@@ -1,3 +1,56 @@
+
+
+/datum/dynamic_ruleset
+	var/name = ""
+	/// For admin logging and round end screen, do not change this unless making a new rule type.
+	var/ruletype = ""
+	/// Cost of this ruleset
+	var/point_cost = 0
+	/// How much this ruleset deducts point gain while it is active.
+	var/active_deduction = 0
+	/// The minimum time this ruleset can be chosen
+	var/minimum_time = 0
+	/// How long does this antag take to start impacting the round
+	var/prep_time = 0
+	/// How many antags this singular ruleset spawns, everything except team antags should have a team size of 1. This also prevents this role from being chosen if there are less candidates then team size
+	var/team_size = 1
+	/// Can this ruleset be played more then once?
+	var/can_repeat = TRUE
+	/// Current mobs which can get this antag
+	var/list/restricted_roles = list()
+	/// Current minds which have this antag
+	var/list/datum/mind/assigned = list()
+	/// Does this ruleset use antag reputation?
+	var/consider_antag_rep = FALSE
+	/// How likely is this antag to be chosen, this value should not change, instead it should be modified
+	var/weight = 0
+
+/// Calculate the weight of this ruleset
+/datum/dynamic_ruleset/proc/get_weight()
+	return weight
+/// Return whether this ruleset can be actually played
+/datum/dynamic_ruleset/proc/get_possible()
+	return FALSE
+/// Returns the modified deduction. By default this will return deduction - N, where N is the length of cycles this ruleset has been active
+/datum/dynamic_ruleset/proc/get_deduction()
+	return active_deduction
+
+/// Returns the amount of points this costs
+/datum/dynamic_ruleset/proc/get_cost()
+	return point_cost
+
+/// Verify candidates given to this ruleset are valid. This will return a list of true candidates, or nothing if none/not enough can be found
+/datum/dynamic_ruleset/proc/verify_candidates(var/list/datum/mind/possible_candidates)
+	return null
+
+/// Actually put this ruleset into play. Return true if this worked, or false if it did not
+/datum/dynamic_ruleset/proc/activate(var/list/datum/mind/candidates)
+	var/real_candidates = verify_candidates(candidates)
+	if (!real_candidates)
+		return FALSE
+	// pick n stuff
+	return TRUE
+
 /datum/dynamic_ruleset
 	/// For admin logging and round end screen.
 	// If you want to change this variable name, the force latejoin/midround rulesets
