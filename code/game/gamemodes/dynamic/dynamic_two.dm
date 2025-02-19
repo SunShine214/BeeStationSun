@@ -46,6 +46,10 @@
 /datum/game_mode/dynamic/proc/scale_points(var/points)
 	return null
 
+/// Gets a list of players to further verify.
+/datum/game_mode/dynamic/proc/find_candidates()
+	return new list()
+
 /// Calculates points to be gained for this period
 /datum/game_mode/dynamic/proc/find_point_gain()
 	if (grace_period_remaining > 0)
@@ -70,24 +74,34 @@
 	if(check_target_ruleset())
 		if(!target_ruleset.activate(candidates))
 			CRASH()
+		pick_target_ruleset()
+
 
 
 	cycle_count = cycle_count + 1
 
 /// Roundstart ruleset picking logic
-/datum/dynamic_ruleset/proc/pull_roundstart()
+/datum/game_mode/dynamic/proc/pull_roundstart()
 
 /// Get a list of rulesets allowed
-/datum/dynamic_ruleset/proc/get_allowed_rulesets()
+/datum/game_mode/dynamic/proc/get_allowed_rulesets()
 	return null
 
+/// Chooses a ruleset to now target
+/datum/game_mode/dynamic/proc/pick_target_ruleset()
+	//might be smarter to collapse this into pick_ruleset
+	ruleset_to_spawn = pick_ruleset(candidates)
+
 /// Returns true if the target ruleset is possible, false if otherwise
-/datum/dynamic_ruleset/proc/check_target_ruleset()
+/datum/game_mode/dynamic/proc/check_target_ruleset()
 	if(!ruleset_to_spawn.get_possible())
 		return FALSE
 	if(ruleset_to_spawn.get_cost() > unused_points)
 		return FALSE
 	return TRUE
+
+/datum/game_mode/dynamic/proc/activate_ruleset(var/datum/dynamic_ruleset/ruleset)
+
 
 // INIT / CONFIG //
 
