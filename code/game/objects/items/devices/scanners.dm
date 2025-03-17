@@ -540,7 +540,7 @@ GENE SCANNER
 	var/list/message = list()
 	if(length(diseases))
 		// costly_icon2html should be okay, as the extrapolator has a cooldown and is NOT spammable
-		message += span_noticebold("[costly_icon2html(target, user)] [target] scan results]")
+		message += span_noticebold("[costly_icon2html(target, user)] [target] scan results")
 		for(var/datum/disease/disease in diseases)
 			if(istype(disease, /datum/disease/advance))
 				var/datum/disease/advance/advance_disease = disease
