@@ -19,3 +19,9 @@
 	cost = 2000
 	unit_name = "deactivated alien deconstruction drone"
 	export_types = list(/obj/item/deactivated_swarmer)
+
+/datum/export/photonic_prism
+	cost = 10000
+	unit_name = "photonic prism"
+	export_types = list(/obj/item/stock_parts/cell/photonic_prism)
+	/// This is highly fucking fallible, I'll have to make another way of doing this bitch

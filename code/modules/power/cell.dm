@@ -13,7 +13,7 @@
 	w_class = WEIGHT_CLASS_SMALL
 	/// note %age converted to actual charge in New
 	var/charge = 0
-	/// Maximum charge possible in Aur
+	/// Maximum charge possible in Watts
 	var/maxcharge = 10 KILOWATT
 	custom_materials = list(/datum/material/iron=700, /datum/material/glass=50)
 	grind_results = list(/datum/reagent/lithium = 15, /datum/reagent/iron = 5, /datum/reagent/silicon = 5)
