@@ -1,13 +1,16 @@
+#define MAX_GLASS_COEFF 50
+
 /obj/machinery/photonic_condenser
 	name = "photonic condenser"
 	icon = 'icons/obj/power.dmi'
 	icon_state = "condenser"
-	desc = "A machine that, when operated and fitted with glass, will create Photonic Prisms by compressing raw electrical charge until it stabilizes as a portable mass power cells."
+	desc = "A machine that, when operated and fitted with glass, will create Photonic Prisms by compressing raw electrical charge until it stabilizes as a portable mass power cell."
 	use_power = IDLE_POWER_USE
 	idle_power_usage = 10 KILOWATT
 	active_power_usage = 300 WATT // This is overriden while giving power
-	circuit = /obj/item/circuitboard/machine/recharger //to do
+	circuit = /obj/item/circuitboard/machine/photonic_condenser
 	var/open = TRUE
+	var/max_glass = MAX_GLASS_COEFF
 	var/glass_amount
 	var/obj/item/stock_parts/cell/photonic_prism/prism
 	var/ready = FALSE
@@ -25,8 +28,10 @@
 	. = ..()
 
 /obj/machinery/photonic_condenser/RefreshParts()
-	for(var/obj/item/stock_parts/capacitor/C in component_parts)
-		recharge_coeff = C.rating
+	for(var/obj/item/stock_parts/capacitor/cap in component_parts)
+		recharge_coeff = cap.rating
+	for(var/obj/item/stock_parts/matter_bin/bin  in component_parts)
+		max_glass = MAX_GLASS_COEFF * bin.rating
 
 /obj/machinery/photonic_condenser/examine(mob/user)
 	. = ..()
@@ -43,14 +48,14 @@
 	if(!anchored)
 		return
 	if(istype(object, /obj/item/stack/sheet/glass))
-		if(glass_amount >= 50)
+		if(glass_amount >= max_glass)
 			balloon_alert(user, "Glass Storage Full!")
 			playsound(src, 'sound/misc/box_deploy.ogg', 50, TRUE)
 			return
 		var/obj/item/stack/sheet/glass/glass_sheet = object
-		var/amount = max(glass_sheet.get_amount() + glass_amount, 50)
+		var/amount = max(glass_sheet.get_amount() + glass_amount, max_glass)
 		if(amount)
-			to_chat(user, span_notice("You start fixing [src]..."))
+			to_chat(user, span_notice("You start adding [src]..."))
 			if(!do_after(user, 20, target = src))
 				return
 			glass_sheet.use(amount)
@@ -60,50 +65,80 @@
 			update_appearance()
 
 
-/obj/machinery/photonic_condenser/attack_hand(mob/living/user, list/modifier)
-	if(prism?.percent() == 100)
-		open = TRUE
-		prism.forceMove(drop_location())
-		prism = null
-		playsound(src, 'sound/misc/box_deploy.ogg', 50, TRUE)
-	else if(prism)
-		balloon_alert(user, "MACHINE IN USE!")
-		//some spark damage here
-		playsound(src, 'sound/misc/box_deploy.ogg', 50, TRUE)
+/obj/machinery/photonic_condenser/AltClick(mob/user)
+	. = ..()
+	if(open)
+		close()
 	else
-		open = !open
-		playsound(src, 'sound/misc/box_deploy.ogg', 50, TRUE)
-		if(open)
-			balloon_alert(user, "Open")
-		else
-			balloon_alert(user, "Closed")
-
-	update_appearance()
+		open()
 
 /obj/machinery/photonic_condenser/process(delta_time)
 	if(machine_stat & (NOPOWER|BROKEN) || !anchored)
 		soundloop.stop()
 		return
-	if(prism)
-		return
-	if(glass_amount < 10)
+	if(glass_amount < 10 && !prism)
 		return
 	if(!open)
 		if(!prism)
-			prism = new /obj/item/stock_parts/cell/photonic_prism/empty(src)
-			glass_amount -= 50
-		if(prism.charge >= prism.maxcharge)
-			soundloop.stop()
-			update_use_power(IDLE_POWER_USE)
-			update_appearance()
-		else
+			fabricate_new_prism()
+			return
+		if(!soundloop.loop_started)
 			soundloop.start()
+		if(prism.charge >= prism.maxcharge)
+			prism.forceMove(drop_location())
+			soundloop.stop()
+			prism = null
+		else
 			prism.give(prism.chargerate * recharge_coeff)
 			active_power_usage = (prism.chargerate * recharge_coeff / POWER_TRANSFER_LOSS)
-			update_use_power(ACTIVE_POWER_USE)
 			update_appearance()
-
+	else
+		if(soundloop.loop_started)
+			soundloop.stop()
 ///obj/machinery/photonic_condenser/emp_act(severity)	//todo
+
+/obj/machinery/photonic_condenser/ui_interact(mob/user, datum/tgui/ui)
+	ui = SStgui.try_update_ui(user, src, ui)
+	if(!ui)
+		ui = new(user, src, "PhotonicCondenser")
+		ui.set_autoupdate(TRUE)
+		ui.open()
+
+/obj/machinery/photonic_condenser/ui_state(mob/user)
+	return GLOB.physical_state
+
+/obj/machinery/photonic_condenser/ui_data(mob/user)
+	var/list/data = list()
+	return data
+
+/obj/machinery/photonic_condenser/ui_static_data(mob/user)
+	var/list/data = list()
+	return data
+
+/obj/machinery/photonic_condenser/ui_act(action, params)
+	. = ..()
+
+/obj/machinery/photonic_condenser/proc/open()
+	open = TRUE
+	if(soundloop.loop_started)
+		soundloop.stop()
+	update_use_power(IDLE_POWER_USE)
+	playsound(src, 'sound/misc/box_deploy.ogg', 50, TRUE)
+	update_appearance()
+
+/obj/machinery/photonic_condenser/proc/close()
+	open = FALSE
+	update_use_power(ACTIVE_POWER_USE)
+	playsound(src, 'sound/misc/box_deploy.ogg', 50, TRUE)
+	update_appearance()
+
+/obj/machinery/photonic_condenser/proc/fabricate_new_prism()
+	if(glass_amount >= 5)
+		prism = new /obj/item/stock_parts/cell/photonic_prism/empty(src)
+		glass_amount -= 5
+		return
+	say("Out of glass!")
+	open()
 
 /obj/machinery/photonic_condenser/update_overlays() //todo
 	. = ..()
@@ -137,3 +172,5 @@
 	. = ..()
 	charge = 0
 	update_appearance()
+
+#undef MAX_GLASS_COEFF

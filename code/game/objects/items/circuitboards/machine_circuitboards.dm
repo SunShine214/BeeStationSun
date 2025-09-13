@@ -193,6 +193,12 @@
 	req_components = list(/obj/item/stock_parts/capacitor = 1)
 	needs_anchored = FALSE
 
+/obj/item/circuitboard/machine/photonic_condenser
+	name = "photonic condenser (Machine Board)"
+	icon_state = "engineering"
+	build_path = /obj/machinery/recharger
+	req_components = list(/obj/item/stock_parts/capacitor = 1, /obj/item/stock_parts/matter_bin = 1)
+
 /obj/item/circuitboard/machine/circulator
 	name = "circulator/heat exchanger (Machine Board)"
 	icon_state = "engineering"
