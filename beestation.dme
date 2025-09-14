@@ -1357,6 +1357,7 @@
 #include "code\game\machinery\fabricators\autolathe.dm"
 #include "code\game\machinery\fabricators\exosuit_fab.dm"
 #include "code\game\machinery\fabricators\modular_fabricator.dm"
+#include "code\game\machinery\multitile\multitile.dm"
 #include "code\game\machinery\newscaster\newscaster_data.dm"
 #include "code\game\machinery\newscaster\newscaster_machine.dm"
 #include "code\game\machinery\newscaster\newspaper.dm"

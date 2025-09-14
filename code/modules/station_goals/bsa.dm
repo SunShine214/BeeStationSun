@@ -329,15 +329,6 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/machinery/power/bsa/full)
 	last_charge_quarter = FLOOR(cell.percent() / 25, 1)
 	ui_update()
 
-/obj/structure/filler
-	name = "big machinery part"
-	density = TRUE
-	anchored = TRUE
-	invisibility = INVISIBILITY_ABSTRACT
-	var/obj/machinery/parent
-
-/obj/structure/filler/ex_act()
-	return
 
 /obj/machinery/computer/bsa_control
 	name = "bluespace artillery control"
