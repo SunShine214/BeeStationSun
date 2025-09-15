@@ -35,7 +35,7 @@
 	icon_state = state
 
 /datum/multitile_component/proc/delete_children()
-	QDEL(component_obj)
+	return
 
 /datum/multitile_component/proc/return_object()
 	var/obj/tmp_obj = new component_obj(location)
