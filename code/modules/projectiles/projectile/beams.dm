@@ -158,6 +158,9 @@
 		damage *= 0.25
 	. = ..()
 
+/obj/projectile/beam/emitter/gigalaser
+	var/laser_strength = 0
+
 /obj/projectile/beam/emitter/drill
 	name = "driller beam"
 	icon_state = "emitter"
