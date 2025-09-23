@@ -3,7 +3,7 @@
 	desc = "It is made of multiple tiles."
 	icon = 'icons/obj/power.dmi'
 	icon_state = "ccharger"
-	var/list/datum/multitile_component/components
+	var/list/obj/components
 
 /obj/machinery/multitile/Initialize(mapload)
 	. = ..()
@@ -11,6 +11,13 @@
 
 /obj/machinery/multitile/proc/setup_objects()
 	return
+
+///returns a list of /datum/multitile_component created from the provided list of objects. Does not support setting a custom icon state
+/obj/machinery/multitile/proc/return_components_from_list(list/input_list)
+	var/list/output_list
+	for(var/obj/comp in input_list)
+		output_list += new /datum/multitile_component(comp)
+	return output_list
 
 /datum/multitile_component
 	var/obj/component_obj
@@ -20,7 +27,7 @@
 	component_obj = component
 	if(state)
 		component_obj.icon_state = state
-
+e
 /datum/multitile_component/Destroy()
 	qdel(component_obj)
 	. = ..()
