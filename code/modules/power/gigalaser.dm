@@ -15,7 +15,7 @@
 	active_power_usage = 5 KILOWATT
 
 	var/active = FALSE
-	var/energy_to_laser_ratio
+	var/energy_to_laser_ratio = 0.99
 	var/laser_output = 0
 	var/internal_temp = 300
 
