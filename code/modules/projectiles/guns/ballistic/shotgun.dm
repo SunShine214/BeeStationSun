@@ -8,6 +8,7 @@
 	item_state = "shotgun"
 	inhand_x_dimension = 64
 	inhand_y_dimension = 64
+	custom_price = 300
 	fire_sound = "sound/weapons/shotgunshot.ogg"
 	vary_fire_sound = FALSE
 	fire_sound_volume = 90
@@ -76,6 +77,7 @@
 	item_state = "shotgun_combat"
 	mag_type = /obj/item/ammo_box/magazine/internal/shot/com
 	w_class = WEIGHT_CLASS_HUGE
+	custom_price = 300
 
 /obj/item/gun/ballistic/shotgun/automatic/combat/AltClick(mob/user)
 	if(loc == user)
@@ -366,8 +368,12 @@
 	. = ..()
 	. += "<span class='notice'>Right-click to shoot the hook.</span>"
 
-/obj/item/gun/ballistic/shotgun/hook/afterattack_secondary(atom/target, mob/user, proximity_flag, click_parameters)
-	hook.afterattack(target, user, proximity_flag, click_parameters)
+/obj/item/gun/ballistic/shotgun/hook/ranged_attack_secondary(atom/target, mob/living/user, params)
+	hook.pull_trigger(target, user, params)
+	return SECONDARY_ATTACK_CANCEL_ATTACK_CHAIN
+
+/obj/item/gun/ballistic/shotgun/hook/pre_attack_secondary(atom/target, mob/living/user, params)
+	hook.pull_trigger(target, user, params)
 	return SECONDARY_ATTACK_CANCEL_ATTACK_CHAIN
 
 ///Lever action shotgun, formerly on thefactory.dm

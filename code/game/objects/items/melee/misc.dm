@@ -354,6 +354,7 @@
 	cooldown = 10
 	stamina_damage = 20
 	stun_animation = TRUE
+	custom_price = 120
 
 //Telescopic Baton
 /obj/item/melee/classic_baton/police/telescopic
@@ -952,6 +953,7 @@
 	slot_flags = ITEM_SLOT_BELT
 	w_class = WEIGHT_CLASS_LARGE
 	hitsound = 'sound/effects/woodhit.ogg'
+	custom_price = 100
 	/// Damage dealt while on help intent
 	var/non_harm_force = 3
 	/// Stamina damage dealt
@@ -1036,7 +1038,6 @@
 	lefthand_file = 'icons/vampires/bs_leftinhand.dmi'
 	righthand_file = 'icons/vampires/bs_rightinhand.dmi'
 	slot_flags = ITEM_SLOT_POCKETS
-	w_class = WEIGHT_CLASS_SMALL
 	hitsound = 'sound/weapons/bladeslice.ogg'
 	attack_verb_continuous = list("staked", "stabbed", "tore into")
 	attack_verb_simple = list("staked", "stabbed", "tore into")

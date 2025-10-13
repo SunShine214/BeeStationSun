@@ -16,6 +16,7 @@
 	strip_delay = 50
 	sensor_mode = SENSOR_COORDS
 	random_sensor = FALSE
+	custom_price = 50
 
 
 /datum/armor/rank_security
@@ -76,6 +77,7 @@
 	icon_state = "blueshift"
 	item_state = null
 	can_adjust = FALSE
+	custom_price = 110
 
 /obj/item/clothing/under/rank/security/officer/formal
 	name = "security officer's formal uniform"
