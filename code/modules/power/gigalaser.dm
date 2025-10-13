@@ -11,19 +11,25 @@
 //	circuit = /obj/item/circuitboard/machine/emitter
 
 	use_power = NO_POWER_USE
-	idle_power_usage = 500 WATT
-	active_power_usage = 5 KILOWATT
-
+	var/power_usage = 5000 //uses half the load on it
+	var/power_usage_actual = 10000
+	var/max_input = 10 MEGAWATT
+	var/obj/machinery/power/dummy_power_node/dummy
 	var/active = FALSE
 	var/energy_to_laser_ratio = 0.99
-	var/laser_output = 0
 	var/internal_temp = 300
-
 
 /obj/machinery/atmospherics/components/trinary/gigalaser/Initialize(mapload)
 	. = ..()
-	AddComponent(/datum/component/simple_rotation)
+	RegisterSignal(src, COMSIG_MOVABLE_MOVED, PROC_REF(moved_laser))
+	dummy = new (get_turf(src))
+	dummy.connect_to_network()
 	update_appearance()
+
+/obj/machinery/atmospherics/components/trinary/gigalaser/Destroy()
+	dummy.disconnect_from_network()
+	qdel(dummy)
+	. = ..()
 
 /obj/machinery/atmospherics/components/trinary/gigalaser/set_init_directions()
 	switch(dir)
@@ -37,12 +43,26 @@
 			initialize_directions = SOUTH|NORTH|EAST
 
 /obj/machinery/atmospherics/components/trinary/gigalaser/process_atmos()
-	handle_cooling()
-	fire_laser()
+	if(active)
+		handle_cooling()
+
+/obj/machinery/atmospherics/components/trinary/gigalaser/process(delta_time)
+	if(active)
+		var/input_available = dummy.surplus()
+		power_usage_actual = min(input_available, power_usage)
+		dummy.add_load(power_usage_actual)
+		fire_laser()
 
 /obj/machinery/atmospherics/components/trinary/gigalaser/wrench_act(mob/living/user, obj/item/item)
 	. = ..()
+	if(active)
+		balloon_alert(user, "Deactivate before unfastening!")
+		return TRUE
 	default_unfasten_wrench(user, item, 15)
+	if(anchored)
+		dummy.connect_to_network(get_turf(src))
+	else
+		dummy.disconnect_from_network()
 	return TRUE
 
 /obj/machinery/atmospherics/components/trinary/gigalaser/attack_hand(mob/living/user, list/modifiers)
@@ -77,6 +97,9 @@
 	setDir(turn(dir, -90))
 	change_dir()
 
+/obj/machinery/atmospherics/components/trinary/gigalaser/proc/moved_laser()
+	dummy.forceMove(get_turf(src))
+
 /obj/machinery/atmospherics/components/trinary/gigalaser/proc/change_dir()
 	set_init_directions()
 	reconnect_nodes()
@@ -88,7 +111,7 @@
 	playsound(src, 'sound/weapons/emitter.ogg', 50, TRUE)
 	projectile.firer = src
 	projectile.fired_from = src
-	projectile.laser_strength = energy_to_laser_ratio * active_power_usage
+	projectile.laser_strength = energy_to_laser_ratio * power_usage_actual
 	projectile.fire(dir2angle(dir))
 
 //airs[1] is cooling input
@@ -127,7 +150,11 @@
 	update_parents()
 
 /obj/machinery/atmospherics/components/trinary/gigalaser/proc/handle_heating()
-	return (active_power_usage) * (1 - energy_to_laser_ratio)
+	return (power_usage_actual) * (1 - energy_to_laser_ratio)
 
 /obj/machinery/atmospherics/components/trinary/gigalaser/proc/get_lensing_power(/datum/gas/gas_to_check)
 	return 0.99 //todo
+
+/obj/machinery/power/dummy_power_node
+	name = "super secret power connector"
+	invisibility = INVISIBILITY_ABSTRACT
