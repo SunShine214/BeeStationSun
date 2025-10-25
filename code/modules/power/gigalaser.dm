@@ -11,8 +11,8 @@
 //	circuit = /obj/item/circuitboard/machine/emitter
 
 	use_power = NO_POWER_USE
-	var/power_usage = 5000 //uses half the load on it
-	var/power_usage_actual = 10000
+	var/power_usage = 5 KILOWATT
+	var/power_usage_actual = 0
 	var/max_input = 10 MEGAWATT
 	var/obj/machinery/power/dummy_power_node/dummy
 	var/active = FALSE

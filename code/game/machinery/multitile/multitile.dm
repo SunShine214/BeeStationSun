@@ -3,7 +3,7 @@
 	desc = "It is made of multiple tiles."
 	icon = 'icons/obj/power.dmi'
 	icon_state = "ccharger"
-	var/list/obj/components
+
 
 /obj/machinery/multitile/Initialize(mapload)
 	. = ..()
@@ -21,12 +21,12 @@
 
 /datum/multitile_component
 	var/obj/component_obj
+	var/location
 
-/datum/multitile_component/New(obj/component, state)
+/datum/multitile_component/New(obj/component, loc)
 	..()
 	component_obj = component
-	if(state)
-		component_obj.icon_state = state
+	location = loc
 e
 /datum/multitile_component/Destroy()
 	qdel(component_obj)
