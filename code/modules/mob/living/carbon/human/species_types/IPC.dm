@@ -106,6 +106,13 @@
 		H.physiology.bleed_mod *= 10
 	UnregisterSignal(C, COMSIG_LIVING_REVIVE)
 
+/datum/species/ipc/handle_radiation(mob/living/carbon/human/source, intensity, delta_time)
+	if(intensity > RAD_MOB_KNOCKDOWN && DT_PROB(RAD_MOB_KNOCKDOWN_PROB, delta_time))
+		if(!source.IsParalyzed())
+			source.emote("collapse")
+		source.Paralyze(RAD_MOB_KNOCKDOWN_AMOUNT)
+		to_chat(source, span_danger("You feel weak."))
+
 /datum/species/ipc/proc/handle_speech(datum/source, list/speech_args)
 	speech_args[SPEECH_SPANS] |= SPAN_ROBOT //beep
 
@@ -260,7 +267,11 @@
 	H.dna.features["ipc_screen"] = saved_screen
 
 /datum/species/ipc/get_harm_descriptors()
-	return list("bleed" = "leaking", "brute" = "denting", "burn" = "burns")
+	return list(
+		BLEED = "leaking",
+		BRUTE = "denting",
+		BURN = "burns"
+	)
 
 /datum/species/ipc/replace_body(mob/living/carbon/C, datum/species/new_species)
 	..()
@@ -314,7 +325,7 @@
 	bandaged_bleeding = 0
 	..()
 
-/datum/status_effect/bleeding/robotic/update_icon()
+/datum/status_effect/bleeding/robotic/update_shown_duration()
 	// The actual rate of bleeding, can be reduced by holding wounds
 	// Calculate the message to show to the user
 	if (HAS_TRAIT(owner, TRAIT_BLEED_HELD))
