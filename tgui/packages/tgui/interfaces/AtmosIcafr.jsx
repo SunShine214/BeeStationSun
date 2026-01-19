@@ -1,5 +1,5 @@
 import { useBackend } from '../backend';
-import { NumberInput, ProgressBar, Section } from '../components';
+import { Box, Knob, NumberInput, ProgressBar, Section } from '../components';
 import { Window } from '../layouts';
 
 export const AtmosIcafr = (props) => {
@@ -15,6 +15,9 @@ export const AtmosIcafr = (props) => {
     containment_energy,
     max_stability,
     stability,
+    parabolic_ratio,
+    parabolic_hold_setting,
+    parabolic_hold_gain,
   } = data;
   return (
     <Window theme="ntos" width={480} height={500}>
@@ -55,6 +58,10 @@ export const AtmosIcafr = (props) => {
           <br />
           {display_parabolic_production}
           <br />
+          Parabolic Ratio
+          <br />
+          {parabolic_ratio}
+          <br />
           Annihilation Input
           <br />
           <NumberInput
@@ -88,6 +95,43 @@ export const AtmosIcafr = (props) => {
               })
             }
           />
+          <br />
+          Hold Value
+          <br />
+          <NumberInput
+            animated
+            value={parseFloat(parabolic_hold_setting).toFixed(2)}
+            width="75px"
+            unit=""
+            minValue={0}
+            maxValue={200}
+            step={0.1}
+            onChange={(value) =>
+              act('hold_value', {
+                hold_value: value,
+              })
+            }
+          />
+          <br />
+          Hold Gain
+          <br />
+          <Box>
+            <Knob
+              size={1.25}
+              color={'yellow'}
+              value={parabolic_hold_gain}
+              unit=""
+              minValue={0}
+              maxValue={1}
+              step={0.1}
+              stepPixelSize={1}
+              onDrag={(e, value) =>
+                act('change_hold_gain', {
+                  change_hold_gain: value,
+                })
+              }
+            />
+          </Box>
         </Section>
       </Window.Content>
     </Window>

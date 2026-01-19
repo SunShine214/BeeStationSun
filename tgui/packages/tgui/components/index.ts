@@ -29,6 +29,7 @@ export { Grid } from './Grid';
 export { Icon } from './Icon';
 export { Image } from './Image';
 export { InfinitePlane } from './InfinitePlane';
+export { Graph } from './Graph';
 export { Input } from './Input';
 export { Interactive } from './Interactive';
 export { KeyListener } from './KeyListener';

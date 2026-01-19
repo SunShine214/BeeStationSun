@@ -26,9 +26,18 @@
 	var/reaction_harvesting_efficiency = 0
 	var/annihilation_input_rate = 50
 	var/fuel_input_rate = 50
+
+	//for autoholding
+	var/parabolic_hold_setting = 0
+	var/parabolic_middle = 0
+	var/parabolic_hold_gain = 0.1
+
 	var/datum/powernet/powernet = null
 	var/display_output_power = 0
-	var/display_parabolic_production = 0
+
+	var/parabolic_production_metric = 0
+	var/parabolic_ratio = 0
+
 	var/obj/machinery/power/dummy_power_node/dummy
 	///input setting, makes it easier to balance, but produce less power overall, min is 0.1, max is 1
 	var/parabolic_setting = 0.5
@@ -50,6 +59,7 @@
 	antimatter = 0
 	var/power_to_output = reaction_energy * reaction_harvesting
 	reaction_energy -= power_to_output
+	hold_value()
 	output_power(power_to_output * reaction_harvesting_efficiency)
 
 /obj/machinery/multitile/icafr/setup_objects()
@@ -123,22 +133,35 @@
 	.["display_power"] = display_output_power
 	.["reaction_harvesting"] = reaction_harvesting
 	.["reaction_harvesting_efficiency"] = reaction_harvesting_efficiency
-	.["display_parabolic_production"] = display_parabolic_production
+	.["display_parabolic_production"] = parabolic_production_metric
 	.["annihilation_input_rate"] = annihilation_input_rate
 	.["fuel_input_rate"] = fuel_input_rate
 	.["containment_energy"] = containment_energy
 	.["stability"] = stability
+	.["parabolic_ratio"] = parabolic_ratio
+	.["parabolic_hold_setting"] = parabolic_hold_setting
+	.["parabolic_hold_gain"] = parabolic_hold_gain
 
 /obj/machinery/multitile/icafr/ui_act(action, params)
 	. = ..()
 	switch(action)
 		if("change_annihilation")
-			annihilation_input_rate = clamp(text2num(params["change_annihilation"]), 0, 200)
+			adjust_annihilation_rate(text2num(params["change_annihilation"]))
 		if("change_fuel")
-			fuel_input_rate = clamp(text2num(params["change_fuel"]), 0, 200)
+			adjust_fuel_rate(text2num(params["change_fuel"]))
+		if("change_hold_gain")
+			parabolic_hold_gain = clamp(text2num(params["change_hold_gain"]), 0, 1)
+		if("hold_value")
+			parabolic_hold_setting = max(text2num(params["hold_value"]), 0)
 
 /obj/machinery/multitile/icafr/proc/move_self()
 	dummy.forceMove(get_turf(src))
+
+/obj/machinery/multitile/icafr/proc/adjust_annihilation_rate(to_change)
+	annihilation_input_rate = clamp(to_change, 0, 200)
+
+/obj/machinery/multitile/icafr/proc/adjust_fuel_rate(to_change)
+	fuel_input_rate = clamp(to_change, 0, 200)
 
 /obj/machinery/multitile/icafr/proc/can_deploy(mob/user)
 	for(var/obj/nearby_turf as anything in components_locs)
@@ -177,7 +200,6 @@
 
 	reaction_harvesting_efficiency = (-1 / (0.15 * GET_MOLES(/datum/gas/oxygen, temp_mix) + 1) + 1) + 0.025 * GET_MOLES(/datum/gas/pluoxium, temp_mix)
 
-
 	var/mols_plas = min(GET_MOLES(/datum/gas/plasma, temp_mix), 100)
 	var/mols_bz = min(GET_MOLES(/datum/gas/bz, temp_mix), 80)
 	var/mols_trit = min(GET_MOLES(/datum/gas/tritium, temp_mix), 60)
@@ -194,26 +216,34 @@
 	process_containment(get_stability_value(temp_mix))
 
 /obj/machinery/multitile/icafr/proc/annihilate_gas(input_antimatter)
+	parabolic_production_metric = 0
+	parabolic_ratio = 0
+
 	if(!input_antimatter)
-		display_parabolic_production = 0
 		return 0
 	if(!annihilation_input_mix)
-		display_parabolic_production = 0
 		return 0
+
 	var/mols = annihilation_input_mix.total_moles()
+
+	if(mols <= 0)
+		return 0
+
 	if(mols <= input_antimatter * ICAFR_MOLS_PER_NANOGRAM)
 		change_stability(-5) //todo maybe make this dynamic, rather then just 5
-	if(mols <= 0)
-		display_parabolic_production = 0
-		return 0
+
 	var/parabolic_upper_limit = get_annihilation_power(annihilation_input_mix) + log(10, (reaction_energy / ICAFR_REACTION_ENERGY_LOG) + 1)
-	var/ratio = input_antimatter / ((mols * ICAFR_MOLS_PER_NANOGRAM) * (reaction_energy != 0 ? max(log(ICAFR_RATIO_ENERGY_LOG, reaction_energy), 1) : 1))
-	var/production_metric = 0
+
+	parabolic_ratio = input_antimatter / ((mols * ICAFR_MOLS_PER_NANOGRAM) * (reaction_energy != 0 ? max(log(ICAFR_RATIO_ENERGY_LOG, reaction_energy), 1) : 1))
+
+	parabolic_middle = sqrt(parabolic_upper_limit * parabolic_setting)
+
 	if(mols > 0.001)
-		production_metric = -1 * ((ratio * parabolic_setting) - sqrt(parabolic_upper_limit * parabolic_setting))**2 + (parabolic_upper_limit * parabolic_setting) // todo, expand on this idea, reduce requirement for gases, make it hard to stay stable instead. Numbers are not big enough
-	display_parabolic_production = production_metric //todo fix this not updating when no input gas or antimatter (since early returns)
+		parabolic_production_metric = -1 * ((parabolic_ratio * parabolic_setting) - sqrt(parabolic_upper_limit * parabolic_setting))**2 + (parabolic_upper_limit * parabolic_setting) // todo, expand on this idea, reduce requirement for gases, make it hard to stay stable instead. Numbers are not big enough
+
 	annihilation_input_mix = new
-	return max(input_antimatter * ICAFR_NANOGRAM_TO_ENERGY * production_metric, 0)
+
+	return max(input_antimatter * ICAFR_NANOGRAM_TO_ENERGY * parabolic_production_metric, 0)
 
 /obj/machinery/multitile/icafr/proc/get_annihilation_power(datum/gas_mixture/input_mixture)
 	var/gas_power = 0
@@ -239,6 +269,18 @@
 		change_stability(-(reaction_energy / containment_energy) * 10)
 	if((containment_energy > ICAFR_HEALING_THRESHOLD * reaction_energy) && reaction_energy != 0)
 		change_stability(containment_energy / reaction_energy)
+
+/obj/machinery/multitile/icafr/proc/hold_value()
+	if(!parabolic_hold_setting)
+		return
+
+	var/annihilation_rate_delta = 0
+	if(parabolic_ratio > parabolic_middle)
+		annihilation_rate_delta = -1 * parabolic_production_metric - parabolic_hold_setting * parabolic_hold_gain
+	else
+		annihilation_rate_delta = parabolic_production_metric - parabolic_hold_setting * parabolic_hold_gain
+
+	adjust_annihilation_rate(annihilation_input_rate + annihilation_rate_delta)
 
 /obj/machinery/multitile/icafr/proc/output_power(power_to_output)
 	display_output_power = power_to_output
