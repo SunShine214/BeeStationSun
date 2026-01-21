@@ -29,9 +29,14 @@
 
 
 #define MDR_MOL_TO_SPIN 1000
+#define MDR_SPIN_INSTABILITY_MULT 1e3
 #define MDR_HEAT_CONSUMED_PER_MOL 1 MEGAWATT //todo change this so gas_decay_flux_mult affects this value
 
 #define MDR_FLUX_TO_POWER 1 KILOWATT
+
+#define MDR_MAX_CORE_HEALTH 100
+
+#define MDR_CORE_MASS_DIV 1000
 
 /obj/machinery/atmospherics/components/unary/mdr
 	name = "Metallic Decay Reactor"
@@ -44,6 +49,8 @@
 
 	var/metallization_ratio = 0.2
 	var/core_stability = 0
+	var/core_instability = 0
+	var/core_health = MDR_MAX_CORE_HEALTH
 	var/temp_stability_factor = 0
 	var/core_temperature = T20C
 
@@ -79,12 +86,12 @@
 		return
 	process_diffusion()
 	decay_gases(get_decay_factor())
-	proccess_toroid()
+	process_toroid()
 	process_harvesters()
-	core_stability = get_core_stability()
+	process_stability()
 
 /obj/machinery/atmospherics/components/unary/mdr/screwdriver_act(mob/living/user, obj/item/tool)
-	for(activated)
+	if(activated)
 		balloon_alert(user, "deactivate first!")
 		return TRUE
 
@@ -124,6 +131,8 @@
 	.["parabolic_setting"] = parabolic_setting
 	.["parabolic_upper_limit"] = parabolic_upper_limit
 	.["parabolic_ratio"] = parabolic_ratio
+	.["core_stability"] = core_stability
+	.["core_instability"] = core_instability
 
 /obj/machinery/atmospherics/components/unary/mdr/ui_act(action, params)
 	. = ..()
@@ -136,7 +145,7 @@
 			metallization_ratio = clamp(text2num(params["change_metal_ratio"]), 0.1, 1)
 
 /obj/machinery/atmospherics/components/unary/mdr/proc/can_activate()
-	return !(activated || (machine_stat & MAINT))
+	return !(activated || (!is_operational))
 
 /obj/machinery/atmospherics/components/unary/mdr/proc/can_deactivate()
 	for(var/gastype in core_composition)
@@ -218,9 +227,13 @@
 	var/core_mass = 0
 	for(var/gastype in core_composition)
 		core_mass += core_composition[gastype]
-	return max(core_mass / 1000, 1) //todo improve this
+	return max(core_mass / MDR_CORE_MASS_DIV, 1) //todo improve this
 
-/obj/machinery/atmospherics/components/unary/mdr/proc/proccess_toroid()
+/obj/machinery/atmospherics/components/unary/mdr/proc/process_stability()
+	core_stability = get_core_stability()
+	core_instability = core_temperature //todo improve this somehow
+
+/obj/machinery/atmospherics/components/unary/mdr/proc/process_toroid()
 	toroid_spin = toroid_spin - toroid_spin * metallization_ratio
 
 	if(toroid_spin < 0.001) //prevent it from reaching absurdly small numbers
@@ -235,7 +248,7 @@
 	parabolic_upper_limit = get_mass_multiplier()
 	parabolic_ratio = toroid_spin / 10000
 
-	toroid_flux_mult = max(-1 * ((parabolic_ratio * parabolic_setting) - sqrt(parabolic_upper_limit * parabolic_setting))**2 + (parabolic_upper_limit * parabolic_setting), 0) //todo this might need a tweak
+	toroid_flux_mult = max(-1 * (parabolic_ratio - sqrt(parabolic_upper_limit * parabolic_setting))**2 + (parabolic_upper_limit * parabolic_setting), 0) //todo this might need a tweak
 
 /obj/machinery/atmospherics/components/unary/mdr/proc/process_diffusion()
 	var/datum/gas_mixture/turf_mix = src.loc.return_air()

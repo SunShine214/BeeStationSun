@@ -1,6 +1,5 @@
 import { Component } from 'react';
 
-import { Box } from './Box';
 import { Chart } from './Chart';
 
 export class Graph extends Component {
@@ -22,7 +21,7 @@ export class Graph extends Component {
     let points = [];
     for(let i = 0; i <= steps; i++) {
       let xPos = (i * this.distPerStep + leftLimit);
-      points.push([xPos, funct(xPos).toFixed(5)]);
+      points.push([xPos, funct(xPos)]);
     }
     return points;
   }
@@ -35,17 +34,19 @@ export class Graph extends Component {
     leftLimit,
     rightLimit,
     steps,
+    lineColor,
+    fillColor,
+    ...rest
   } = this.props;
   return (
-    <Box>
       <Chart.Line
               data={this.iterateOverNodes(funct, leftLimit, steps)}
               rangeX={[leftLimit, rightLimit]}
               rangeY={[lowerLimit, upperLimit]}
-              strokeColor="rgba(0, 181, 173, 1)"
-              fillColor="rgba(0, 181, 173, 0.25)"
+              strokeColor={lineColor}
+              fillColor={fillColor}
+              {...rest}
             />
-    </Box>
   );
   }
 }

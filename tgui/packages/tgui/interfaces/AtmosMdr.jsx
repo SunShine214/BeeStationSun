@@ -16,6 +16,8 @@ export const AtmosMdr = (props) => {
     can_activate,
     activated,
     metallization_ratio,
+    core_stability,
+    core_instability,
   } = data;
   return (
     <Window theme="ntos" width={480} height={500}>
@@ -45,20 +47,25 @@ export const AtmosMdr = (props) => {
             }
           />
           <br />
-          Toroid Spin:
+          Core Stability:
+          {core_stability}
           <br />
+          Core Instability:
+          {core_instability}
+          <br />
+          Delta Stability:
+          {core_stability - core_instability}
+          <br />
+          Toroid Spin:
           {toroid_spin}
           <br />
           Parabolic Setting:
-          <br />
           {parabolic_setting}
           <br />
           Toroid Flux Mult:
-          <br />
           {toroid_flux_mult}
           <br />
           Core Temperature:
-          <br />
           {core_temperature}
           <br />
           Core Comp:
@@ -82,8 +89,8 @@ export const AtmosMdr = (props) => {
               })
             }
           />
-          <Flex>
-            <Flex.Item>
+          <Flex direction="column">
+            <Flex.Item position="absolute">
                 <svg>
             <rect
             x={1}
@@ -96,11 +103,11 @@ export const AtmosMdr = (props) => {
             </Flex.Item>
             <Flex.Item grow={1}>
           <Graph
-            funct={(i) => { return -((i - Math.sqrt(parabolic_upper_limit))**2) + parabolic_upper_limit; }}
+            funct={(i) => { return -((i - Math.sqrt(parabolic_setting * parabolic_upper_limit))**2) + parabolic_setting * parabolic_upper_limit; }}
             upperLimit={parabolic_upper_limit}
             lowerLimit={0}
             leftLimit={0}
-            rightLimit={2 * Math.sqrt(parabolic_upper_limit)}
+            rightLimit={(2 * Math.sqrt(parabolic_upper_limit * parabolic_setting)) + (2 * Math.sqrt(parabolic_upper_limit * parabolic_setting) * 0.1)}
             steps={25}
           />
             </Flex.Item>
