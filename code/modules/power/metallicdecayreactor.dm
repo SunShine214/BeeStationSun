@@ -30,7 +30,7 @@
 
 #define MDR_MOL_TO_SPIN 1000
 #define MDR_SPIN_INSTABILITY_MULT 1e3
-#define MDR_HEAT_CONSUMED_PER_MOL 1 MEGAWATT //todo change this so gas_decay_flux_mult affects this value
+#define MDR_HEAT_CONSUMED_PER_MOL 1 MEGAWATT
 
 #define MDR_FLUX_TO_POWER 1 KILOWATT
 
@@ -210,13 +210,13 @@
 
 		var/true_decay_factor = decay_factor * MDR_GAS_VARS[gastype][GAS_DECAY_RATE]
 		var/decayed_gas = max((core_composition[gastype] - MDR_GAS_VARS[gastype][GAS_DECAY_THRESHOLD]) * true_decay_factor, 0)
-		total_energy_consumed += decayed_gas * MDR_HEAT_CONSUMED_PER_MOL //todo review this
+		total_energy_consumed += decayed_gas * MDR_HEAT_CONSUMED_PER_MOL * MDR_GAS_VARS[gastype][GAS_DECAY_FLUX_MULT]
 
 		add_flux(MDR_GAS_VARS[gastype][GAS_DECAY_FLUX_MULT] * core_composition[gastype] * get_mass_multiplier())
 		remove_gas_from_core(gastype, decayed_gas)
 		add_gas_to_core(GAS_DECAY_LIST[gastype], decayed_gas)
 
-	var/core_capacity = get_core_heat_capacity()
+	var/core_capacity = get_core_heat_capacity() //todo make this heat transfer not instant
 	var/core_thermal_heat = (core_temperature * core_capacity) - total_energy_consumed
 	var/mix_capacity = turf_mix.heat_capacity()
 	var/new_temperature = max(((turf_mix.temperature * mix_capacity) + core_thermal_heat) / (core_capacity + mix_capacity), TCMB)
@@ -227,11 +227,22 @@
 	var/core_mass = 0
 	for(var/gastype in core_composition)
 		core_mass += core_composition[gastype]
-	return max(core_mass / MDR_CORE_MASS_DIV, 1) //todo improve this
+	return max(core_mass / MDR_CORE_MASS_DIV, 1)
 
 /obj/machinery/atmospherics/components/unary/mdr/proc/process_stability()
 	core_stability = get_core_stability()
-	core_instability = core_temperature //todo improve this somehow
+	core_instability = core_temperature >= 100000 ? 50000 * (log(10, core_temperature) - 4) : 0.5 * core_temperature //I could make this a define, but really, whos going to change it? :clueless: IF YOU DO TOUCH IT, make sure to recalculate the entire function
+	var/delta_stability = core_instability - core_stability
+	adjust_health(delta_stability > 0 ? max(log(10, abs(delta_stability)), 0) : min(-log(10, abs(delta_stability)), 0))
+
+/obj/machinery/atmospherics/components/unary/mdr/proc/adjust_health(delta)
+	core_health = clamp(core_health + delta, 0, MDR_MAX_CORE_HEALTH)
+	if (core_health <= 0)
+		fail()
+
+/obj/machinery/atmospherics/components/unary/mdr/proc/fail()
+	new /obj/anomaly/singularity/temporary(get_turf(src))
+	qdel(src)
 
 /obj/machinery/atmospherics/components/unary/mdr/proc/process_toroid()
 	toroid_spin = toroid_spin - toroid_spin * metallization_ratio

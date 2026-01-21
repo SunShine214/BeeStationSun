@@ -441,3 +441,10 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/anomaly/singularity/deadchat_controlled)
 /obj/anomaly/singularity/stationary/process(delta_time)
 	if(DT_PROB(0.5, delta_time))
 		mezzer()
+
+/obj/anomaly/singularity/temporary
+	var/time_to_delete = 60 SECONDS
+
+/obj/anomaly/singularity/temporary/Initialize(mapload)
+	. = ..(mapload, 300)
+	QDEL_IN(src, time_to_delete)
