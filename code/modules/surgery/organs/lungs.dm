@@ -35,7 +35,7 @@
 	var/list/gas_min = list()
 	var/list/gas_max = list(
 		/datum/gas/carbon_dioxide = 30, // Yes it's an arbitrary value who cares?
-		/datum/breathing_class/plasma = MOLES_GAS_VISIBLE,
+		/datum/breathing_class/plasma = MOLES_GAS_VISIBLE
 	)
 	var/list/gas_damage = list(
 		"default" = list(
