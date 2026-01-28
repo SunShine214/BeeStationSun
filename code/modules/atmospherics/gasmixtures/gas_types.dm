@@ -223,7 +223,7 @@ GLOBAL_LIST_INIT(hardcoded_gases, list(/datum/gas/oxygen, /datum/gas/nitrogen, /
 /datum/gas/ionic_fuel
 	id = IONICE_FUEL
 	specific_heat = 150
-	name = "LX-212 Formulated Hydrogen Fuel"
+	name = "Ionic Fuel"
 	gas_overlay = "freon"
 	moles_visible = MOLES_GAS_VISIBLE
 	gasrig_shielding_power = 1
@@ -231,7 +231,7 @@ GLOBAL_LIST_INIT(hardcoded_gases, list(/datum/gas/oxygen, /datum/gas/nitrogen, /
 	dangerous = TRUE
 	rarity = 100
 	base_value = 3
-	desc = "A specialized hydrogen-based fuel formulation designed for orbital maneuvering systems. Highly flammable and less thermally stable than standard plasma."
+	desc = "A mixture of gases that have been ionized for use in high power thrusters."
 	primary_color = "#00ffff"
 
 /obj/effect/overlay/gas
