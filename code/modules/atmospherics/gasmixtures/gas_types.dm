@@ -220,8 +220,8 @@ GLOBAL_LIST_INIT(hardcoded_gases, list(/datum/gas/oxygen, /datum/gas/nitrogen, /
 	desc = "A gas that could supply even more oxygen to the bloodstream when inhaled, without being an oxidizer."
 	primary_color = "#7b68ee"
 
-/datum/gas/hydrogen_fuel
-	id = GAS_HYDROGEN_FUEL
+/datum/gas/ionic_fuel
+	id = IONICE_FUEL
 	specific_heat = 150
 	name = "LX-212 Formulated Hydrogen Fuel"
 	gas_overlay = "freon"

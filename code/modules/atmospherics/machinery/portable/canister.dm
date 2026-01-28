@@ -617,9 +617,9 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/machinery/portable_atmospherics/canister)
 	greyscale_config = /datum/greyscale_config/canister/double_stripe
 	greyscale_colors = "#4c4e4d#f7d5d3"
 
-/obj/machinery/portable_atmospherics/canister/hydrogen_fuel
-	name = "formulated hydrogen fuel canister"
-	gas_type = /datum/gas/hydrogen_fuel
+/obj/machinery/portable_atmospherics/canister/ionic_fuel
+	name = "ionic fuel canister"
+	gas_type = /datum/gas/ionic_fuel
 	greyscale_config = /datum/greyscale_config/canister/hazard
 	greyscale_colors = "#00ffff#000000"
 
