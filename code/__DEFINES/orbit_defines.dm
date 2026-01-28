@@ -1,12 +1,26 @@
 // Technically unrelated but they use "orbits" too so:
 // Orbital altitude thresholds in meters
-#define ORBITAL_ALTITUDE_HIGH_BOUND 140000 // 140km - Cannot go higher than this
-#define ORBITAL_ALTITUDE_HIGH_CRITICAL 130000 // 130km - Upper critical threshold
-#define ORBITAL_ALTITUDE_HIGH 120000 // 120km - Upper normal threshold
-#define ORBITAL_ALTITUDE_DEFAULT 110000 // 110km - Default stable altitude
-#define ORBITAL_ALTITUDE_LOW 95000 // 95km - Lower warning threshold (visual effects start)
-#define ORBITAL_ALTITUDE_LOW_CRITICAL 90000 // 90km - Lower critical threshold (structural damage begins)
-#define ORBITAL_ALTITUDE_LOW_BOUND 80000 // 80km - Cannot go lower than this
+#define ORBITAL_ALTITUDE_HIGH_BOUND 140000 // - Cannot go higher than this
+#define ORBITAL_ALTITUDE_HIGH_CRITICAL 130000 // - Upper critical threshold
+#define ORBITAL_ALTITUDE_HIGH 120000 // - Upper normal threshold
+#define ORBITAL_ALTITUDE_DEFAULT 110000 // - Default stable altitude
+#define ORBITAL_ALTITUDE_LOW 95000 // - Lower warning threshold (visual effects start)
+#define ORBITAL_ALTITUDE_LOW_CRITICAL 90000 // - Lower critical threshold (structural damage begins)
+#define ORBITAL_ALTITUDE_ABSOLUTE_MIN 50000 // past this point the station will just explode
+#define ORBITAL_ALTITUDE_LOW_BOUND 10000 // - Cannot go lower than this
+
+#define ORBITAL_MINIMUM_DRAG 0.1 // - How much drag do we experience in high orbits
+#define ORBITAL_DRAG_COEFF 300 // - How much drag a station produces, in mega neutons This will counteract thrust.
+#define STATION_MASS 100000 // - According to the interweb, aircraft carriers are 100000 tons, which feels similar to what the station would be.
+
+#define ORBITAL_TIME_TO_DEST 1 MINUTES
+
+#define ORBITAL_LOW_DEST 0
+#define ORBITAL_LOW_CRIT 1
+#define ORBITAL_LOW_ALT 2
+#define ORBITAL_NORM 3
+#define ORBITAL_HIGH_ALT 4
+#define ORBITAL_HIGH_CRIT 5
 
 
 // Proper orbital defines

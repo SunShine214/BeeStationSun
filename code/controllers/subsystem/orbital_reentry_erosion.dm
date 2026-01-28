@@ -1,8 +1,8 @@
 // Orbital altitude thresholds for erosion (matches orbital_altitude.dm)
 #define EROSION_ALTITUDE_START 95000  // 95km - Light fire effects start
 #define EROSION_ALTITUDE_CRITICAL 90000  // 90km - Damage begins
-#define EROSION_ALTITUDE_SEVERE 85000  // 85km - Heavy damage
-#define EROSION_ALTITUDE_EXTREME 80000  // 80km - Maximum damage
+#define EROSION_ALTITUDE_SEVERE 75000  // 75km - Heavy damage
+#define EROSION_ALTITUDE_EXTREME 65000  // 65km - Maximum damage
 
 SUBSYSTEM_DEF(orbital_reentry_erosion)
 	name = "Orbital Reentry Erosion"

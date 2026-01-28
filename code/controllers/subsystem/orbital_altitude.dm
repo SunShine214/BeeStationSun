@@ -7,37 +7,25 @@ SUBSYSTEM_DEF(orbital_altitude)
 	/// Current orbital altitude in meters
 	var/orbital_altitude = ORBITAL_ALTITUDE_DEFAULT
 
-	/// Velocity index for display purposes (-10 to +10)
+	/// Velocity index for display purposes
 	var/velocity_index = 0
 
 	/// Current thrust applied to the station (from engines)
 	var/thrust = 0
-	/// Current orbital decay rate in m/s
-	var/decay_rate = 0
-	/// Atmospheric resistance coefficient (0.5 to 1.0)
-	var/resistance = 1.0
+	/// Atmospheric resistance coefficient
+	var/resistance = 0.1
 
 	/// List of all orbital thrusters
 	var/list/orbital_thrusters = list()
 
 	/// World time when critical orbit was entered
 	var/critical_orbit_start_time = 0
-	/// Whether the station is in critical orbit (below 90km)
-	var/in_critical_orbit = FALSE
-	/// Whether the station is in low altitude warning zone (below 95km)
-	var/in_low_altitude = FALSE
-	/// Whether the station is in high altitude warning zone (above 120km)
-	var/in_high_altitude = FALSE
-	/// Whether the station is in critical high altitude zone (above 130km)
-	var/in_high_altitude_critical = FALSE
+	/// State of orbiting. Used for announments, mostly.
+	var/orbital_stage = ORBITAL_NORM
 	/// Whether the final 60-second countdown has started
 	var/final_countdown_active = FALSE
-	/// World time of the last warning announcement
-	var/last_warning_time = 0
 	/// Security level before switching to delta
 	var/previous_alert_level = SEC_LEVEL_GREEN
-	/// Current stage of the final countdown (0-4)
-	var/countdown_stage = 0
 
 	/// Cached station boundaries for each Z-level
 	var/list/station_bounds_cache
@@ -68,255 +56,128 @@ SUBSYSTEM_DEF(orbital_altitude)
 	// Check for critical orbit conditions and warnings
 	check_critical_orbit()
 
-	// Send periodic status reports
-	if(COOLDOWN_FINISHED(src, orbital_report_cooldown) && !in_critical_orbit)
-		send_orbital_report()
+	process_countdown()
 
 	// Spawn atmospheric drag damage effects when critical
-	if(in_critical_orbit)
+	if(orbital_stage == ORBITAL_LOW_CRIT)
 		spawn_atmospheric_drag()
-		if(COOLDOWN_FINISHED(src, orbital_report_critical))
-			send_orbital_report()
 
 /datum/controller/subsystem/orbital_altitude/proc/update_thrust_from_thrusters()
 	// Calculate total thrust from all thrusters
-	thrust = 0
-	var/thruster_count = 0
 	var/summed_thrust = 0
 
 	for(var/obj/machinery/atmospherics/components/unary/orbital_thruster/T in orbital_thrusters)
 		if(QDELETED(T))
 			continue
-		thruster_count++
 		summed_thrust += T.thrust_level
 
-	// We now know how many thrusters we have, and what their collective thrust is.
+	thrust = summed_thrust
 
-	// No thrusters means no thrust
-	if(thruster_count == 0)
-		return
-
-	// Average the thrust level
-	summed_thrust /= thruster_count
-
-	thrust = clamp(summed_thrust * 2, -40, 40) // Since thrusters can now range from -20 to +20, and we need -40 to +40 range
-
-/datum/controller/subsystem/orbital_altitude/proc/orbital_altitude_change()
+/datum/controller/subsystem/orbital_altitude/proc/orbital_altitude_change(delta_time)
 	var/orbital_altitude_change = 0
+	resistance = clamp(1 - (orbital_altitude - ORBITAL_ALTITUDE_LOW_BOUND) / (ORBITAL_ALTITUDE_HIGH_BOUND - ORBITAL_ALTITUDE_LOW_BOUND), ORBITAL_MINIMUM_DRAG, 1)
+	var/negative_velocity_factor = -(ORBITAL_DRAG_COEFF * resistance)
 
-	// Calculate atmospheric decay rate (increases as altitude decreases)
-	decay_rate = min(max((-orbital_altitude * 0.0006) + 78, 0), 30)
 
-	// Calculate atmospheric resistance (decreases as altitude decreases)
-	resistance = min(max((orbital_altitude * 0.0001) - 8.5, 0.5), 1)
+	orbital_altitude_change = (thrust * 1000000 / STATION_MASS) * delta_time
+	orbital_altitude_change += negative_velocity_factor
 
-	// Apply forces to altitude
-	orbital_altitude_change -= decay_rate  // Natural orbital decay
-	orbital_altitude_change += thrust      // Engine thrust (if any)
-	orbital_altitude_change += rand(-5, 5) / 10  // Minor random fluctuation
-
-	// Apply atmospheric turbulence (more likely at lower altitudes)
-	var/atmospheric_turbulence_chance = min(max((-orbital_altitude * 0.01) + 1000, 5), 100)
-	if(prob(atmospheric_turbulence_chance))
-		var/fluctuation = rand(-(atmospheric_turbulence_chance / 20), atmospheric_turbulence_chance / 20)
-		orbital_altitude_change += fluctuation
-
-	// Calculate velocity index for display
-	var/temp_index = orbital_altitude_change / 3
-	velocity_index = clamp(temp_index, -10, 10)
-
-	// Apply resistance to altitude change
-	orbital_altitude_change *= resistance
-
-	// Extreme atmospheric drag below 85km
-	if(orbital_altitude <= 85000)
-		orbital_altitude_change /= 2
-
-	// Clamp altitude change rate
-	orbital_altitude_change = clamp(orbital_altitude_change, -30, 30)
-
+	velocity_index = orbital_altitude_change
 	// Apply the change
 	orbital_altitude += orbital_altitude_change
 
-	// Enforce hard altitude limits (80km minimum, 140km maximum)
+	// Enforce hard altitude limits
 	orbital_altitude = clamp(orbital_altitude, ORBITAL_ALTITUDE_LOW_BOUND, ORBITAL_ALTITUDE_HIGH_BOUND)
 
-/datum/controller/subsystem/orbital_altitude/proc/send_orbital_report()
-	COOLDOWN_START(src, orbital_report_cooldown, 10 MINUTES)
-	COOLDOWN_START(src, orbital_report_critical, 1 MINUTES)
-
-	// Normalize resistance for display (0-100%)
-	var/resistance_normalized = clamp((1 - resistance) * 100 + rand(-10, 10), 0, 100)
-
-	if(in_critical_orbit)
-		// Critical orbit emergency report
-		var/time_in_critical = (world.time - critical_orbit_start_time) / 10
-		var/time_remaining = max(0, 600 - time_in_critical)
-		var/minutes_remaining = round(time_remaining / 60, 0.1)
-
-		GLOB.news_network.submit_article("<h1>EMERGENCY STATUS REPORT</h1>\
-												<b>STATION [uppertext(station_name())] - CRITICAL ALERT</b><br><br>\
-												Current orbital altitude: <b>[round(orbital_altitude/1000, 0.1)]km</b><br>\
-												Orbital Velocity Index: [round(velocity_index, 0.1)]<br>\
-												Detected Orbital Decay: <b>[round(decay_rate, 0.1)]m/s</b><br>\
-												Atmospheric resistance: <b>[round(resistance_normalized, 0.1)]%</b><br>\
-												<b>Estimated time to structural failure: [minutes_remaining] minutes</b><br><br>\
-												<b>STATUS: [pick("STRUCTURAL STRESS DETECTED","HULL BREACHES DETECTED","CATASTROPHIC FAILURE IMMINENT","EMERGENCY THRUST REQUIRED")]</b><br>\
-												<b>IMMEDIATE CORRECTIVE ACTION REQUIRED</b><br><br>\
-												- Automated Station Systems - PRIORITY ALERT",
-												"Automated Station System",
-												"Station Orbital Report")
-	else
-		// Normal status report
-		GLOB.news_network.submit_article("<h1>Automated Orbital Parameter Status Report</h1>\
-												Station [station_name()] telemetry update:<br><br>\
-												Current orbital altitude: [round(orbital_altitude/1000, 0.1)]km<br>\
-												Orbital Velocity Index: [round(velocity_index, 0.1)]<br>\
-												Detected Orbital Decay: [round(decay_rate, 0.1)]m/s<br>\
-												Normalized atmospheric resistance: [round(resistance_normalized, 0.1)]%<br>\
-												Semi-Major Axis: [rand(6500, 6900)]km<br>\
-												Status: [pick("No drift detected.","Minimal drift detected.","Drift detected, within acceptable parameters.")]<br><br>\
-												<b>All systems nominal.</b><br><br>\
-												- Automated Station Systems - ",
-												"Automated Station System",
-												"Station Orbital Report")
-
-/datum/controller/subsystem/orbital_altitude/proc/check_critical_orbit()
-	// High altitude critical warning (above 130km threshold)
-	if(orbital_altitude > ORBITAL_ALTITUDE_HIGH_CRITICAL && !in_high_altitude_critical)
-		in_high_altitude_critical = TRUE
-		priority_announce("DANGER: Station orbital altitude has exceeded critical upper threshold. \
+/datum/controller/subsystem/orbital_altitude/proc/set_orbital_state(new_state)
+	if(new_state == orbital_stage)
+		return
+	if((new_state != ORBITAL_LOW_DEST) && final_countdown_active)
+		end_final_countdown()
+	switch(new_state)
+		if(ORBITAL_HIGH_CRIT)
+			priority_announce("DANGER: Station orbital altitude has exceeded critical upper threshold. \
 			Current altitude: [round(orbital_altitude/1000, 0.1)]km. \
 			Station entering the Osei-Hollund radiation band. Critical radiative exposure likely. \
 			Immediate corrective action required.", \
 			"CRITICAL ALTITUDE WARNING",
 			sound = 'sound/misc/notice1.ogg',
 			has_important_message = TRUE)
-
-	// High altitude warning (above 120km threshold)
-	if(orbital_altitude > ORBITAL_ALTITUDE_HIGH && !in_high_altitude && !in_high_altitude_critical)
-		in_high_altitude = TRUE
-		priority_announce("Advisory: Station orbital altitude has exceeded normal operating parameters. \
+		if(ORBITAL_HIGH_ALT)
+			priority_announce("Advisory: Station orbital altitude has entered a high altitude orbit. \
 			Current altitude: [round(orbital_altitude/1000, 0.1)]km. \
 			Entering radiative zone at this altitude. Further monitoring is advised.", \
 			"High Altitude Advisory",
 			sound = 'sound/misc/notice2.ogg')
-
-	// Low altitude warning (95km threshold)
-	if(orbital_altitude < ORBITAL_ALTITUDE_LOW && !in_low_altitude)
-		in_low_altitude = TRUE
-		priority_announce("Advisory: Station orbital altitude has decreased below normal operating parameters. \
+		if(ORBITAL_LOW_ALT)
+			priority_announce("Advisory: Station orbital altitude has entered a low altitude orbit. \
 			Current altitude: [round(orbital_altitude/1000, 0.1)]km. \
 			Further monitoring is advised.", \
 			"Orbital Altitude Advisory",
 			sound = 'sound/misc/notice2.ogg')
+		if(ORBITAL_LOW_CRIT)
+			priority_announce("WARNING: Station orbital altitude has entered a critically low orbit. Structural damage detected.\nRestore orbital parameters immediately.",
+			"CRITICAL ORBITAL FAILURE",
+			sound = 'sound/misc/notice1.ogg',
+			has_important_message = TRUE)
+		if(ORBITAL_LOW_DEST)
+			priority_announce("ALERT: The Station is experiencing stress above its survivable limit. The Station super-structure will fall apart in 1 minute.\nEvacuate now.",
+			"COMPLETE ORBITAL FAILURE",
+			sound = 'sound/misc/notice1.ogg',
+			has_important_message = TRUE)
+			start_final_countdown()
+	orbital_stage = new_state
 
-	// Critical orbit handling (below 90km)
+/datum/controller/subsystem/orbital_altitude/proc/check_critical_orbit()
+	// High altitude critical warning
+	if(orbital_altitude > ORBITAL_ALTITUDE_HIGH_CRITICAL)
+		set_orbital_state(ORBITAL_HIGH_CRIT)
+		return
+
+	// High altitude warning
+	if(orbital_altitude > ORBITAL_ALTITUDE_HIGH)
+		set_orbital_state(ORBITAL_HIGH_ALT)
+		return
+
+	if((ORBITAL_ALTITUDE_LOW < orbital_altitude) && (orbital_altitude < ORBITAL_ALTITUDE_HIGH))
+		set_orbital_state(ORBITAL_NORM)
+		return
+
+	// Ordered this way to ensure it returns on the right if
+	// Critical altitude warning and countdown start
+	if(orbital_altitude < ORBITAL_ALTITUDE_ABSOLUTE_MIN)
+		set_orbital_state(ORBITAL_LOW_DEST)
+		return
+
+	// Critical altitude warning
 	if(orbital_altitude < ORBITAL_ALTITUDE_LOW_CRITICAL)
-		// Enter critical orbit state
-		if(!in_critical_orbit)
-			in_critical_orbit = TRUE
-			critical_orbit_start_time = world.time
-			last_warning_time = world.time
+		set_orbital_state(ORBITAL_LOW_CRIT)
+		return
 
-			priority_announce("WARNING: Station orbital altitude has fallen below critical threshold. Structural damage detected.\nRestore orbital parameters immediately.",
-				"CRITICAL ORBITAL FAILURE",
-				sound = 'sound/misc/notice1.ogg',
-				has_important_message = TRUE)
+	// Low altitude warning
+	if(orbital_altitude < ORBITAL_ALTITUDE_LOW)
+		set_orbital_state(ORBITAL_LOW_ALT)
+		return
 
-		// Calculate time remaining until destruction
-		var/time_in_critical = (world.time - critical_orbit_start_time) / 10
-		var/time_remaining = 600 - time_in_critical
+/datum/controller/subsystem/orbital_altitude/proc/process_countdown()
+	if(!final_countdown_active)
+		return
 
-		// Send periodic warnings every 2 minutes
-		if(!final_countdown_active && (world.time - last_warning_time) >= 120 SECONDS)
-			last_warning_time = world.time
-			var/minutes_remaining = round(time_remaining / 60)
+	var/time_remaining = ORBITAL_TIME_TO_DEST - (world.time - critical_orbit_start_time)
+	if(time_remaining <= 0)
+		initiate_destruction()
+		end_final_countdown()
 
-			priority_announce("WARNING: Station altitude remains critical at [round(orbital_altitude/1000, 0.1)]km. \
-				Estimated time until full structural failure: [minutes_remaining] minute[minutes_remaining == 1 ? "" : "s"]. \
-				Immediate corrective action required.", \
-				"ORBITAL PARAMETERS CRITICAL",
-				sound = 'sound/misc/notice1.ogg',
-				has_important_message = TRUE)
+/datum/controller/subsystem/orbital_altitude/proc/start_final_countdown()
+	previous_alert_level = SSsecurity_level.get_current_level_as_text()
+	SSsecurity_level.set_level(SEC_LEVEL_DELTA)
+	critical_orbit_start_time = world.time
+	final_countdown_active = TRUE
 
-			// Escalate to delta alert at 4 minutes remaining
-			if(time_remaining <= 240 && SSsecurity_level.get_current_level_as_number() != SEC_LEVEL_DELTA)
-				previous_alert_level = SSsecurity_level.get_current_level_as_number()
-				SSsecurity_level.set_level(SEC_LEVEL_DELTA)
-
-		// Final countdown stages
-		if(!final_countdown_active && time_remaining <= 60)
-			final_countdown_active = TRUE
-			countdown_stage = 1
-			announce_countdown_stage()
-		else if(final_countdown_active)
-			if(countdown_stage == 1 && time_remaining <= 30)
-				countdown_stage = 2
-				announce_countdown_stage()
-			else if(countdown_stage == 2 && time_remaining <= 10)
-				countdown_stage = 3
-				announce_countdown_stage()
-			else if(countdown_stage == 3 && time_remaining <= 0)
-				countdown_stage = 4
-				initiate_destruction()
-	else
-		// Restored from critical orbit
-		if(in_critical_orbit)
-			in_critical_orbit = FALSE
-			critical_orbit_start_time = 0
-			final_countdown_active = FALSE
-			countdown_stage = 0
-
-			priority_announce("Station altitude has been restored above critical threshold. \
-				Emergency status cancelled.", \
-				"ORBITAL STABILITY RESTORED",
-				sound = 'sound/misc/notice2.ogg',
-				has_important_message = TRUE)
-
-			send_orbital_report()
-
-			// Restore previous security level if we escalated to delta
-			if(SSsecurity_level.get_current_level_as_number() == SEC_LEVEL_DELTA)
-				SSsecurity_level.set_level(previous_alert_level)
-
-		// Clear low altitude flag when safely above 95km
-		if(orbital_altitude >= ORBITAL_ALTITUDE_LOW && in_low_altitude)
-			in_low_altitude = FALSE
-
-	// Clear high altitude flags when returning to normal range
-	if(orbital_altitude <= ORBITAL_ALTITUDE_HIGH)
-		if(in_high_altitude_critical)
-			in_high_altitude_critical = FALSE
-			priority_announce("Station altitude has returned below critical upper threshold. \
-				Radiative exposure normalized.", \
-				"Altitude Stabilized",
-				sound = 'sound/misc/notice2.ogg')
-
-		if(in_high_altitude)
-			in_high_altitude = FALSE
-			priority_announce("Station altitude has returned to normal operating parameters.", \
-				"Altitude Normalized",
-				sound = 'sound/misc/notice2.ogg')
-
-/datum/controller/subsystem/orbital_altitude/proc/announce_countdown_stage()
-	switch(countdown_stage)
-		if(1)
-			priority_announce("DANGER: Catastrophic structural failure imminent. Station breakup in 60 seconds. \
-				All personnel is to evacuate immediately.", \
-				"DESTRUCTION IMMINENT",
-				sound = 'sound/misc/notice3.ogg',
-				has_important_message = TRUE)
-		if(2)
-			priority_announce("DANGER: Station breakup in 30 seconds.", \
-				"DESTRUCTION IMMINENT",
-				sound = 'sound/misc/notice3.ogg',
-				has_important_message = TRUE)
-		if(3)
-			priority_announce("DANGER: Station breakup in 10 seconds.", \
-				"DESTRUCTION IMMINENT",
-				sound = 'sound/misc/notice3.ogg',
-				has_important_message = TRUE)
+/datum/controller/subsystem/orbital_altitude/proc/end_final_countdown()
+	// Restore previous security level if we escalated to delta
+	SSsecurity_level.set_level(previous_alert_level)
+	final_countdown_active = FALSE
 
 /datum/controller/subsystem/orbital_altitude/proc/initiate_destruction()
 	Cinematic(CINEMATIC_SELFDESTRUCT, world, CALLBACK(src, PROC_REF(complete_destruction)))

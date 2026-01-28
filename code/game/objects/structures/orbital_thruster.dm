@@ -14,8 +14,7 @@
 	resistance_flags = INDESTRUCTIBLE | LAVA_PROOF | FIRE_PROOF | UNACIDABLE | ACID_PROOF | FREEZE_PROOF
 	flags_1 = PREVENT_CONTENTS_EXPLOSION_1
 
-	/// Current thrust level being produced (-20 to +20)
-	var/thrust_level = 0
+	var/thrust_level = 100 //todo fix
 	/// Requested thrust level from control computer (-20 to +20)
 	var/requested_thrust = 0
 	/// Whether we have sufficient fuel
@@ -25,24 +24,12 @@
 	var/propellant_per_thrust = 0.1
 	/// Target buffer amount for propellant
 	var/buffer_target = 10
-	/// Internal fuel buffer separate from the pipe connection because I cannot fucking get the pipe to stop equalizing
-	var/datum/gas_mixture/fuel_buffer
 
 /obj/machinery/atmospherics/components/unary/orbital_thruster/Initialize(mapload)
 	. = ..()
-	// Create our isolated internal fuel buffer
-	fuel_buffer = new
-	fuel_buffer.volume = 200 // Same as default airs volume
-	fuel_buffer.temperature = T20C
-
-	// If they MAKE us do this, at least make the pipe very small
-	var/datum/gas_mixture/pipe_connection = airs[1]
-	pipe_connection.volume = 0.1 // Tiny volume for connection only
-
 	SSorbital_altitude.orbital_thrusters += src
 
 /obj/machinery/atmospherics/components/unary/orbital_thruster/Destroy()
-	QDEL_NULL(fuel_buffer)
 	SSorbital_altitude.orbital_thrusters -= src
 	return ..()
 
@@ -72,10 +59,6 @@
 /// Set target thrust level for thruster. The thruster will gradually ramp to this level over time.
 /obj/machinery/atmospherics/components/unary/orbital_thruster/proc/set_thrust(new_thrust)
 	requested_thrust = clamp(new_thrust, -20, 20)
-
-/// Return our fuel buffer for gas analyzers
-/obj/machinery/atmospherics/components/unary/orbital_thruster/return_analyzable_air()
-	return fuel_buffer
 
 // Effect Component.
 /obj/machinery/orbital_thruster_nozzle

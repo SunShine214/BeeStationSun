@@ -221,7 +221,7 @@ GLOBAL_LIST_INIT(hardcoded_gases, list(/datum/gas/oxygen, /datum/gas/nitrogen, /
 	primary_color = "#7b68ee"
 
 /datum/gas/ionic_fuel
-	id = IONIC_FUEL
+	id = GAS_IONIC_FUEL
 	specific_heat = 150
 	name = "Ionic Fuel"
 	gas_overlay = "freon"
