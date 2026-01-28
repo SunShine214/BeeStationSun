@@ -36,7 +36,6 @@
 	var/list/gas_max = list(
 		/datum/gas/carbon_dioxide = 30, // Yes it's an arbitrary value who cares?
 		/datum/breathing_class/plasma = MOLES_GAS_VISIBLE,
-		/datum/gas/hydrogen_fuel = MOLES_GAS_VISIBLE // Hydrogen fuel is mildly toxic when inhaled
 	)
 	var/list/gas_damage = list(
 		"default" = list(
@@ -47,11 +46,6 @@
 		/datum/gas/plasma = list(
 			min = MIN_TOXIC_GAS_DAMAGE,
 			max = MAX_TOXIC_GAS_DAMAGE,
-			damage_type = TOX
-		),
-		/datum/gas/hydrogen_fuel = list(
-			min = MIN_TOXIC_GAS_DAMAGE * 0.5, // Less toxic than plasma
-			max = MAX_TOXIC_GAS_DAMAGE * 0.5,
 			damage_type = TOX
 		)
 	)

@@ -57,68 +57,6 @@
 	else if(thrust_level > requested_thrust)
 		thrust_level--
 
-/obj/machinery/atmospherics/components/unary/orbital_thruster/process_atmos()
-	..()
-
-	// Use our isolated fuel buffer instead of airs[1]
-	if(!fuel_buffer)
-		has_fuel = FALSE
-		update_appearance()
-		return
-
-	// Ensure the gas type exists in our internal buffer
-	ASSERT_GAS(/datum/gas/hydrogen_fuel, fuel_buffer)
-
-	// Calculate required propellant. Ramp smoothly from 0.5 moles at thrust 0 to 1.0 moles at thrust 20
-	var/required_moles = 0.5 + (abs(thrust_level) * propellant_per_thrust)
-
-	// Now check if we have enough fuel in our internal buffer
-	var/available_fuel = fuel_buffer.gases[/datum/gas/hydrogen_fuel][MOLES]
-
-	// Check if we have enough fuel to maintain thrust
-	if(available_fuel >= required_moles)
-		// Consume the propellant from our internal buffer
-		var/datum/gas_mixture/removed = fuel_buffer.remove_specific(/datum/gas/hydrogen_fuel, required_moles)
-		qdel(removed)
-
-	// We have used, or may have used, fuel. Now we pull to keep the buffer up.
-	// Get whatever net we are connected to
-	var/datum/pipenet/parent_net = parents[1]
-
-	// If it exists and has contents, proceed
-	if(parent_net && parent_net.air)
-
-		// Ensure the gas type exists in the network
-		ASSERT_GAS(/datum/gas/hydrogen_fuel, parent_net.air)
-
-		// Check how much we have to work with inside the network
-		var/available_in_network = parent_net.air.gases[/datum/gas/hydrogen_fuel][MOLES]
-
-		// Check how much is inside our buffer.
-		var/current_fuel = fuel_buffer.gases[/datum/gas/hydrogen_fuel][MOLES]
-
-		// Calculate the deficit.
-		var/fuel_deficit = buffer_target - current_fuel
-
-		// Take what is required from the net and add it to our buffer.
-		if(fuel_deficit > 0 && available_in_network > 0)
-			// Pump in fuel to fill the deficit
-			var/fuel_to_pump = min(fuel_deficit, available_in_network)
-			var/datum/gas_mixture/fuel_removed = parent_net.air.remove_specific(/datum/gas/hydrogen_fuel, fuel_to_pump)
-			fuel_buffer.merge(fuel_removed)
-			qdel(fuel_removed)
-
-	// Now we set the has_fuel flag.
-	// If our buffer is less than half our target, we do not have fuel.
-	if(fuel_buffer.gases[/datum/gas/hydrogen_fuel][MOLES] < (buffer_target / 2))
-		has_fuel = FALSE
-	else
-		has_fuel = TRUE
-
-	// Update the pipe network once at the end if we modified anything
-	update_parents()
-	update_appearance()
-
 /obj/machinery/atmospherics/components/unary/orbital_thruster/update_overlays()
 	. = ..()
 	if(!has_fuel)
