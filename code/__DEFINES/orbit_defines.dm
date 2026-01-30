@@ -1,17 +1,22 @@
 // Technically unrelated but they use "orbits" too so:
 // Orbital altitude thresholds in meters
-#define ORBITAL_ALTITUDE_HIGH_BOUND 140000 // - Cannot go higher than this
-#define ORBITAL_ALTITUDE_HIGH_CRITICAL 130000 // - Upper critical threshold
-#define ORBITAL_ALTITUDE_HIGH 120000 // - Upper normal threshold
-#define ORBITAL_ALTITUDE_DEFAULT 110000 // - Default stable altitude
-#define ORBITAL_ALTITUDE_LOW 95000 // - Lower warning threshold (visual effects start)
-#define ORBITAL_ALTITUDE_LOW_CRITICAL 90000 // - Lower critical threshold (structural damage begins)
-#define ORBITAL_ALTITUDE_ABSOLUTE_MIN 50000 // past this point the station will just explode
-#define ORBITAL_ALTITUDE_LOW_BOUND 10000 // - Cannot go lower than this
+#define ORBITAL_ALTITUDE_HIGH_BOUND 600000 // - Cannot go higher than this
+#define ORBITAL_ALTITUDE_HIGH_CRITICAL 550000 // - Upper critical threshold
+#define ORBITAL_ALTITUDE_HIGH 500000 // - Upper normal threshold
+#define ORBITAL_ALTITUDE_DEFAULT 450000 // - Default stable altitude
+#define ORBITAL_ALTITUDE_LOW 300000 // - Lower warning threshold (visual effects start)
+#define ORBITAL_ALTITUDE_LOW_CRITICAL 250000 // - Lower critical threshold (structural damage begins)
+#define ORBITAL_ALTITUDE_ABSOLUTE_MIN 150000 // past this point the station will just explode
+#define ORBITAL_ALTITUDE_LOW_BOUND 100000 // - Cannot go lower than this
 
 #define ORBITAL_MINIMUM_DRAG 0.1 // - How much drag do we experience in high orbits
-#define ORBITAL_DRAG_COEFF 300 // - How much drag a station produces, in mega neutons This will counteract thrust.
+#define ORBITAL_DRAG_COEFF 1000 MEGANEWTON // - How much drag the station produces at minimum altitude, in mega neutons This will counteract thrust.
 #define STATION_MASS 100000 // - According to the interweb, aircraft carriers are 100000 tons, which feels similar to what the station would be.
+
+#define CINIS_RADIUS 6.6421e7 // - Larger then earth, because its partially hollow.
+#define GRAVITATION_CONSTANT 6.6743e-11 // Grav constant
+#define CINIS_MASS 5.6e26
+#define CALCULATED_ORBITAL_VELOCITY 2.3e4 // - SHOULD be ~400km from the surface of CINIS
 
 #define ORBITAL_TIME_TO_DEST 1 MINUTES
 

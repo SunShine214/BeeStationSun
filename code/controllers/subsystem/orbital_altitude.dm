@@ -10,6 +10,9 @@ SUBSYSTEM_DEF(orbital_altitude)
 	/// Velocity index for display purposes
 	var/velocity_index = 0
 
+	/// The orbital velocity of the station
+	var/orbital_velocity = CALCULATED_ORBITAL_VELOCITY
+
 	/// Current thrust applied to the station (from engines)
 	var/thrust = 0
 	/// Atmospheric resistance coefficient
@@ -62,6 +65,11 @@ SUBSYSTEM_DEF(orbital_altitude)
 	if(orbital_stage == ORBITAL_LOW_CRIT)
 		spawn_atmospheric_drag()
 
+/datum/controller/subsystem/orbital_altitude/proc/get_altitude_from_orbital_velocity()
+	var/gravmass = CINIS_MASS * GRAVITATION_CONSTANT
+	var/radius = gravmass / (orbital_velocity**2)
+	return radius - CINIS_RADIUS
+
 /datum/controller/subsystem/orbital_altitude/proc/update_thrust_from_thrusters()
 	// Calculate total thrust from all thrusters
 	var/summed_thrust = 0
@@ -69,22 +77,21 @@ SUBSYSTEM_DEF(orbital_altitude)
 	for(var/obj/machinery/atmospherics/components/unary/orbital_thruster/T in orbital_thrusters)
 		if(QDELETED(T))
 			continue
-		summed_thrust += T.thrust_level
+		summed_thrust += T.thrust_strength
 
 	thrust = summed_thrust
 
-/datum/controller/subsystem/orbital_altitude/proc/orbital_altitude_change(delta_time)
-	var/orbital_altitude_change = 0
+/datum/controller/subsystem/orbital_altitude/proc/orbital_altitude_change()
 	resistance = clamp(1 - (orbital_altitude - ORBITAL_ALTITUDE_LOW_BOUND) / (ORBITAL_ALTITUDE_HIGH_BOUND - ORBITAL_ALTITUDE_LOW_BOUND), ORBITAL_MINIMUM_DRAG, 1)
-	var/negative_velocity_factor = -(ORBITAL_DRAG_COEFF * resistance)
+	var/negative_velocity_factor = -(ORBITAL_DRAG_COEFF * resistance) / (STATION_MASS * 1000)
 
 
-	orbital_altitude_change = (thrust * 1000000 / STATION_MASS) * delta_time
-	orbital_altitude_change += negative_velocity_factor
+	orbital_velocity += (thrust) / (STATION_MASS * 1000)
+	orbital_velocity += negative_velocity_factor
 
-	velocity_index = orbital_altitude_change
+	velocity_index = orbital_velocity
 	// Apply the change
-	orbital_altitude += orbital_altitude_change
+	orbital_altitude = get_altitude_from_orbital_velocity()
 
 	// Enforce hard altitude limits
 	orbital_altitude = clamp(orbital_altitude, ORBITAL_ALTITUDE_LOW_BOUND, ORBITAL_ALTITUDE_HIGH_BOUND)

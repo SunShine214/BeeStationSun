@@ -9,7 +9,7 @@
 	var/altitude_hold_enabled = TRUE
 	var/altitude_hold_target = 110000  // in meters
 
-	var/set_thrust = 0
+	var/set_throttle = 0
 
 /obj/machinery/computer/orbital_height_control/Initialize(mapload)
 	. = ..()
@@ -21,16 +21,16 @@
 	if(altitude_hold_enabled)
 		// Simple altitude hold logic
 		if(SSorbital_altitude.orbital_altitude < altitude_hold_target)
-			set_thrust = 20
+			set_throttle = 1
 		else if(SSorbital_altitude.orbital_altitude > altitude_hold_target + 500) // Add buffer to prevent oscillation
-			set_thrust = -20
+			set_throttle = -1
 		else
-			set_thrust = 0
+			set_throttle = 0
 
 	// Send thrust commands to all thrusters
 	for(var/obj/machinery/atmospherics/components/unary/orbital_thruster/T in SSorbital_altitude.orbital_thrusters)
 		if(!QDELETED(T))
-			T.set_thrust(set_thrust)
+			T.set_throttle(set_throttle)
 
 /obj/machinery/computer/orbital_height_control/ui_interact(mob/user, datum/tgui/ui)
 	ui = SStgui.try_update_ui(user, src, ui)
@@ -38,6 +38,11 @@
 		ui = new(user, src, "OrbitalHeightControl", name)
 		ui.open()
 		ui.set_autoupdate(TRUE)
+
+/obj/machinery/computer/orbital_height_control/ui_static_data(mob/user)
+	. = ..()
+	.["max_altitude"] = ORBITAL_ALTITUDE_HIGH_BOUND
+	.["min_altitude"] = ORBITAL_ALTITUDE_LOW_BOUND
 
 /obj/machinery/computer/orbital_height_control/ui_data(mob/user)
 	var/list/data = list()
@@ -50,7 +55,7 @@
 
 	data["normalized_resistance"] = round(SSorbital_altitude.resistance, 0.1)
 
-	data["thrust_level"] = set_thrust
+	data["thrust_level"] = set_throttle
 	data["actual_thrust"] = SSorbital_altitude.thrust
 	data["altitude_hold_enabled"] = altitude_hold_enabled || FALSE
 	data["altitude_hold_target"] = altitude_hold_target || SSorbital_altitude.orbital_altitude
@@ -100,11 +105,11 @@
 	switch(action)
 		if("increase_thrust")
 			// Increase thrust by 1, max 20
-			set_thrust = clamp(set_thrust + 1, -20, 20)
+			set_throttle = clamp(round(set_throttle + 0.2, 0.1), -1, 1)
 			. = TRUE
 		if("decrease_thrust")
 			// Decrease thrust by 1, min -20
-			set_thrust = clamp(set_thrust - 1, -20, 20)
+			set_throttle = clamp(round(set_throttle - 0.2, 0.1), -1, 1)
 			. = TRUE
 		if("set_altitude_hold_target")
 			// Set the target altitude for altitude hold system

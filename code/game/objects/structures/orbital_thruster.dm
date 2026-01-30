@@ -14,16 +14,10 @@
 	resistance_flags = INDESTRUCTIBLE | LAVA_PROOF | FIRE_PROOF | UNACIDABLE | ACID_PROOF | FREEZE_PROOF
 	flags_1 = PREVENT_CONTENTS_EXPLOSION_1
 
-	var/thrust_level = 100 //todo fix
-	/// Requested thrust level from control computer (-20 to +20)
-	var/requested_thrust = 0
-	/// Whether we have sufficient fuel
-	var/has_fuel = FALSE
+	var/throttle = 1 // Between -1 and 1
 
-	/// How many moles of propellant needed per thrust level per tick
-	var/propellant_per_thrust = 0.1
-	/// Target buffer amount for propellant
-	var/buffer_target = 10
+	///The thrust of this thruster in Mega Newtons
+	var/thrust_strength = 100 MEGANEWTON //todo fix
 
 /obj/machinery/atmospherics/components/unary/orbital_thruster/Initialize(mapload)
 	. = ..()
@@ -33,32 +27,18 @@
 	SSorbital_altitude.orbital_thrusters -= src
 	return ..()
 
-/obj/machinery/atmospherics/components/unary/orbital_thruster/process()
-	// Gradually step thrust_level toward requested_thrust (one level per tick)
-	// But only if we have fuel
-	if(!has_fuel)
-		// No fuel - ramp down immediately to zero
-		thrust_level = 0
-	else if(thrust_level < requested_thrust)
-		thrust_level++
-	else if(thrust_level > requested_thrust)
-		thrust_level--
-
 /obj/machinery/atmospherics/components/unary/orbital_thruster/process_atmos()
-	..()
-
+	thrust_strength = initial(thrust_strength) * throttle
 	// Update the pipe network once at the end if we modified anything
 	update_parents()
 	update_appearance()
 
 /obj/machinery/atmospherics/components/unary/orbital_thruster/update_overlays()
 	. = ..()
-	if(!has_fuel)
-		. += "low_fuel"
 
-/// Set target thrust level for thruster. The thruster will gradually ramp to this level over time.
-/obj/machinery/atmospherics/components/unary/orbital_thruster/proc/set_thrust(new_thrust)
-	requested_thrust = clamp(new_thrust, -20, 20)
+/// Set target throttle level for thruster.
+/obj/machinery/atmospherics/components/unary/orbital_thruster/proc/set_throttle(new_throttle)
+	throttle = clamp(new_throttle, -1, 1)
 
 // Effect Component.
 /obj/machinery/orbital_thruster_nozzle
@@ -105,7 +85,7 @@
 	// Get the thrust level
 	var/target_thrust = 0
 
-	target_thrust = abs(back_end_piece.thrust_level) * 2 // Scale from -20 to +20 range to -40 to +40 for visuals
+	target_thrust = abs(back_end_piece.thrust_strength) * 2 // Scale from -20 to +20 range to -40 to +40 for visuals
 
 	// Update particles based on thrust level
 	if(target_thrust > 0 && target_thrust != visual_thrust)
