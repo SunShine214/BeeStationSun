@@ -18,7 +18,9 @@
 	/// How unstable the core is
 	var/core_instability = 0
 	/// How unstable the core is naturally
-	var/base_instability = CDR_BASE_INSTABILITY
+	var/base_instability
+	/// How much instabiliy are components giving?
+	var/component_instability_factor = 0
 	/// How much health the core has, reaching zero causes the fail state
 	var/core_health = CDR_MAX_CORE_HEALTH
 	/// Does the core take damage?
@@ -260,11 +262,19 @@
 /obj/machinery/atmospherics/components/unary/cdr/proc/get_mass_multiplier()
 	return max(core_composition.total_moles() / CDR_CORE_MASS_DIV, 1)
 
+/obj/machinery/atmospherics/components/unary/cdr/RefreshParts()
+	var/total_rating = 0
+	var/total_parts = 0
+	for(var/obj/item/stock_parts/matter_bin/bin in component_parts)
+		total_rating += bin.rating
+		total_parts += 1
+	component_instability_factor = total_parts ? CDR_BASE_INSTABILITY * (total_rating / total_parts) : CDR_BASE_INSTABILITY
+
 /obj/machinery/atmospherics/components/unary/cdr/proc/process_stability()
 	var/datum/condensate_gas/bz_gas = cdr_gas_factors[/datum/gas/bz]
 	var/bz_mols = GET_MOLES(/datum/gas/bz, core_composition)
 	core_stability = get_core_stability()
-	base_instability = max(bz_mols ? bz_mols * bz_gas.threshold : 0, CDR_BASE_INSTABILITY)
+	base_instability = bz_mols * bz_gas.threshold + component_instability_factor
 	core_instability = (max(core_composition.temperature >= 100000 ? 50000 * (log(10, core_composition.temperature) - 4) : 0.5 * core_composition.temperature, 0) + base_instability) //I could make this a define, but really, whos going to change it? :clueless: IF YOU DO TOUCH IT, make sure to recalculate the entire function
 	var/delta_stability = core_instability - core_stability
 	adjust_health(delta_stability > 0 ? max(log(10, abs(delta_stability)) / CDR_HEALTH_DELTA_DIVISOR, 0) : min(-log(10, abs(delta_stability)) / CDR_HEALTH_DELTA_DIVISOR, 0))
