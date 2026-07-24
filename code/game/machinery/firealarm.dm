@@ -31,7 +31,7 @@
 
 	light_power = 0
 	light_range = 7
-	light_color = "#ff3232"
+	light_color = COLOR_VIVID_RED
 
 	//Trick to get the glowing overlay visible from a distance
 	luminosity = 1
@@ -530,7 +530,7 @@ MAPPING_DIRECTIONAL_HELPERS(/obj/machinery/firealarm, 26)
 		return
 	area.party = TRUE
 	if (!party_overlay)
-		party_overlay = iconstate2appearance('icons/turf/areas.dmi', "party")
+		party_overlay = iconstate2appearance('icons/area/areas.dmi', "party")
 	area.add_overlay(party_overlay)
 
 /////////////////////// CIRCUITS //////////////////////////////////////

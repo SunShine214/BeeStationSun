@@ -49,7 +49,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/item/stack/tile)
 		. += span_notice("Use while in your hand to change what type of [src] you want.")
 	if(throwforce && !is_cyborg) //do not want to divide by zero or show the message to borgs who can't throw
 		var/verb
-		switch(CEILING(MAX_LIVING_HEALTH / throwforce, 1)) //throws to crit a human
+		switch(ceil(MAX_LIVING_HEALTH / throwforce)) //throws to crit a human
 			if(1 to 3)
 				verb = "superb"
 			if(4 to 6)
@@ -81,7 +81,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/item/stack/tile)
 	if(!replace_plating)
 		if(!use(1))
 			return
-		target_plating = target_plating.PlaceOnTop(placed_turf_path, flags = CHANGETURF_INHERIT_AIR)
+		target_plating = target_plating.place_on_top(placed_turf_path, flags = CHANGETURF_INHERIT_AIR)
 		target_plating.setDir(turf_dir)
 		playsound(target_plating, 'sound/weapons/genhit.ogg', 50, TRUE)
 		return target_plating // Most executions should end here.
@@ -136,7 +136,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/item/stack/tile)
 	turf_type = /turf/open/floor/grass/fairy
 	resistance_flags = FLAMMABLE
 	merge_type = /obj/item/stack/tile/fairygrass
-	color = "#33CCFF"
+	color = COLOR_BLUE_LIGHT
 
 /obj/item/stack/tile/fairygrass/white
 	name = "white fairygrass tile"
@@ -144,7 +144,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/item/stack/tile)
 	desc = "A patch of odd, glowing white grass."
 	turf_type = /turf/open/floor/grass/fairy/white
 	merge_type = /obj/item/stack/tile/fairygrass/white
-	color = "#FFFFFF"
+	color = COLOR_WHITE
 
 /obj/item/stack/tile/fairygrass/red
 	name = "red fairygrass tile"
@@ -152,7 +152,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/item/stack/tile)
 	desc = "A patch of odd, glowing red grass."
 	turf_type = /turf/open/floor/grass/fairy/red
 	merge_type = /obj/item/stack/tile/fairygrass/red
-	color = "#FF3333"
+	color = COLOR_RED_LIGHT
 
 /obj/item/stack/tile/fairygrass/orange
 	name = "orange fairygrass tile"

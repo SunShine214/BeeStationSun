@@ -1,4 +1,5 @@
 /obj/item/clothing/head/hats
+	abstract_type = /obj/item/clothing/head/hats
 	icon = 'icons/obj/clothing/head/hats.dmi'
 	worn_icon = 'icons/mob/clothing/head/hats.dmi'
 
@@ -58,15 +59,7 @@
 	name = "mailman's hat"
 	icon_state = "mailman"
 	desc = "<i>'Right-on-time'</i> mail service head wear."
-
-/obj/item/clothing/mask/nobreath/equipped(mob/living/carbon/human/user, slot)
-	. = ..()
-	if(slot == ITEM_SLOT_HEAD)
-		ADD_TRAIT(user, TRAIT_HATED_BY_DOGS, CLOTHING_TRAIT)
-
-/obj/item/clothing/mask/nobreath/dropped(mob/living/carbon/human/user)
-	..()
-	REMOVE_TRAIT(user, TRAIT_NOBREATH, CLOTHING_TRAIT)
+	clothing_traits = list(TRAIT_HATED_BY_DOGS)
 
 /obj/item/clothing/head/costume/plague
 	name = "plague doctor's hat"

@@ -4,15 +4,16 @@
 #define EMAGGED (1<<0)
 #define IN_USE (1<<1)  //! If we have a user using us, this will be set on. We will check if the user has stopped using us, and thus stop updating and LAGGING EVERYTHING!
 #define CAN_BE_HIT (1<<2)  //! can this be bludgeoned by items?
-#define BEING_SHOCKED (1<<3)  //! Whether this thing is currently (already) being shocked by a tesla
-#define DANGEROUS_POSSESSION (1<<4)  //! Admin possession yes/no
-#define UNIQUE_RENAME (1<<6)  //! can you customize the description/name of the thing?
-#define USES_TGUI (1<<7)  //! put on things that use tgui on ui_interact instead of custom/old UI.
-#define OBJ_EMPED (1<<8)  //! Object is affected by EMP
-#define SCANNED (1<<9)  //! Object has been scanned by the prison_scanner
-#define BLOCKS_CONSTRUCTION (1<<10) //! Does this object prevent things from being built on it?
-#define BLOCKS_CONSTRUCTION_DIR (1<<11) //! Does this object prevent same-direction things from being built on it?
-#define IGNORE_DENSITY (1<<12) //! Can we ignore density when building on this object? (for example, directional windows and grilles)
+#define DANGEROUS_POSSESSION (1<<3)  //! Admin possession yes/no
+#define UNIQUE_RENAME (1<<4)  //! can you customize the description/name of the thing?
+#define USES_TGUI (1<<5)  //! put on things that use tgui on ui_interact instead of custom/old UI.
+#define OBJ_EMPED (1<<6)  //! Object is affected by EMP
+#define SCANNED (1<<7)  //! Object has been scanned by the prison_scanner
+#define BLOCKS_CONSTRUCTION (1<<8) //! Does this object prevent things from being built on it?
+#define BLOCKS_CONSTRUCTION_DIR (1<<9) //! Does this object prevent same-direction things from being built on it?
+#define IGNORE_DENSITY (1<<10) //! Can we ignore density when building on this object? (for example, directional windows and grilles)
+/// Can this object conduct electricity
+#define CONDUCTS_ELECTRICITY (1<<11)
 
 // If you add new ones, be sure to add them to /obj/Initialize as well for complete mapping support
 
@@ -39,27 +40,25 @@
  * This is used for general exclusion, such as preventing insertions into other items
  * Basically, these aren't "real" items. <= wow thanks for the fucking insight sherlock
 */
-#define ABSTRACT (1<<9)
+#define ABSTRACT (1<<8)
 /// When players should not be able to change the slowdown of the item (Speed potions, etc)
-#define IMMUTABLE_SLOW (1<<10)
+#define IMMUTABLE_SLOW (1<<9)
 /// Is this item in the storage item, such as backpack? used for tooltips
-#define IN_STORAGE (1<<11)
-/// This item unlocks illegal tech
-#define ILLEGAL (1<<12)
+#define IN_STORAGE (1<<10)
 /// If dropped, it wont have a randomized pixel_x/pixel_y
-#define NO_PIXEL_RANDOM_DROP (1<<13)
+#define NO_PIXEL_RANDOM_DROP (1<<11)
 /// If the item was thrown and shouldn't have the drop_item animation applied
-#define WAS_THROWN (1<<14)
+#define WAS_THROWN (1<<12)
 /// If this item should hit living mobs when used on harm intent
-#define ISWEAPON (1<<15)
+#define ISWEAPON (1<<13)
 /// Doesn't slow you down while worn, which is only useful in combination with SLOWS_WHILE_IN_HAND
-#define NO_WORN_SLOWDOWN (1<<16)
+#define NO_WORN_SLOWDOWN (1<<14)
 /// If an item is just your hand (circled hand, slapper) and shouldn't block things like riding
-#define HAND_ITEM (1<<17)
+#define HAND_ITEM (1<<15)
 /// Can be equipped on digitigrade legs.
-#define IGNORE_DIGITIGRADE (1<<18)
+#define IGNORE_DIGITIGRADE (1<<16)
 /// No blood overlay is allowed to appear on this item, and it cannot gain blood DNA forensics
-#define NO_BLOOD_ON_ITEM (1<<19)
+#define NO_BLOOD_ON_ITEM (1<<17)
 
 // Flags for the clothing_flags var on /obj/item/clothing
 
@@ -85,13 +84,15 @@
 #define SNUG_FIT (1<<9)
 /// For hats with an effect that shouldn't get knocked off ie finfoil
 #define EFFECT_HAT (1<<10)
+/// prevents from placing on plasmaman helmet or modsuit hat holder
+#define STACKABLE_HELMET_EXEMPT (1<<11)
 /// For masks, allows you to breathe from internals on adjacent tiles
-#define MASKEXTENDRANGE (1<<11)
+#define MASKEXTENDRANGE (1<<12)
 /// Moths cannot eat clothing with that flag
-#define NOTCONSUMABLE (1<<12)
-#define SURGICAL_TOOL (1<<20)
+#define NOTCONSUMABLE (1<<13)
+#define SURGICAL_TOOL (1<<14)
 /// Usable as casting clothes by wizards (matters for suits, glasses and headwear)
-#define CASTING_CLOTHES (1<<13)
+#define CASTING_CLOTHES (1<<15)
 /// Headgear/helmet allows internals
 #define HEADINTERNALS (1<<18)
 /// noslip with only works if wearer is walking
@@ -103,16 +104,6 @@
 #define CLOTHING_PRISTINE 0 // We have no damage on the clothing
 #define CLOTHING_DAMAGED 1 // There's some damage on the clothing but it still has at least one functioning bodypart and can be equipped
 #define CLOTHING_SHREDDED 2 // The clothing is useless and cannot be equipped unless repaired first
-
-/// Flags for the organ_flags var on /obj/item/organ
-
-#define ORGAN_SYNTHETIC			(1<<0)	//Synthetic organs, or cybernetic organs. Reacts to EMPs and don't deteriorate or heal
-#define ORGAN_FROZEN			(1<<1)	//Frozen organs, don't deteriorate
-#define ORGAN_FAILING			(1<<2)	//Failing organs perform damaging effects until replaced or fixed
-#define ORGAN_EXTERNAL			(1<<3)	//Was this organ implanted/inserted/etc, if true will not be removed during species change.
-#define ORGAN_VITAL				(1<<4)	//Currently only the brain
-#define ORGAN_EDIBLE			(1<<5)	//is a snack? :D
-#define ORGAN_UNREMOVABLE 		(1<<6)	//Can't be removed using surgery
 
 /// Flags for the pod_flags var on /obj/structure/closet/supplypod
 

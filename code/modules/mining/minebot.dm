@@ -7,7 +7,7 @@
 	name = "minebot"
 	desc = "A small robot used to support miners. It can be set to search and collect loose ore, mine any ore it detects, or help fend off wildlife. It is equipped with a mining drill and kinetic accelerator, with mounting points for a plasma cutter."
 	gender = NEUTER
-	icon = 'icons/mob/aibots.dmi'
+	icon = 'icons/mob/silicon/aibots.dmi'
 	icon_state = "mining_drone"
 	icon_living = "mining_drone"
 	icon_dead = "mining_drone_disabled"
@@ -27,7 +27,7 @@
 	obj_damage = 10
 	environment_smash = ENVIRONMENT_SMASH_NONE
 	healable = 0
-	deathmessage = "stops moving"
+	death_message = "stops moving"
 	// AI stuff
 	check_friendly_fire = TRUE
 	move_to_delay = 5
@@ -92,7 +92,7 @@
 
 	// Setup access
 	access_card = new /obj/item/card/id(src)
-	var/datum/job/M = SSjob.GetJob(JOB_NAME_SHAFTMINER)
+	var/datum/job/M = SSjob.get_job(JOB_NAME_SHAFTMINER)
 	access_card.access = M.get_access()
 
 
@@ -368,7 +368,7 @@
 		stored_cutter.afterattack(target, src)
 
 /// Handles reacting to attacks, getting the minebot in combat mode if it was mining.
-/mob/living/simple_animal/hostile/mining_drone/adjustHealth(amount, updating_health = TRUE, forced = FALSE)
+/mob/living/simple_animal/hostile/mining_drone/adjustHealth(amount, updating_health = TRUE, forced = FALSE, required_bodytype)
 	if(!client && mode != MODE_COMBAT && amount > 0) // We don't want to automatically switch it if a player's in control
 		set_offense_behavior()
 	update_health_hud()

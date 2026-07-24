@@ -1,4 +1,5 @@
 /obj/item/gun/ballistic
+	abstract_type = /obj/item/gun/ballistic
 	desc = "Now comes in flavors like GUN. Uses 10mm ammo, for some reason."
 	name = "projectile gun"
 	icon_state = "pistol"
@@ -76,6 +77,10 @@
 	caliber = magazine.caliber
 	chamber_round()
 	update_icon()
+
+/obj/item/gun/ballistic/Destroy()
+	QDEL_NULL(magazine)
+	return ..()
 
 /obj/item/gun/ballistic/fire_sounds()
 	var/frequency_to_use

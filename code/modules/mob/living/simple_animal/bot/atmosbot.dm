@@ -20,13 +20,12 @@
 /mob/living/simple_animal/bot/atmosbot
 	name = "\improper Atmosbot"
 	desc = "A little robot that just seems happy to keep you alive!"
-	icon = 'icons/mob/aibots.dmi'
+	icon = 'icons/mob/silicon/aibots.dmi'
 	icon_state = "atmosbot0"
 	density = FALSE
 	anchored = FALSE
 	health = 25
 	maxHealth = 25
-	spacewalk = TRUE
 
 	radio_key = /obj/item/encryptionkey/headset_eng
 	radio_channel = RADIO_CHANNEL_ENGINEERING
@@ -75,7 +74,8 @@ CREATION_TEST_IGNORE_SUBTYPES(/mob/living/simple_animal/bot/atmosbot)
 
 /mob/living/simple_animal/bot/atmosbot/Initialize(mapload, new_toolbox_color)
 	. = ..()
-	var/datum/job/J = SSjob.GetJob(JOB_NAME_STATIONENGINEER)
+	ADD_TRAIT(src, TRAIT_SPACEWALK, INNATE_TRAIT)
+	var/datum/job/J = SSjob.get_job(JOB_NAME_STATIONENGINEER)
 	access_card.access = J.get_access()
 	prev_access = access_card.access.Copy()
 
@@ -350,7 +350,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/mob/living/simple_animal/bot/atmosbot)
 		return
 	icon_state = "atmosbot[on][on?"_[action]":""]"
 
-/mob/living/simple_animal/bot/atmosbot/UnarmedAttack(atom/A, proximity)
+/mob/living/simple_animal/bot/atmosbot/UnarmedAttack(atom/A, proximity_flag, modifiers)
 	if(isturf(A) && A == get_turf(src))
 		return deploy_holobarrier()
 	return ..()
