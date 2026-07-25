@@ -190,7 +190,6 @@
 	description = "How to get more zap."
 	prereq_ids = list(TECHWEB_NODE_ENGINEERING)
 	design_ids = list(
-		"circulator",
 		"hyper_cell",
 		"mrspacman",
 		"power_compressor",
@@ -200,7 +199,8 @@
 		"super_capacitor",
 		"super_cell",
 		"superpacman",
-		"teg",
+		"cdr",
+		"flux_harvester"
 	)
 	research_costs = list(TECHWEB_POINT_TYPE_GENERIC = TECHWEB_TIER_1_POINTS)
 	announce_channels = list(RADIO_CHANNEL_SCIENCE, RADIO_CHANNEL_ENGINEERING)
