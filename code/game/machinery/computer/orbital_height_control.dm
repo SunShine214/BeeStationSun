@@ -28,9 +28,7 @@
 			set_throttle = 0
 
 	// Send thrust commands to all thrusters
-	for(var/obj/machinery/atmospherics/components/unary/orbital_thruster/T in SSorbital_altitude.orbital_thrusters)
-		if(!QDELETED(T))
-			T.set_throttle(set_throttle)
+
 
 /obj/machinery/computer/orbital_height_control/ui_interact(mob/user, datum/tgui/ui)
 	ui = SStgui.try_update_ui(user, src, ui)
@@ -50,12 +48,13 @@
 	// Fetch data from the orbital altitude subsystem
 	data["current_altitude"] = SSorbital_altitude.orbital_altitude / 1000  // Convert meters to kilometers
 	data["orbital_velocity_index"] = SSorbital_altitude.velocity_index || 0
+	data["station_pos"] = SSorbital_altitude.get_station_pos()
 
 	// Calculate normalized atmospheric resistance (0-100%)
 
 	data["normalized_resistance"] = round(SSorbital_altitude.resistance, 0.1)
 
-	data["thrust_level"] = set_throttle
+	data["thrust_level"] = SSorbital_altitude.throttle
 	data["actual_thrust"] = SSorbital_altitude.thrust
 	data["altitude_hold_enabled"] = altitude_hold_enabled || FALSE
 	data["altitude_hold_target"] = altitude_hold_target || SSorbital_altitude.orbital_altitude
@@ -101,28 +100,20 @@
 	. = ..()
 	if(.)
 		return
-
 	switch(action)
 		if("increase_thrust")
-			// Increase thrust by 1, max 20
-			set_throttle = clamp(round(set_throttle + 0.2, 0.1), -1, 1)
-			. = TRUE
+			SSorbital_altitude.adjust_all_throttle(0.2)
 		if("decrease_thrust")
-			// Decrease thrust by 1, min -20
-			set_throttle = clamp(round(set_throttle - 0.2, 0.1), -1, 1)
-			. = TRUE
+			SSorbital_altitude.adjust_all_throttle(-0.2)
 		if("set_altitude_hold_target")
 			// Set the target altitude for altitude hold system
 			var/target = text2num(params["target"])
 			if(isnull(target))
 				return FALSE
-			altitude_hold_target = clamp(target, 80000, 140000)  // 80km to 140km in meters
-			. = TRUE
+			//TODO - fix altitude holding (needs to calculate the required orbital velocity)
 		if("toggle_altitude_hold")
 			// Toggle altitude hold system on/off
 			altitude_hold_enabled = !altitude_hold_enabled
-			. = TRUE
-
 	return TRUE
 
 /obj/machinery/computer/orbital_height_control/ui_state(mob/user)

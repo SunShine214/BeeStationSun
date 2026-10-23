@@ -3,31 +3,29 @@
 	name = "orbital thruster"
 	desc = "A massive thruster used to adjust the station's orbit."
 	icon = 'icons/obj/orbital_thruster.dmi'
-	max_integrity = 50000000
-	icon_state = "2"
+	icon_state = "top"
 	device_type = UNARY
 	anchored = TRUE
 	density = TRUE
 	dir = NORTH
 	initialize_directions = NORTH
 	pipe_flags = PIPING_ONE_PER_TURF | PIPING_DEFAULT_LAYER_ONLY
-	resistance_flags = INDESTRUCTIBLE | LAVA_PROOF | FIRE_PROOF | UNACIDABLE | ACID_PROOF | FREEZE_PROOF
-	flags_1 = PREVENT_CONTENTS_EXPLOSION_1
 
-	var/throttle = 1 // Between -1 and 1
-
+	var/throttle = -1 // Between -1 and 1
 	///The thrust of this thruster in Mega Newtons
 	var/thrust_strength = 100 MEGANEWTON //todo fix
 
 /obj/machinery/atmospherics/components/unary/orbital_thruster/Initialize(mapload)
 	. = ..()
 	SSorbital_altitude.orbital_thrusters += src
+	new /obj/machinery/orbital_thruster_nozzle(get_step(get_turf(src), dir), src)
 
 /obj/machinery/atmospherics/components/unary/orbital_thruster/Destroy()
 	SSorbital_altitude.orbital_thrusters -= src
 	return ..()
 
 /obj/machinery/atmospherics/components/unary/orbital_thruster/process_atmos()
+	//TODO - add gas effects
 	thrust_strength = initial(thrust_strength) * throttle
 	// Update the pipe network once at the end if we modified anything
 	update_parents()
@@ -45,9 +43,7 @@
 	name = "orbital thruster"
 	desc = "A massive thruster used to adjust the station's orbit."
 	icon = 'icons/obj/orbital_thruster.dmi'
-	icon_state = "14"
-	resistance_flags = INDESTRUCTIBLE | LAVA_PROOF | FIRE_PROOF | UNACIDABLE | ACID_PROOF | FREEZE_PROOF
-	max_integrity = 50000000
+	icon_state = "bottom"
 	anchored = TRUE
 	density = TRUE
 	use_power = NO_POWER_USE
@@ -61,18 +57,10 @@
 	/// The backend thruster piece this nozzle is linked to
 	var/obj/machinery/atmospherics/components/unary/orbital_thruster/back_end_piece
 
-/obj/machinery/orbital_thruster_nozzle/Initialize(mapload)
+/obj/machinery/orbital_thruster_nozzle/Initialize(mapload, obj/machinery/atmospherics/components/unary/orbital_thruster/parent)
 	. = ..()
-
-	back_end_piece = find_backend()
-	if(!back_end_piece)
-		message_admins("Orbital Thruster Nozzle could not find backend piece! Please inform the mappers.")
-		return
-
-	if(!back_end_piece)
-		return
-
-	begin_processing()
+	if(!parent)
+		CRASH("An orbital thruster nozzle has spawned without a parent piece!")
 	soundloop = new(src, FALSE)
 
 /obj/machinery/orbital_thruster_nozzle/Destroy()
@@ -80,36 +68,6 @@
 		remove_emitter("thruster")
 	QDEL_NULL(soundloop)
 	return ..()
-
-/obj/machinery/orbital_thruster_nozzle/process()
-	// Get the thrust level
-	var/target_thrust = 0
-
-	target_thrust = abs(back_end_piece.thrust_strength) * 2 // Scale from -20 to +20 range to -40 to +40 for visuals
-
-	// Update particles based on thrust level
-	if(target_thrust > 0 && target_thrust != visual_thrust)
-		update_thruster_effect(target_thrust)
-	else if(target_thrust == 0 && visual_thrust > 0)
-		stop_thruster_effect()
-
-	// Update sound loop based on thrust level
-	if(target_thrust > 0)
-		if(!soundloop.loop_started)
-			soundloop.start()
-		// Calculate volume based on thrust percentage (0-40 range maps to 5-100 volume)
-		soundloop.volume = clamp(5 + ((target_thrust / 40) * 95), 5, 100)
-	else if(soundloop.loop_started)
-		soundloop.stop()
-
-	visual_thrust = target_thrust
-
-	// Update appearance for glow overlay
-	update_appearance()
-
-	// Apply damage to anything in the thrust direction
-	if(visual_thrust > 0)
-		apply_thrust_damage()
 
 /obj/machinery/orbital_thruster_nozzle/update_overlays()
 	. = ..()
@@ -124,21 +82,7 @@
 		. += glow
 
 /obj/machinery/orbital_thruster_nozzle/proc/update_thruster_effect(thrust)
-	// Add or update the thruster effect
-	if(!master_holder || !master_holder.emitters["thruster"])
-		add_emitter(/obj/emitter/thruster_jet, "thruster")
-
-	// Update particle intensity based on thrust level (0-40 range from subsystem)
-	if(master_holder && master_holder.emitters["thruster"])
-		var/obj/emitter/thruster_jet/emitter = master_holder.emitters["thruster"]
-		if(emitter && emitter.particles)
-			// Scale count from 0 to 1000 based on thrust (0-40)
-			emitter.particles.count = clamp(thrust * 25, 0, 1000)
-			// Scale spawning from 1 to 10 based on thrust
-			emitter.particles.spawning = clamp(thrust * 0.25, 1, 10)
-
-/obj/machinery/orbital_thruster_nozzle/proc/stop_thruster_effect()
-	remove_emitter("thruster")
+	//TODO - fix effects to use particle_holder (once merging upstream)
 
 /obj/machinery/orbital_thruster_nozzle/proc/apply_thrust_damage()
 	// Cast a ray 5 tiles in the direction of the thruster
@@ -183,32 +127,3 @@
 				if(!played_sound)
 					playsound(affected_turf, 'sound/effects/wounds/sizzle1.ogg', 50, vary = TRUE)
 					played_sound = TRUE
-
-/obj/machinery/orbital_thruster_nozzle/proc/find_backend()
-	// Step 6 tiles north to find the backend piece
-	var/turf/target_turf = get_turf(src)
-	if(!target_turf)
-		return null
-
-	// Step 4 times in the NORTH direction
-	for(var/i = 1 to 4)
-		target_turf = get_step(target_turf, NORTH)
-		if(!target_turf)
-			return null
-
-	// Find the backend piece in the target turf
-	for(var/obj/machinery/atmospherics/components/unary/orbital_thruster/thruster in target_turf)
-		return thruster
-
-	return null
-
-// Dummy Pieces that do nothing but look pretty. Iterate icon_states to get different parts.
-/obj/structure/orbital_thruster_dummy
-	name = "orbital thruster"
-	desc = "A massive thruster used to adjust the station's orbit."
-	icon = 'icons/obj/orbital_thruster.dmi'
-	icon_state = "1"
-	resistance_flags = INDESTRUCTIBLE | LAVA_PROOF | FIRE_PROOF | UNACIDABLE | ACID_PROOF | FREEZE_PROOF
-	max_integrity = 50000000
-	anchored = TRUE
-	density = TRUE

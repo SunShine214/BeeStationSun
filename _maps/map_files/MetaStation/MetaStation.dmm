@@ -12810,9 +12810,6 @@
 /turf/closed/wall/r_wall,
 /area/security/checkpoint/science/research)
 "chr" = (
-/obj/machinery/computer/atmos_control/fuelsupply_tank{
-	dir = 8
-	},
 /obj/effect/turf_decal/bot,
 /turf/open/floor/iron/dark,
 /area/engine/atmos)
@@ -23326,13 +23323,6 @@
 "faV" = (
 /turf/open/floor/plating,
 /area/maintenance/department/medical/central)
-"fbb" = (
-/obj/structure/orbital_thruster_dummy{
-	icon_state = "11"
-	},
-/obj/structure/lattice,
-/turf/open/space/basic,
-/area/space/nearstation)
 "fbk" = (
 /obj/structure/sign/warning/electricshock,
 /turf/closed/wall/r_wall,
@@ -40820,13 +40810,6 @@
 /obj/machinery/atmospherics/pipe/smart/manifold4w/supply/hidden/layer2,
 /turf/open/floor/iron/white,
 /area/science/research)
-"lsB" = (
-/obj/structure/orbital_thruster_dummy{
-	icon_state = "6"
-	},
-/obj/structure/lattice,
-/turf/open/space/basic,
-/area/space/nearstation)
 "lsE" = (
 /obj/structure/disposalpipe/segment,
 /obj/machinery/turnstile,
@@ -42376,13 +42359,6 @@
 	},
 /turf/open/floor/iron,
 /area/crew_quarters/bar)
-"lTo" = (
-/obj/structure/orbital_thruster_dummy{
-	icon_state = "3"
-	},
-/obj/structure/lattice,
-/turf/open/space/basic,
-/area/space/nearstation)
 "lTr" = (
 /obj/machinery/atmospherics/pipe/smart/manifold4w/cyan/hidden/layer4,
 /obj/machinery/atmospherics/pipe/smart/manifold4w/scrubbers/hidden/layer2,
@@ -44127,11 +44103,6 @@
 /obj/machinery/atmospherics/pipe/smart/simple/pink/hidden,
 /turf/open/floor/iron,
 /area/maintenance/starboard/aft)
-"mzC" = (
-/obj/machinery/atmospherics/components/unary/orbital_thruster,
-/obj/structure/lattice,
-/turf/open/space/basic,
-/area/space/nearstation)
 "mAd" = (
 /obj/structure/cable/yellow{
 	icon_state = "4-8"
@@ -45000,13 +44971,6 @@
 	},
 /turf/open/floor/iron,
 /area/hallway/secondary/command)
-"mPd" = (
-/obj/structure/orbital_thruster_dummy{
-	icon_state = "5"
-	},
-/obj/structure/lattice,
-/turf/open/space/basic,
-/area/space/nearstation)
 "mPg" = (
 /obj/effect/turf_decal/tile/neutral{
 	dir = 4
@@ -51755,10 +51719,6 @@
 /obj/machinery/light,
 /turf/open/floor/iron/smooth_edge,
 /area/security/brig)
-"pjA" = (
-/obj/machinery/orbital_thruster_nozzle,
-/turf/open/space/basic,
-/area/space/nearstation)
 "pjC" = (
 /obj/structure/window/spawner/directional/south,
 /obj/machinery/computer/atmos_control/carbon_tank{
@@ -53292,13 +53252,6 @@
 /obj/machinery/atmospherics/pipe/smart/manifold4w/scrubbers/hidden/layer4,
 /turf/open/floor/plating,
 /area/maintenance/port/fore)
-"pMe" = (
-/obj/structure/orbital_thruster_dummy{
-	icon_state = "4"
-	},
-/obj/structure/lattice,
-/turf/open/space/basic,
-/area/space/nearstation)
 "pMu" = (
 /obj/effect/landmark/start/shaft_miner,
 /obj/machinery/atmospherics/components/unary/vent_scrubber/on/layer4{
@@ -58601,12 +58554,6 @@
 	},
 /turf/open/floor/iron/dark,
 /area/ai_monitored/turret_protected/aisat_interior)
-"rKq" = (
-/obj/structure/orbital_thruster_dummy{
-	icon_state = "13"
-	},
-/turf/open/space/basic,
-/area/space/nearstation)
 "rKu" = (
 /obj/structure/chair/stool{
 	pixel_y = 8
@@ -62065,13 +62012,6 @@
 	},
 /turf/open/floor/iron,
 /area/medical/break_room)
-"sXx" = (
-/obj/structure/orbital_thruster_dummy{
-	icon_state = "9"
-	},
-/obj/structure/lattice,
-/turf/open/space/basic,
-/area/space/nearstation)
 "sXL" = (
 /obj/machinery/atmospherics/pipe/smart/manifold4w/supply/hidden/layer2,
 /obj/machinery/atmospherics/pipe/smart/manifold4w/scrubbers/hidden/layer4,
@@ -62700,13 +62640,6 @@
 	},
 /turf/open/floor/plating,
 /area/maintenance/aft)
-"til" = (
-/obj/structure/orbital_thruster_dummy{
-	icon_state = "12"
-	},
-/obj/structure/lattice,
-/turf/open/space/basic,
-/area/space/nearstation)
 "tiu" = (
 /obj/structure/mirror{
 	pixel_x = 27;
@@ -65377,12 +65310,6 @@
 	},
 /turf/open/floor/wood,
 /area/crew_quarters/heads/hop)
-"ufb" = (
-/obj/structure/orbital_thruster_dummy{
-	icon_state = "15"
-	},
-/turf/open/space/basic,
-/area/space/nearstation)
 "ufT" = (
 /obj/machinery/photocopier,
 /obj/machinery/power/apc{
@@ -65636,13 +65563,6 @@
 	},
 /turf/open/floor/carpet/orange,
 /area/crew_quarters/dorms)
-"ujG" = (
-/obj/structure/orbital_thruster_dummy{
-	icon_state = "7"
-	},
-/obj/structure/lattice,
-/turf/open/space/basic,
-/area/space/nearstation)
 "ujN" = (
 /obj/structure/cable/yellow{
 	icon_state = "1-2"
@@ -67981,13 +67901,6 @@
 /obj/machinery/atmospherics/pipe/smart/manifold4w/scrubbers/hidden/layer4,
 /turf/open/floor/iron,
 /area/hallway/secondary/entry)
-"uZS" = (
-/obj/structure/orbital_thruster_dummy{
-	icon_state = "10"
-	},
-/obj/structure/lattice,
-/turf/open/space/basic,
-/area/space/nearstation)
 "vaz" = (
 /obj/effect/turf_decal/tile/red/half{
 	dir = 4
@@ -69027,7 +68940,6 @@
 /obj/effect/turf_decal/tile/brown/half/contrasted{
 	dir = 4
 	},
-/obj/machinery/computer/atmos_control/fuelsupply_tank,
 /turf/open/floor/iron/dark,
 /area/bridge)
 "vvm" = (
@@ -73497,11 +73409,6 @@
 /obj/effect/turf_decal/tile/neutral/fourcorners/contrasted,
 /turf/open/floor/iron/dark,
 /area/crew_quarters/fitness/recreation)
-"wXe" = (
-/obj/structure/orbital_thruster_dummy,
-/obj/structure/lattice,
-/turf/open/space/basic,
-/area/space/nearstation)
 "wXo" = (
 /obj/machinery/atmospherics/pipe/smart/manifold4w/supply/hidden/layer2,
 /obj/machinery/atmospherics/pipe/smart/manifold4w/scrubbers/hidden/layer4,
@@ -76632,13 +76539,6 @@
 /obj/machinery/atmospherics/pipe/smart/simple/cyan/visible/layer5,
 /turf/open/floor/iron/dark/textured,
 /area/engine/atmos)
-"yaj" = (
-/obj/structure/orbital_thruster_dummy{
-	icon_state = "8"
-	},
-/obj/structure/lattice,
-/turf/open/space/basic,
-/area/space/nearstation)
 "yak" = (
 /obj/machinery/atmospherics/components/unary/vent_scrubber/on/layer4{
 	dir = 8
@@ -96255,11 +96155,11 @@ bTs
 bTs
 bTs
 aaf
-wXe
-pMe
-ujG
-uZS
-rKq
+lMJ
+lMJ
+lMJ
+lMJ
+gXq
 aaa
 aaa
 aaa
@@ -96512,11 +96412,11 @@ tVO
 iYo
 jmy
 khz
-mzC
-mPd
-yaj
-fbb
-pjA
+lMJ
+lMJ
+lMJ
+lMJ
+gXq
 aaa
 aaa
 aaa
@@ -96769,11 +96669,11 @@ tjJ
 oGp
 dBO
 lMJ
-lTo
-lsB
-sXx
-til
-ufb
+lMJ
+lMJ
+lMJ
+lMJ
+gXq
 aaa
 aaa
 aaa
@@ -113474,11 +113374,11 @@ amM
 aZZ
 lMJ
 lLh
-wXe
-pMe
-ujG
-uZS
-rKq
+lMJ
+lMJ
+lMJ
+lMJ
+gXq
 aaa
 aaa
 aaa
@@ -113731,11 +113631,11 @@ gcg
 ihd
 ihd
 kGt
-mzC
-mPd
-yaj
-fbb
-pjA
+lMJ
+lMJ
+lMJ
+lMJ
+gXq
 aaa
 aaa
 aaa
@@ -113988,11 +113888,11 @@ gBY
 okX
 ihd
 lMJ
-lTo
-lsB
-sXx
-til
-ufb
+lMJ
+lMJ
+lMJ
+lMJ
+gXq
 aaa
 aaa
 aaa

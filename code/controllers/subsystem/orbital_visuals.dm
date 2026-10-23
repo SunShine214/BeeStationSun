@@ -103,10 +103,6 @@ SUBSYSTEM_DEF(orbital_visuals)
 			// Violent flickering during re-entry
 			update_reentry(altitude)
 
-// ============================================================================
-// NORMAL STARLIGHT STATE
-// ============================================================================
-
 /datum/controller/subsystem/orbital_visuals/proc/start_normal_starlight()
 	is_flickering = FALSE
 	reentry_flicker_intensity = 0
@@ -117,10 +113,6 @@ SUBSYSTEM_DEF(orbital_visuals)
 	// Optional: Tie to time of day by checking SSnatural_light_cycle
 	// For now, just maintain normal starlight
 	return
-
-// ============================================================================
-// ATMOSPHERIC DESCENT STATE (95km - 120km)
-// ============================================================================
 
 /datum/controller/subsystem/orbital_visuals/proc/start_atmospheric_descent(altitude)
 	is_flickering = FALSE
@@ -143,10 +135,6 @@ SUBSYSTEM_DEF(orbital_visuals)
 	blended_color = LightenRGB(blended_color, brightness_boost)
 
 	set_orbital_starlight_colour(blended_color, 1 SECONDS)
-
-// ============================================================================
-// REENTRY WARNING STATE (95km - 90km)
-// ============================================================================
 
 /datum/controller/subsystem/orbital_visuals/proc/start_reentry_warning(altitude)
 	is_flickering = TRUE

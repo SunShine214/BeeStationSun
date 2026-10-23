@@ -13,6 +13,7 @@ type OrbitalData = {
   current_altitude: number;
   orbital_decay: number;
   orbital_velocity_index: number;
+  station_pos: number;
   normalized_resistance: number;
   thrust_level: number;
   actual_thrust: number;
@@ -139,11 +140,15 @@ const OrbitalHeightContent = () => {
     altitude_hold_enabled = false,
     altitude_hold_target = 98000,
     orbital_bands = [],
+    station_pos = [0, 0],
   } = data;
 
   return (
     <>
       {/* Scan line effect overlay */}
+      <svg height="100%" width="100%">
+          <rect x={station_pos[0] / 100000 + 150} y={station_pos[1] / 100000 + 150} width={10} height={10} fill="blue" />
+      </svg>
       <Box
         style={{
           position: 'absolute',
