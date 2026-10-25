@@ -11,9 +11,10 @@
 	initialize_directions = NORTH
 	pipe_flags = PIPING_ONE_PER_TURF | PIPING_DEFAULT_LAYER_ONLY
 
-	var/throttle = -1 // Between -1 and 1
+	var/throttle = 0 // Between -1 and 1
 	///The thrust of this thruster in Mega Newtons
-	var/thrust_strength = 100 MEGANEWTON //todo fix
+	var/thrust_strength = 100 MEGANEWTON
+	var/maximum_thrust = 100 MEGANEWTON //todo fix
 
 /obj/machinery/atmospherics/components/unary/orbital_thruster/Initialize(mapload)
 	. = ..()
@@ -26,7 +27,7 @@
 
 /obj/machinery/atmospherics/components/unary/orbital_thruster/process_atmos()
 	//TODO - add gas effects
-	thrust_strength = initial(thrust_strength) * throttle
+	thrust_strength = maximum_thrust * throttle
 	// Update the pipe network once at the end if we modified anything
 	update_parents()
 	update_appearance()

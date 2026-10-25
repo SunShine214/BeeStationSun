@@ -13,22 +13,6 @@
 
 /obj/machinery/computer/orbital_height_control/Initialize(mapload)
 	. = ..()
-	begin_processing()
-
-/obj/machinery/computer/orbital_height_control/process()
-
-
-	if(altitude_hold_enabled)
-		// Simple altitude hold logic
-		if(SSorbital_altitude.orbital_altitude < altitude_hold_target)
-			set_throttle = 1
-		else if(SSorbital_altitude.orbital_altitude > altitude_hold_target + 500) // Add buffer to prevent oscillation
-			set_throttle = -1
-		else
-			set_throttle = 0
-
-	// Send thrust commands to all thrusters
-
 
 /obj/machinery/computer/orbital_height_control/ui_interact(mob/user, datum/tgui/ui)
 	ui = SStgui.try_update_ui(user, src, ui)
@@ -38,26 +22,29 @@
 		ui.set_autoupdate(TRUE)
 
 /obj/machinery/computer/orbital_height_control/ui_static_data(mob/user)
-	. = ..()
-	.["max_altitude"] = ORBITAL_ALTITUDE_HIGH_BOUND
-	.["min_altitude"] = ORBITAL_ALTITUDE_LOW_BOUND
+	var/list/data = list()
+	data["orbital_bodies"] = list(list("Dummy", 1000, 5000, 5000)) //TODO - expand on this
+	data["cinus_radius"] = CINIS_RADIUS
+	data["cinus_name"] = "Cinis"
+	return data
 
 /obj/machinery/computer/orbital_height_control/ui_data(mob/user)
 	var/list/data = list()
 
 	// Fetch data from the orbital altitude subsystem
-	data["current_altitude"] = SSorbital_altitude.orbital_altitude / 1000  // Convert meters to kilometers
-	data["orbital_velocity_index"] = SSorbital_altitude.velocity_index || 0
+	data["current_altitude"] = SSorbital_altitude.get_station_altitude()
+	data["orbital_velocity"] = SSorbital_altitude.cached_station_velocity
 	data["station_pos"] = SSorbital_altitude.get_station_pos()
-
-	// Calculate normalized atmospheric resistance (0-100%)
-
-	data["normalized_resistance"] = round(SSorbital_altitude.resistance, 0.1)
+	data["station_target_angle"] = SSorbital_altitude.target_angle
+	data["station_actual_angle"] = SSorbital_altitude.actual_angle
+	data["semi_major_axis"] = SSorbital_altitude.semi_major_axis
+	data["eccentricity"] = SSorbital_altitude.eccentricity
+	data["arg_of_periapsis"] = SSorbital_altitude.arg_of_periapsis
+	data["orbital_angle"] = SSorbital_altitude.orbital_angle
+	data["orbit_keeping"] = SSorbital_altitude.orbit_keeping
 
 	data["thrust_level"] = SSorbital_altitude.throttle
 	data["actual_thrust"] = SSorbital_altitude.thrust
-	data["altitude_hold_enabled"] = altitude_hold_enabled || FALSE
-	data["altitude_hold_target"] = altitude_hold_target || SSorbital_altitude.orbital_altitude
 
 	// Define orbital bands for visualization
 	var/list/orbital_bands = list()
@@ -105,15 +92,14 @@
 			SSorbital_altitude.adjust_all_throttle(0.2)
 		if("decrease_thrust")
 			SSorbital_altitude.adjust_all_throttle(-0.2)
-		if("set_altitude_hold_target")
-			// Set the target altitude for altitude hold system
-			var/target = text2num(params["target"])
-			if(isnull(target))
-				return FALSE
-			//TODO - fix altitude holding (needs to calculate the required orbital velocity)
-		if("toggle_altitude_hold")
+		if("toggle_orbit_keeping")
 			// Toggle altitude hold system on/off
-			altitude_hold_enabled = !altitude_hold_enabled
+			SSorbital_altitude.orbit_keeping = !SSorbital_altitude.orbit_keeping
+		if("adjust_angle")
+			var/angle = text2num(params["angle"])
+			if(isnull(angle))
+				return FALSE
+			SSorbital_altitude.target_angle = angle
 	return TRUE
 
 /obj/machinery/computer/orbital_height_control/ui_state(mob/user)

@@ -1,21 +1,26 @@
 // Technically unrelated but they use "orbits" too so:
 // Orbital altitude thresholds in meters
-#define ORBITAL_ALTITUDE_HIGH_BOUND 600000 // - Cannot go higher than this
-#define ORBITAL_ALTITUDE_HIGH_CRITICAL 550000 // - Upper critical threshold
-#define ORBITAL_ALTITUDE_HIGH 500000 // - Upper normal threshold
-#define ORBITAL_ALTITUDE_DEFAULT 450000 // - Default stable altitude
-#define ORBITAL_ALTITUDE_LOW 300000 // - Lower warning threshold (visual effects start)
-#define ORBITAL_ALTITUDE_LOW_CRITICAL 250000 // - Lower critical threshold (structural damage begins)
-#define ORBITAL_ALTITUDE_ABSOLUTE_MIN 150000 // past this point the station will just explode
-#define ORBITAL_ALTITUDE_LOW_BOUND 100000 // - Cannot go lower than this
+#define ORBITAL_ALTITUDE_HIGH_BOUND 3e5 // - Cannot go higher than this
+#define ORBITAL_ALTITUDE_HIGH_CRITICAL 2.75e5 // - Upper critical threshold
+#define ORBITAL_ALTITUDE_HIGH 2.25e5 // - Upper normal threshold
+#define ORBITAL_ALTITUDE_DEFAULT 2e5 // - Default stable altitude
+#define ORBITAL_ALTITUDE_LOW 1.75e5 // - Lower warning threshold (visual effects start)
+#define ORBITAL_ALTITUDE_LOW_CRITICAL 1.5e5 // - Lower critical threshold (structural damage begins)
+#define ORBITAL_ALTITUDE_ABSOLUTE_MIN 1.25e5 // past this point the station will just explode
+#define ORBITAL_ALTITUDE_LOW_BOUND 1e5 // - Cannot go lower than this
 
 #define ORBITAL_MINIMUM_DRAG 0.1 // - How much drag do we experience in high orbits
 #define ORBITAL_DRAG_COEFF 1000 MEGANEWTON // - How much drag the station produces at minimum altitude, in mega neutons This will counteract thrust.
 #define STATION_MASS 100000 // - According to the interweb, aircraft carriers are 100000 tons, which feels similar to what the station would be.
 
-#define CINIS_RADIUS 9.6421e6 // - Larger then earth, because its partially hollow.
+#define CINIS_RADIUS 1.143e5 // - Tiny, since Earth-sized planets take hours to finish an orbit.
 #define GRAVITATION_CONSTANT 6.6743e-11 // Grav constant
-#define CINIS_MASS 5.6e26
+#define CINIS_MASS 5.6e23 // - Similarly tiny
+
+
+// Orbital directions
+#define PROGRADE 0
+#define RETROGRADE 180
 
 #define ECCEN_ANOM_ITER 10
 

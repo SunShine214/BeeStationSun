@@ -1,7 +1,7 @@
 SUBSYSTEM_DEF(orbital_altitude)
 	name = "Orbital Altitude"
 	can_fire = TRUE
-	wait = 1 SECONDS
+	wait = 0.25 SECONDS //TODO - PUT THIS BACK RAAAAAA (maybe not...?)
 	flags = SS_NO_INIT | SS_KEEP_TIMING
 
 	/// Current orbital altitude in meters
@@ -11,7 +11,7 @@ SUBSYSTEM_DEF(orbital_altitude)
 	var/velocity_index = 0
 
 	// ---------------------------------------
-	// TRUE ORBIT PROTOTYPE
+	// TRUE ORBIT VARS
 	// ---------------------------------------
 
 	var/semi_major_axis = ORBITAL_ALTITUDE_DEFAULT + CINIS_RADIUS
@@ -24,18 +24,23 @@ SUBSYSTEM_DEF(orbital_altitude)
 	var/cached_station_pos = null
 	var/cached_station_velocity = null
 
-	var/target_vector = list(0, 1) //Facing up, or prograde
-	var/actual_vector = list(0, 1)
+	var/target_angle = 0
+	var/actual_angle = 0
+
+	var/orbital_angle = 0
 
 	// ---------------------------------------
 
 	/// Global throttle
-	var/throttle = 0
+	var/throttle = 1
 
 	/// Current thrust applied to the station (from engines)
 	var/thrust = 0
 	/// Atmospheric resistance coefficient
 	var/resistance = 0.1
+
+	/// Should we counteract atmospheric resistance (only if we are facing prograde) at all times to keep our orbit?
+	var/orbit_keeping = TRUE
 
 	/// List of all orbital thrusters
 	var/list/orbital_thrusters = list()
@@ -72,26 +77,41 @@ SUBSYSTEM_DEF(orbital_altitude)
 	// Update thrust from all orbital thrusters
 	update_thrust_from_thrusters()
 
-	// Update orbital altitude based on physics
+	check_values()
 
 	// Check for critical orbit conditions and warnings
 	check_critical_orbit()
 
 	process_countdown()
 
+	adjust_angle()
+
 	calculate_eccentric_anomaly()
 	calculate_pos_from_epoch()
 	calculate_velo_from_epoch()
 	orbital_altitude_change()
-	orbital_epoch += 10
+	orbital_epoch += 0.05
 	// Spawn atmospheric drag damage effects when critical
 	if(orbital_stage == ORBITAL_LOW_CRIT)
 		spawn_atmospheric_drag()
+
+/datum/controller/subsystem/orbital_altitude/proc/check_values()
+	if(semi_major_axis <= 0)
+		stack_trace("Semi Major Axis is below or equal to 0; math will break! Resetting orbit to a more suitable number")
+		//TODO - actually reset orbit
+
+/datum/controller/subsystem/orbital_altitude/proc/adjust_angle()
+	if(actual_angle == target_angle)
+		return
+	actual_angle += clamp(target_angle - actual_angle, -5, 5)
 
 /datum/controller/subsystem/orbital_altitude/proc/get_station_pos()
 	if(!cached_station_pos)
 		calculate_pos_from_epoch()
 	return cached_station_pos
+
+/datum/controller/subsystem/orbital_altitude/proc/get_station_altitude()
+	return sqrt(cached_station_pos[1]**2 + cached_station_pos[2]**2)
 
 /datum/controller/subsystem/orbital_altitude/proc/calculate_velo_from_epoch()
 	if(cached_eccentric_anomaly == null)
@@ -102,7 +122,7 @@ SUBSYSTEM_DEF(orbital_altitude)
 		var/per_velo_y = (sqrt(CINIS_MASS * GRAVITATION_CONSTANT * semi_major_axis * (1 - eccentricity ** 2)) / r) * cos(cached_eccentric_anomaly)
 
 		var/real_velo_x = per_velo_x * cos(arg_of_periapsis) - per_velo_y * sin(arg_of_periapsis)
-		var/real_velo_y = per_velo_x * sin(arg_of_periapsis) - per_velo_y * cos(arg_of_periapsis)
+		var/real_velo_y = per_velo_x * sin(arg_of_periapsis) + per_velo_y * cos(arg_of_periapsis)
 
 		cached_station_velocity = list(real_velo_x, real_velo_y)
 		return
@@ -118,7 +138,7 @@ SUBSYSTEM_DEF(orbital_altitude)
 		var/per_y = semi_major_axis * sqrt(1 - eccentricity**2) * sin(cached_eccentric_anomaly)
 
 		var/real_x = per_x * cos(arg_of_periapsis) - per_y * sin(arg_of_periapsis)
-		var/real_y = per_x * sin(arg_of_periapsis) - per_y * cos(arg_of_periapsis)
+		var/real_y = per_x * sin(arg_of_periapsis) + per_y * cos(arg_of_periapsis)
 
 		cached_station_pos = list(real_x, real_y)
 		return
@@ -127,9 +147,19 @@ SUBSYSTEM_DEF(orbital_altitude)
 
 /datum/controller/subsystem/orbital_altitude/proc/calculate_eccentric_anomaly()
 	var/mean_anomaly = calculate_mean_anomaly()
-	var/eccentric_anomaly = eccentricity <= 0.8 ? mean_anomaly : PI
+	var/eccentric_anomaly = eccentricity <= 0.8 ? mean_anomaly : 180
 	for(var/i in 1 to ECCEN_ANOM_ITER)
-		eccentric_anomaly = (eccentric_anomaly - eccentricity * sin(eccentric_anomaly) - mean_anomaly) / (1 - eccentricity * cos(eccentric_anomaly))
+		var/anomaly_error = eccentric_anomaly - eccentricity * (180 / PI) * sin(eccentric_anomaly) - mean_anomaly
+		var/anomaly_derivitive = 1 - eccentricity * cos(eccentric_anomaly)
+
+		if(abs(anomaly_derivitive) < 1e-6)
+			break
+
+		var/anomaly_correction = anomaly_error / anomaly_derivitive
+		eccentric_anomaly -= anomaly_correction
+
+		if(abs(anomaly_correction) < 1e-6)
+			break
 	cached_eccentric_anomaly = eccentric_anomaly
 
 /datum/controller/subsystem/orbital_altitude/proc/calculate_mean_anomaly()
@@ -138,9 +168,13 @@ SUBSYSTEM_DEF(orbital_altitude)
 /datum/controller/subsystem/orbital_altitude/proc/calculate_mean_motion()
 	return sqrt((CINIS_MASS * GRAVITATION_CONSTANT) / semi_major_axis ** 3)
 
-/datum/controller/subsystem/orbital_altitude/proc/get_altitude_from_orbital_velocity()
-	return 400000
-	//TODO
+/datum/controller/subsystem/orbital_altitude/proc/get_maxium_thrust()
+	var/summed_thrust = 0
+	for(var/obj/machinery/atmospherics/components/unary/orbital_thruster/T in orbital_thrusters)
+		if(QDELETED(T))
+			continue
+		summed_thrust += T.maximum_thrust
+	return summed_thrust
 
 /datum/controller/subsystem/orbital_altitude/proc/update_thrust_from_thrusters()
 	// Calculate total thrust from all thrusters
@@ -161,33 +195,56 @@ SUBSYSTEM_DEF(orbital_altitude)
 /datum/controller/subsystem/orbital_altitude/proc/sync_all_thrusters()
 	for(var/obj/machinery/atmospherics/components/unary/orbital_thruster/T in SSorbital_altitude.orbital_thrusters)
 		if(!QDELETED(T))
-			T.set_throttle(clamp(throttle, -1, 1))
+			T.set_throttle(clamp(throttle, 0, 1))
 	update_thrust_from_thrusters()
 
 /datum/controller/subsystem/orbital_altitude/proc/orbital_altitude_change()
 	resistance = clamp(1 - (orbital_altitude - ORBITAL_ALTITUDE_LOW_BOUND) / (ORBITAL_ALTITUDE_HIGH_BOUND - ORBITAL_ALTITUDE_LOW_BOUND), ORBITAL_MINIMUM_DRAG, 1)
-	var/negative_velocity_factor = -(ORBITAL_DRAG_COEFF * resistance) / (STATION_MASS * 1000)
+
+	manage_orbit_keeping() // Lives here so small mistakes are not made due to out-of-date information
+
+	var/negative_velocity_magnitude = (ORBITAL_DRAG_COEFF * resistance) / (STATION_MASS * 1000)
 	var/magnitude = (thrust) / (STATION_MASS * 1000)
-	if(abs(magnitude + negative_velocity_factor) < 0.001)
-		return //TODO - MAKE THIS RESPECT VECTOR FACING
 
-	var/new_velo_x = cached_station_velocity[0] + actual_vector[0] * magnitude
-	var/new_velo_y = cached_station_velocity[1] + actual_vector[1] * magnitude
+	orbital_angle = ATAN2(cached_station_velocity[1], cached_station_velocity[2])
 
-	var/pos_magnitude = sqrt(cached_station_pos[0]**2 + cached_station_pos[1]**2)
+	if(abs(orbital_angle - actual_angle) < 0.001)
+		if((magnitude - negative_velocity_magnitude) < 0.001)
+			return // Early return when the thrust vector is near equal to resistance- thus meaning no force is actually being applied.
+			//TODO - think about this and fix it
+
+	var/new_velo_x = cached_station_velocity[1] + (magnitude * cos(orbital_angle + actual_angle)) + (negative_velocity_magnitude * -cos(orbital_angle))
+	var/new_velo_y = cached_station_velocity[2] + (magnitude * sin(orbital_angle + actual_angle)) + (negative_velocity_magnitude * -sin(orbital_angle))
+
+	var/pos_magnitude = get_station_altitude()
+	orbital_altitude = pos_magnitude //TODO - find a better place for this.
 	var/velo_magnitude_sqrd = new_velo_x**2 + new_velo_y**2
-	var/radial_velo = cached_station_pos[0] * new_velo_x + cached_station_pos[1] * new_velo_y
+	var/radial_dot = cached_station_pos[1] * new_velo_x + cached_station_pos[2] * new_velo_y
+
+	var/orbital_energy = velo_magnitude_sqrd / 2 - (CINIS_MASS * GRAVITATION_CONSTANT) / pos_magnitude
+
+	if(orbital_energy >= 0)
+		return
+		//TODO: add message about thrusters being cut due to orbital extremes, also, make sure you it resets to a non-parabolic orbit should one occur somehow
 
 	semi_major_axis = 1 / (2 / pos_magnitude - velo_magnitude_sqrd / (CINIS_MASS * GRAVITATION_CONSTANT))
 
-	var/eccentricity_x = calculate_eccentricity_vector_comp(cached_station_pos[0], new_velo_x, pos_magnitude, radial_velo, velo_magnitude_sqrd)
-	var/eccentricity_y = calculate_eccentricity_vector_comp(cached_station_pos[1], new_velo_y, pos_magnitude, radial_velo, velo_magnitude_sqrd)
+	var/eccentricity_x = calculate_eccentricity_vector_comp(cached_station_pos[1], new_velo_x, pos_magnitude, radial_dot, velo_magnitude_sqrd)
+	var/eccentricity_y = calculate_eccentricity_vector_comp(cached_station_pos[2], new_velo_y, pos_magnitude, radial_dot, velo_magnitude_sqrd)
 
 	eccentricity = sqrt(eccentricity_x**2 + eccentricity_y**2)
-	arg_of_periapsis = eccentricity > 0 ? ATAN2(eccentricity_y, eccentricity_x) : 0
+	arg_of_periapsis = eccentricity > 0 ? ATAN2(eccentricity_x, eccentricity_y) : 0
 
-/datum/controller/subsystem/orbital_altitude/proc/calculate_eccentricity_vector_comp(pos_component, velo_component, pos_magnitude, radial_velo, velo_magnitude_sqrd)
-	return ((velo_magnitude_sqrd - (CINIS_MASS * GRAVITATION_CONSTANT) / pos_magnitude) * pos_component - radial_velo * velo_component) / (CINIS_MASS * GRAVITATION_CONSTANT)
+/datum/controller/subsystem/orbital_altitude/proc/calculate_eccentricity_vector_comp(pos_component, velo_component, pos_magnitude, radial_dot, velo_magnitude_sqrd)
+	return ((velo_magnitude_sqrd - (CINIS_MASS * GRAVITATION_CONSTANT) / pos_magnitude) * pos_component - radial_dot * velo_component) / (CINIS_MASS * GRAVITATION_CONSTANT)
+
+/datum/controller/subsystem/orbital_altitude/proc/manage_orbit_keeping()
+	if(abs(actual_angle - PROGRADE) > 1)
+		return
+	if(!orbit_keeping)
+		return
+	var/max_thrust = get_maxium_thrust()
+	set_all_throttle(max_thrust ? ORBITAL_DRAG_COEFF * resistance / max_thrust : 1)
 
 /datum/controller/subsystem/orbital_altitude/proc/set_orbital_state(new_state)
 	if(new_state == orbital_stage)
