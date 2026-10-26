@@ -7,8 +7,8 @@ SUBSYSTEM_DEF(orbital_altitude)
 	/// Current orbital altitude in meters
 	var/orbital_altitude = ORBITAL_ALTITUDE_DEFAULT
 
-	/// Velocity index for display purposes
-	var/velocity_index = 0
+	var/hull_integrity = 1000
+	var/shielding_integrity = 1000
 
 	// ---------------------------------------
 	// TRUE ORBIT VARS
@@ -79,9 +79,6 @@ SUBSYSTEM_DEF(orbital_altitude)
 
 	check_values()
 
-	// Check for critical orbit conditions and warnings
-	check_critical_orbit()
-
 	process_countdown()
 
 	adjust_angle()
@@ -90,7 +87,7 @@ SUBSYSTEM_DEF(orbital_altitude)
 	calculate_pos_from_epoch()
 	calculate_velo_from_epoch()
 	orbital_altitude_change()
-	orbital_epoch += 0.05
+	orbital_epoch += 1
 	// Spawn atmospheric drag damage effects when critical
 	if(orbital_stage == ORBITAL_LOW_CRIT)
 		spawn_atmospheric_drag()
@@ -103,7 +100,7 @@ SUBSYSTEM_DEF(orbital_altitude)
 /datum/controller/subsystem/orbital_altitude/proc/adjust_angle()
 	if(actual_angle == target_angle)
 		return
-	actual_angle += clamp(target_angle - actual_angle, -5, 5)
+	actual_angle += clamp(target_angle - actual_angle, -5, 5) //TODO - fix it allowing it to turn both ways
 
 /datum/controller/subsystem/orbital_altitude/proc/get_station_pos()
 	if(!cached_station_pos)
@@ -114,7 +111,7 @@ SUBSYSTEM_DEF(orbital_altitude)
 	return sqrt(cached_station_pos[1]**2 + cached_station_pos[2]**2)
 
 /datum/controller/subsystem/orbital_altitude/proc/calculate_velo_from_epoch()
-	if(cached_eccentric_anomaly == null)
+	if(isnull(cached_eccentric_anomaly))
 		calculate_eccentric_anomaly()
 	if(eccentricity > 0)
 		var/r = semi_major_axis * (1 - eccentricity * cos(cached_eccentric_anomaly))
@@ -131,7 +128,7 @@ SUBSYSTEM_DEF(orbital_altitude)
 	cached_station_velocity = list(-circular_velo * sin(mean_anomaly + arg_of_periapsis), circular_velo * cos(mean_anomaly + arg_of_periapsis))
 
 /datum/controller/subsystem/orbital_altitude/proc/calculate_pos_from_epoch()
-	if(cached_eccentric_anomaly == null)
+	if(isnull(cached_eccentric_anomaly))
 		calculate_eccentric_anomaly()
 	if(eccentricity > 0)
 		var/per_x = semi_major_axis * (cos(cached_eccentric_anomaly) - eccentricity)
@@ -160,6 +157,7 @@ SUBSYSTEM_DEF(orbital_altitude)
 
 		if(abs(anomaly_correction) < 1e-6)
 			break
+
 	cached_eccentric_anomaly = eccentric_anomaly
 
 /datum/controller/subsystem/orbital_altitude/proc/calculate_mean_anomaly()
@@ -168,7 +166,7 @@ SUBSYSTEM_DEF(orbital_altitude)
 /datum/controller/subsystem/orbital_altitude/proc/calculate_mean_motion()
 	return sqrt((CINIS_MASS * GRAVITATION_CONSTANT) / semi_major_axis ** 3)
 
-/datum/controller/subsystem/orbital_altitude/proc/get_maxium_thrust()
+/datum/controller/subsystem/orbital_altitude/proc/get_maximum_thrust()
 	var/summed_thrust = 0
 	for(var/obj/machinery/atmospherics/components/unary/orbital_thruster/T in orbital_thrusters)
 		if(QDELETED(T))
@@ -199,7 +197,7 @@ SUBSYSTEM_DEF(orbital_altitude)
 	update_thrust_from_thrusters()
 
 /datum/controller/subsystem/orbital_altitude/proc/orbital_altitude_change()
-	resistance = clamp(1 - (orbital_altitude - ORBITAL_ALTITUDE_LOW_BOUND) / (ORBITAL_ALTITUDE_HIGH_BOUND - ORBITAL_ALTITUDE_LOW_BOUND), ORBITAL_MINIMUM_DRAG, 1)
+	resistance = clamp(1 - (orbital_altitude - ORBITAL_ALTITUDE_ABSOLUTE_MIN) / (ORBITAL_ALTITUDE_HIGH_BOUND - ORBITAL_ALTITUDE_ABSOLUTE_MIN), ORBITAL_MINIMUM_DRAG, 1)
 
 	manage_orbit_keeping() // Lives here so small mistakes are not made due to out-of-date information
 
@@ -243,78 +241,8 @@ SUBSYSTEM_DEF(orbital_altitude)
 		return
 	if(!orbit_keeping)
 		return
-	var/max_thrust = get_maxium_thrust()
+	var/max_thrust = get_maximum_thrust()
 	set_all_throttle(max_thrust ? ORBITAL_DRAG_COEFF * resistance / max_thrust : 1)
-
-/datum/controller/subsystem/orbital_altitude/proc/set_orbital_state(new_state)
-	if(new_state == orbital_stage)
-		return
-	if((new_state != ORBITAL_LOW_DEST) && final_countdown_active)
-		end_final_countdown()
-	switch(new_state)
-		if(ORBITAL_HIGH_CRIT)
-			priority_announce("DANGER: Station orbital altitude has exceeded critical upper threshold. \
-			Current altitude: [round(orbital_altitude/1000, 0.1)]km. \
-			Station entering the Osei-Hollund radiation band. Critical radiative exposure likely. \
-			Immediate corrective action required.", \
-			"CRITICAL ALTITUDE WARNING",
-			sound = 'sound/misc/notice1.ogg',
-			has_important_message = TRUE)
-		if(ORBITAL_HIGH_ALT)
-			priority_announce("Advisory: Station orbital altitude has entered a high altitude orbit. \
-			Current altitude: [round(orbital_altitude/1000, 0.1)]km. \
-			Entering radiative zone at this altitude. Further monitoring is advised.", \
-			"High Altitude Advisory",
-			sound = 'sound/misc/notice2.ogg')
-		if(ORBITAL_LOW_ALT)
-			priority_announce("Advisory: Station orbital altitude has entered a low altitude orbit. \
-			Current altitude: [round(orbital_altitude/1000, 0.1)]km. \
-			Further monitoring is advised.", \
-			"Orbital Altitude Advisory",
-			sound = 'sound/misc/notice2.ogg')
-		if(ORBITAL_LOW_CRIT)
-			priority_announce("WARNING: Station orbital altitude has entered a critically low orbit. Structural damage detected.\nRestore orbital parameters immediately.",
-			"CRITICAL ORBITAL FAILURE",
-			sound = 'sound/misc/notice1.ogg',
-			has_important_message = TRUE)
-		if(ORBITAL_LOW_DEST)
-			priority_announce("ALERT: The Station is experiencing stress above its survivable limit. The Station super-structure will fall apart in 1 minute.\nEvacuate now.",
-			"COMPLETE ORBITAL FAILURE",
-			sound = 'sound/misc/notice1.ogg',
-			has_important_message = TRUE)
-			start_final_countdown()
-	orbital_stage = new_state
-
-/datum/controller/subsystem/orbital_altitude/proc/check_critical_orbit()
-	// High altitude critical warning
-	if(orbital_altitude > ORBITAL_ALTITUDE_HIGH_CRITICAL)
-		set_orbital_state(ORBITAL_HIGH_CRIT)
-		return
-
-	// High altitude warning
-	if(orbital_altitude > ORBITAL_ALTITUDE_HIGH)
-		set_orbital_state(ORBITAL_HIGH_ALT)
-		return
-
-	if((ORBITAL_ALTITUDE_LOW < orbital_altitude) && (orbital_altitude < ORBITAL_ALTITUDE_HIGH))
-		set_orbital_state(ORBITAL_NORM)
-		return
-
-	// Ordered this way to ensure it returns on the right if
-	// Critical altitude warning and countdown start
-	if(orbital_altitude < ORBITAL_ALTITUDE_ABSOLUTE_MIN)
-		set_orbital_state(ORBITAL_LOW_DEST)
-		return
-
-	// Critical altitude warning
-	if(orbital_altitude < ORBITAL_ALTITUDE_LOW_CRITICAL)
-		set_orbital_state(ORBITAL_LOW_CRIT)
-		return
-
-	// Low altitude warning
-	if(orbital_altitude < ORBITAL_ALTITUDE_LOW)
-		set_orbital_state(ORBITAL_LOW_ALT)
-		return
 
 /datum/controller/subsystem/orbital_altitude/proc/process_countdown()
 	if(!final_countdown_active)

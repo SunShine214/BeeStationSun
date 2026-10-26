@@ -1,9 +1,3 @@
-// Orbital altitude thresholds for erosion (matches orbital_altitude.dm)
-#define EROSION_ALTITUDE_START 95000  // 95km - Light fire effects start
-#define EROSION_ALTITUDE_CRITICAL 90000  // 90km - Damage begins
-#define EROSION_ALTITUDE_SEVERE 75000  // 75km - Heavy damage
-#define EROSION_ALTITUDE_EXTREME 65000  // 65km - Maximum damage
-
 SUBSYSTEM_DEF(orbital_reentry_erosion)
 	name = "Orbital Reentry Erosion"
 	wait = 1 SECONDS
@@ -69,7 +63,7 @@ SUBSYSTEM_DEF(orbital_reentry_erosion)
 /datum/controller/subsystem/orbital_reentry_erosion/fire(resumed)
 	// Check if we should be active based on altitude
 	var/current_altitude = SSorbital_altitude.orbital_altitude
-	var/should_be_active = current_altitude < EROSION_ALTITUDE_START
+	var/should_be_active = current_altitude < ORBITAL_ALTITUDE_LOW_CRITICAL
 
 	// Handle activation/deactivation
 	if (should_be_active && !erosion_active)
@@ -155,41 +149,15 @@ SUBSYSTEM_DEF(orbital_reentry_erosion)
 			return
 
 /datum/controller/subsystem/orbital_reentry_erosion/proc/get_damage_multiplier(altitude)
-	// No damage above EROSION_ALTITUDE_START
-	if (altitude >= EROSION_ALTITUDE_START)
-		return 0
-
-	// Light effects only between EROSION_ALTITUDE_CRITICAL and EROSION_ALTITUDE_START
-	if (altitude >= EROSION_ALTITUDE_CRITICAL)
-		return (EROSION_ALTITUDE_START - altitude) / (EROSION_ALTITUDE_START - EROSION_ALTITUDE_CRITICAL) * 0.1
-
-	// Moderate damage between EROSION_ALTITUDE_CRITICAL and EROSION_ALTITUDE_SEVERE
-	if (altitude >= EROSION_ALTITUDE_SEVERE)
-		return 0.1 + (EROSION_ALTITUDE_CRITICAL - altitude) / (EROSION_ALTITUDE_CRITICAL - EROSION_ALTITUDE_SEVERE) * 1.5
-
-	// Heavy damage between EROSION_ALTITUDE_SEVERE and EROSION_ALTITUDE_EXTREME
-	if (altitude >= EROSION_ALTITUDE_EXTREME)
-		return 1.5 + (EROSION_ALTITUDE_SEVERE - altitude) / (EROSION_ALTITUDE_SEVERE - EROSION_ALTITUDE_EXTREME) * 1.5
-
-	// Maximum damage below EROSION_ALTITUDE_EXTREME. Though this should not really be reachable.
 	return 4.0
 
 /datum/controller/subsystem/orbital_reentry_erosion/proc/apply_erosion_damage(turf/target_tile, damage_multiplier)
-	// Very light fire effect only (no damage)
-	if (damage_multiplier <= 0.1)
-		// Only spawn fire visual, no actual damage
-		if (prob(damage_multiplier * 100))
-			created_fires += new /obj/effect/reentry_fire(target_tile)
-		return
-
 	// Create fire effect
 	created_fires += new /obj/effect/reentry_fire(target_tile)
 
 	// Calculate actual damage values with much higher scaling
 	var/fire_temp = 600 + (1400 * damage_multiplier)  // 600 to 4800K at max
 	var/fire_volume = 200 + (800 * damage_multiplier)  // 200 to 2600 at max
-	var/plasma_amount = 5 + (45 * damage_multiplier)  // 5 to 140 at max
-	var/o2_amount = 5 + (45 * damage_multiplier)  // 5 to 140 at max
 
 	// Yeah we go exponential
 	var/tile_damage = ((100 * damage_multiplier) * (damage_multiplier * damage_multiplier)) // 0 to 2700
@@ -237,14 +205,6 @@ SUBSYSTEM_DEF(orbital_reentry_erosion)
 	// Apply damage to turf if not blocked
 	if (!dense)
 		target_tile.take_damage(tile_damage, BURN, FIRE, TRUE, reentry_direction, fire_volume)
-		if (isopenturf(target_tile))
-			var/turf/open/open_tile = target_tile
-			open_tile.atmos_spawn_air("plasma=[plasma_amount];o2=[o2_amount];TEMP=[fire_temp]")
-
-#undef EROSION_ALTITUDE_START
-#undef EROSION_ALTITUDE_CRITICAL
-#undef EROSION_ALTITUDE_SEVERE
-#undef EROSION_ALTITUDE_EXTREME
 
 /obj/effect/reentry_fire
 	anchored = TRUE

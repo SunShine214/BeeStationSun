@@ -66,7 +66,7 @@ const OrbitalHeightContent = () => {
     orbital_angle,
     cinus_radius,
   } = data;
-  const pixel_scale = 1 / 5000;
+  const pixel_scale = 1 / 40000;
   const [target_x, set_target_x] = useState(Math.cos(station_target_angle));
   const [target_y, set_target_y] = useState(Math.sin(station_target_angle));
   return (
@@ -128,11 +128,11 @@ const OrbitalHeightContent = () => {
       />
     <svg height="300px" width="300px" viewBox="-150 -150 300 300">
       <g transform="scale(1, -1)">
-        <rect x={station_pos[0] * pixel_scale - 2} y={station_pos[1] * pixel_scale - 2} width={4} height={4} fill="grey" />
-        <line x1={station_pos[0] * pixel_scale} y1={station_pos[1] * pixel_scale} x2={station_pos[0] * pixel_scale + 25} y2={station_pos[1] * pixel_scale} transform={`rotate(${station_actual_angle} ${station_pos[0] * pixel_scale} ${station_pos[1] * pixel_scale})`} stroke="red" />
-        <line x1={station_pos[0] * pixel_scale} y1={station_pos[1] * pixel_scale} x2={station_pos[0] * pixel_scale + 25} y2={station_pos[1] * pixel_scale} transform={`rotate(${station_target_angle} ${station_pos[0] * pixel_scale} ${station_pos[1] * pixel_scale})`} stroke="blue" />
+        <line x1={station_pos[0] * pixel_scale} y1={station_pos[1] * pixel_scale} x2={station_pos[0] * pixel_scale + 25} y2={station_pos[1] * pixel_scale} transform={`rotate(${station_actual_angle + orbital_angle} ${station_pos[0] * pixel_scale} ${station_pos[1] * pixel_scale})`} stroke="red" />
+        <line x1={station_pos[0] * pixel_scale} y1={station_pos[1] * pixel_scale} x2={station_pos[0] * pixel_scale + 25} y2={station_pos[1] * pixel_scale} transform={`rotate(${station_target_angle + orbital_angle} ${station_pos[0] * pixel_scale} ${station_pos[1] * pixel_scale})`} stroke="blue" />
         <OrbitalRing center_x={0} center_y={0} semi_major_axis={semi_major_axis} eccentricity={eccentricity} arg_of_periapsis={arg_of_periapsis} color="#ffffff" pixel_scale={pixel_scale} />
         <circle cx={0} cy={0} r={cinus_radius * pixel_scale} fill="#e93c3c" />
+        <rect x={station_pos[0] * pixel_scale - 2} y={station_pos[1] * pixel_scale - 2} width={4} height={4} fill="grey" />
       </g>
     </svg>
     </>

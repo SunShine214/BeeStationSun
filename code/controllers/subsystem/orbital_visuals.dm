@@ -158,7 +158,7 @@ SUBSYSTEM_DEF(orbital_visuals)
 	set_orbital_starlight_colour(current_color, 0.3 SECONDS)
 
 // ============================================================================
-// FULL REENTRY STATE (below 90km)
+// FULL REENTRY STATE
 // ============================================================================
 
 /datum/controller/subsystem/orbital_visuals/proc/start_reentry(altitude)
@@ -167,8 +167,7 @@ SUBSYSTEM_DEF(orbital_visuals)
 	update_reentry(altitude)
 
 /datum/controller/subsystem/orbital_visuals/proc/update_reentry(altitude)
-	// Calculate how deep into re-entry we are (0 to 1, where 0 is at 90km and 1 is at 80km)
-	var/reentry_depth = clamp((ORBITAL_ALTITUDE_LOW_CRITICAL - altitude) / (ORBITAL_ALTITUDE_LOW_CRITICAL - ORBITAL_ALTITUDE_LOW_BOUND), 0, 1)
+	var/reentry_depth = clamp((ORBITAL_ALTITUDE_LOW_CRITICAL - altitude) / (ORBITAL_ALTITUDE_LOW_CRITICAL - ORBITAL_ALTITUDE_ABSOLUTE_MIN), 0, 1)
 
 	// Violent flickering between different intensities of orange and red
 	var/list/reentry_colors = list(

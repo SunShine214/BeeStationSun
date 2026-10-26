@@ -46,40 +46,10 @@
 	data["thrust_level"] = SSorbital_altitude.throttle
 	data["actual_thrust"] = SSorbital_altitude.thrust
 
-	// Define orbital bands for visualization
-	var/list/orbital_bands = list()
-	orbital_bands += list(list(
-		"name" = "High Critical",
-		"max_altitude" = 140,
-		"min_altitude" = 130,
-		"color" = "#B22222"
-	))
-	orbital_bands += list(list(
-		"name" = "High Warning",
-		"max_altitude" = ORBITAL_ALTITUDE_HIGH_CRITICAL / 1000,
-		"min_altitude" = ORBITAL_ALTITUDE_HIGH / 1000,
-		"color" = "#DAA520"
-	))
-	orbital_bands += list(list(
-		"name" = "Safe Zone",
-		"max_altitude" = ORBITAL_ALTITUDE_HIGH / 1000,
-		"min_altitude" = (ORBITAL_ALTITUDE_LOW + 10000) / 1000,
-		"color" = "#3CB371"
-	))
-	orbital_bands += list(list(
-		"name" = "Mining Regime",
-		"max_altitude" = (ORBITAL_ALTITUDE_LOW + 10000) / 1000,
-		"min_altitude" = ORBITAL_ALTITUDE_LOW / 1000,
-		"color" = "#D7A44A",
-		"is_mining_regime" = TRUE
-	))
-	orbital_bands += list(list(
-		"name" = "Critical",
-		"max_altitude" = ORBITAL_ALTITUDE_LOW / 1000,
-		"min_altitude" = 0,
-		"color" = "#8B0000"
-	))
-	data["orbital_bands"] = orbital_bands
+	data["atmosphere_height"] = CINIS_ATMOSPHERE + CINIS_RADIUS
+	data["atmosphere_normal"] = ORBITAL_ALTITUDE_DEFAULT
+	data["atmosphere_low"] = ORBITAL_ALTITUDE_LOW
+	data["atmosphere_destruction"] = ORBITAL_ALTITUDE_ABSOLUTE_MIN
 
 	return data
 

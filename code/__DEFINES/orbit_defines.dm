@@ -1,22 +1,23 @@
 // Technically unrelated but they use "orbits" too so:
 // Orbital altitude thresholds in meters
-#define ORBITAL_ALTITUDE_HIGH_BOUND 3e5 // - Cannot go higher than this
-#define ORBITAL_ALTITUDE_HIGH_CRITICAL 2.75e5 // - Upper critical threshold
-#define ORBITAL_ALTITUDE_HIGH 2.25e5 // - Upper normal threshold
-#define ORBITAL_ALTITUDE_DEFAULT 2e5 // - Default stable altitude
-#define ORBITAL_ALTITUDE_LOW 1.75e5 // - Lower warning threshold (visual effects start)
-#define ORBITAL_ALTITUDE_LOW_CRITICAL 1.5e5 // - Lower critical threshold (structural damage begins)
-#define ORBITAL_ALTITUDE_ABSOLUTE_MIN 1.25e5 // past this point the station will just explode
-#define ORBITAL_ALTITUDE_LOW_BOUND 1e5 // - Cannot go lower than this
 
 #define ORBITAL_MINIMUM_DRAG 0.1 // - How much drag do we experience in high orbits
-#define ORBITAL_DRAG_COEFF 1000 MEGANEWTON // - How much drag the station produces at minimum altitude, in mega neutons This will counteract thrust.
+#define ORBITAL_DRAG_COEFF 1000 MEGANEWTON // - How much drag the station produces at minimum altitude, in mega neutons. This will counteract thrust.
 #define STATION_MASS 100000 // - According to the interweb, aircraft carriers are 100000 tons, which feels similar to what the station would be.
 
-#define CINIS_RADIUS 1.143e5 // - Tiny, since Earth-sized planets take hours to finish an orbit.
+#define CINIS_ATMOSPHERE 5e5
+#define CINIS_RADIUS 1.143e6 // - Tiny, since Earth-sized planets take hours to finish an orbit.
 #define GRAVITATION_CONSTANT 6.6743e-11 // Grav constant
-#define CINIS_MASS 5.6e23 // - Similarly tiny
+#define CINIS_MASS 5.6e24 // - Similarly tiny
 
+#define ORBITAL_ALTITUDE_RAD_FREE 10 * CINIS_ATMOSPHERE + CINIS_RADIUS //At which point there is not radiation
+#define ORBITAL_ALTITUDE_HIGH_BOUND 3 * CINIS_ATMOSPHERE + CINIS_RADIUS // - Cannot go higher than this
+#define ORBITAL_ALTITUDE_HIGH_CRITICAL 2 * CINIS_ATMOSPHERE + CINIS_RADIUS // - Upper critical threshold
+#define ORBITAL_ALTITUDE_HIGH CINIS_ATMOSPHERE + CINIS_RADIUS // - Upper normal threshold
+#define ORBITAL_ALTITUDE_DEFAULT 0.75 * CINIS_ATMOSPHERE + CINIS_RADIUS // - Default stable altitude
+#define ORBITAL_ALTITUDE_LOW 0.5 * CINIS_ATMOSPHERE + CINIS_RADIUS // - Lower warning threshold (visual effects start)
+#define ORBITAL_ALTITUDE_LOW_CRITICAL 0.25 * CINIS_ATMOSPHERE + CINIS_RADIUS // - Lower critical threshold (structural damage begins)
+#define ORBITAL_ALTITUDE_ABSOLUTE_MIN 0.1 * CINIS_ATMOSPHERE + CINIS_RADIUS  // at this point the station will just explode. Cannot go lower, since instantous station destruction (colliding with the planet) would be annoying for players.
 
 // Orbital directions
 #define PROGRADE 0
@@ -32,7 +33,6 @@
 #define ORBITAL_NORM 3
 #define ORBITAL_HIGH_ALT 4
 #define ORBITAL_HIGH_CRIT 5
-
 
 // Proper orbital defines
 #define GRAVITATIONAL_CONSTANT 1
