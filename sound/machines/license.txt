@@ -1,2 +1,6 @@
 crate_close.ogg and crate_open.ogg are made by lawnjelly
 (https://freesound.org/people/lawnjelly/sounds/156892/)
+
+gas_attach.ogg is made from
+https://freesound.org/people/bassmosphere/sounds/384700/ by bassmosphere, and
+https://freesound.org/people/SukritSen/sounds/398077/ by SukritSen

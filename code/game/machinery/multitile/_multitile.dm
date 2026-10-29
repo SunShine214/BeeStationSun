@@ -1,6 +1,7 @@
 #define TEMPLATE_PART_DUMMY 1
 
 /obj/machinery/multitile
+	//abstract_type = /obj/machinery/multitile TODO - MERGE MASTER YOU FOOL
 	density = TRUE
 
 	/// -------------------
@@ -41,9 +42,9 @@
 /obj/machinery/multitile/proc/build_from_template()
 	if(isnull(template))
 		return
-	var/iter_y = template_offset_y
+	var/iter_x = template_offset_x
 	for(var/list/row in template)
-		var/iter_x = template_offset_x
+		var/iter_y = template_offset_y
 		for(var/item in row)
 			if(isnull(item))
 				continue
@@ -51,13 +52,13 @@
 				stack_trace("Something is overlapping the main multitile machine! Fix it's template!")
 			var/obj/to_attach = null
 			if(islist(item))
-				to_attach = get_obj_from_template(item["template_type"])
+				to_attach = get_obj_from_template(item["template_type"], iter_x, iter_y)
 				if(item["layer"])
 					to_attach.layer = item["layer"]
 				if(item["density"])
 					to_attach.density = item["density"]
 			else
-				to_attach = get_obj_from_template(item)
+				to_attach = get_obj_from_template(item, iter_x, iter_y)
 			if(isnull(to_attach))
 				stack_trace("Unable to get object from multitile template segment. Please review the multitile template!")
 				continue
@@ -67,13 +68,13 @@
 	for(var/obj/attached in attached_parts)
 		RegisterSignal(attached, COMSIG_QDELETING, PROC_REF(child_destroyed))
 
-/obj/machinery/multitile/proc/get_obj_from_template(item)
+/obj/machinery/multitile/proc/get_obj_from_template(item, x_offset, y_offset)
 	if(ispath(item))
-		return build_type(item, locate(x + iter_x, y + iter_y, z))
+		return build_type(item, locate(x + x_offset, y + y_offset, z))
 	else if(istext(item))
-		return build_icon_dummy(item, locate(x + iter_x, y + iter_y, z))
+		return build_icon_dummy(item, locate(x + x_offset, y + y_offset, z))
 	else if(isnum(item) && item == TEMPLATE_PART_DUMMY)
-		return build_dummy(locate(x + iter_x, y + iter_y, z))
+		return build_dummy(locate(x + x_offset, y + y_offset, z))
 
 /obj/machinery/multitile/proc/build_dummy(location)
 	return new /obj/structure/dummy(location, src)
@@ -84,12 +85,21 @@
 /obj/machinery/multitile/proc/build_type(type, location)
 	return new type(location, src)
 
+/// Call this when relaying a ui_act
+/obj/machinery/multitile/proc/ui_act_base(action, params)
+	return
+
+/obj/machinery/multitile/ui_act(action, params)
+	if(..())
+		return
+	ui_act_base(action, params)
+
 /obj/structure/dummy
 	name = "big machinery part"
 	density = TRUE
 	anchored = TRUE
 	invisibility = INVISIBILITY_ABSTRACT
-	var/obj/machinery/parent
+	var/obj/machinery/multitile/parent
 
 /obj/structure/dummy/Initialize(mapload, new_parent)
 	. = ..()
@@ -99,7 +109,7 @@
 	name = "big machinery part"
 	density = TRUE
 	anchored = TRUE
-	var/obj/machinery/parent
+	var/obj/machinery/multitile/parent //TODO - replace with weakref
 
 /obj/structure/dummy_visible/Initialize(mapload, obj/new_parent, new_icon_state)
 	. = ..()
@@ -111,5 +121,10 @@
 
 /obj/structure/dummy_visible/ui_interact(mob/user, datum/tgui/ui)
 	parent.ui_interact()
+
+/obj/structure/dummy_visible/ui_act(action, params)
+	if(..())
+		return
+	parent.ui_act_base(action, params)
 
 #undef TEMPLATE_PART_DUMMY
