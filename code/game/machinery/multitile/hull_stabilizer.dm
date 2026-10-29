@@ -10,21 +10,59 @@
 
 	var/list/obj/structure/hull_nanite_canister/canisters = list()
 
+/obj/machinery/multitile/hull_stabilizer/proc/adjust_nanites(amount)
+	if(!length(canisters))
+		return 0 // Not FALSE since this does not represent a boolean
+
+	var/list/cans_to_nanites = list()
+	for(var/obj/structure/hull_nanite_canister/canister in canisters)
+		cans_to_nanites[canister] = canister.nanites
+
+	var/amount_removed = 0
+	var/remove_per_can = amount / length(canisters)
+	for(var/obj/structure/hull_nanite_canister/canister in sortTim(cans_to_nanites, GLOBAL_PROC_REF(cmp_numeric_asc), associative = TRUE)) // sorted, since you need to start taking from the least filled canister.
+		var/actually_removed = canister.adjust_nanites(remove_per_can)
+		amount_removed += actually_removed
+		remove_per_can += remove_per_can - actually_removed
+
+	return amount_removed
+
+
+/obj/machinery/multitile/hull_stabilizer/proc/get_nanites()
+	var/total = 0
+	for(var/obj/structure/hull_nanite_canister/canister in canisters)
+		total += canister.nanites
+	return total
+
+/obj/machinery/multitile/hull_stabilizer/proc/add_canister(obj/structure/hull_nanite_canister/canister)
+	RegisterSignal(canister, COMSIG_QDELETING, PROC_REF(remove_canister))
+	canisters += canister
+
+/obj/machinery/multitile/hull_stabilizer/proc/remove_canister(obj/structure/hull_nanite_canister/canister)
+	UnregisterSignal(canister, COMSIG_QDELETING) // TODO - Investigate this
+	canisters -= canister
+
 /obj/structure/hull_nanite_canister
 	name = "hull-repair nanite canister"
 	desc = "A stasis canister for organo-synth nanite clusters meant to be attached to the hull crucible to provide replacement nanites."
 	icon = 'icons/obj/machines/hull_stabilizer.dmi'
 	icon_state = "nanite_canister"
 	var/nanites = 100
+	var/datum/weakref/crucible
 
 /obj/structure/hull_nanite_canister/wrench_act(mob/living/user, obj/item/tool)
 	if(anchored)
 		playsound(src, 'sound/machines/gas_attach.ogg', 50)
 		set_anchored(FALSE)
+		var/obj/machinery/multitile/hull_stabilizer/old_crucible = cruible?.resolve()
+		old_crucible?.remove_canister(src)
 		return TRUE
-	else if(is_valid_canister_location())
+	var/obj/machinery/multitile/hull_stabilizer/new_crucible = find_valid_crucible()
+	if(crucible)
 		playsound(src, 'sound/machines/gas_attach.ogg', 50)
 		set_anchored(TRUE)
+		crucible = WEAKREF(new_crucible)
+		new_crucible.add_canister(src)
 		return TRUE
 	balloon_alert(user, "no connector!")
 	return FALSE
@@ -38,10 +76,15 @@
 	for(var/obj/machinery/multitile/hull_stabilizer/crucible in contents_to_check)
 		return crucible
 
-/obj/structure/hull_nanite_canister/proc/is_valid_canister_location()
+/obj/structure/hull_nanite_canister/proc/find_valid_crucible()
 	if(!find_crucible())
 		return FALSE
 	for(var/obj/structure/hull_nanite_canister/other_can in get_turf(src))
 		if(other_can != src)
 			return FALSE
 	return TRUE
+
+/obj/structure/hull_nanite_canister/proc/adjust_nanites(amount)
+	var/initial_nanites = nanites
+	nanites = clamp(nanites + amount, 0, INFINITY)
+	return nanites - initial_nanites
