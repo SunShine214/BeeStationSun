@@ -126,6 +126,7 @@ const OrbitalHeightContent = () => {
         content={'decrease'}
         onClick={() => act('decrease_thrust')}
       />
+    Height {Math.sqrt(station_pos[0]**2 + station_pos[1]**2) / 1000}
     <svg height="300px" width="300px" viewBox="-150 -150 300 300">
       <g transform="scale(1, -1)">
         <line x1={station_pos[0] * pixel_scale} y1={station_pos[1] * pixel_scale} x2={station_pos[0] * pixel_scale + 25} y2={station_pos[1] * pixel_scale} transform={`rotate(${station_actual_angle + orbital_angle} ${station_pos[0] * pixel_scale} ${station_pos[1] * pixel_scale})`} stroke="red" />

@@ -1,8 +1,7 @@
 // Technically unrelated but they use "orbits" too so:
 // Orbital altitude thresholds in meters
 
-#define ORBITAL_MINIMUM_DRAG 0.1 // - How much drag do we experience in high orbits
-#define ORBITAL_DRAG_COEFF 1000 MEGANEWTON // - How much drag the station produces at minimum altitude, in mega neutons. This will counteract thrust.
+#define ORBITAL_DRAG_COEFF 5000 MEGANEWTON // - How much drag the station produces at 1 resistance, in mega neutons. This will counteract thrust.
 #define STATION_MASS 100000 // - According to the interweb, aircraft carriers are 100000 tons, which feels similar to what the station would be.
 
 #define CINIS_ATMOSPHERE 5e5
@@ -10,14 +9,18 @@
 #define GRAVITATION_CONSTANT 6.6743e-11 // Grav constant
 #define CINIS_MASS 5.6e24 // - Similarly tiny
 
+#define CINIS_CALCULATED_DRAG_SCALE 300000 // Not at all realistic, but provides a decent scale of resistance.
+
 #define ORBITAL_ALTITUDE_RAD_FREE 10 * CINIS_ATMOSPHERE + CINIS_RADIUS //At which point there is not radiation
 #define ORBITAL_ALTITUDE_HIGH_BOUND 3 * CINIS_ATMOSPHERE + CINIS_RADIUS // - Cannot go higher than this
 #define ORBITAL_ALTITUDE_HIGH_CRITICAL 2 * CINIS_ATMOSPHERE + CINIS_RADIUS // - Upper critical threshold
 #define ORBITAL_ALTITUDE_HIGH CINIS_ATMOSPHERE + CINIS_RADIUS // - Upper normal threshold
 #define ORBITAL_ALTITUDE_DEFAULT 0.75 * CINIS_ATMOSPHERE + CINIS_RADIUS // - Default stable altitude
-#define ORBITAL_ALTITUDE_LOW 0.5 * CINIS_ATMOSPHERE + CINIS_RADIUS // - Lower warning threshold (visual effects start)
-#define ORBITAL_ALTITUDE_LOW_CRITICAL 0.25 * CINIS_ATMOSPHERE + CINIS_RADIUS // - Lower critical threshold (structural damage begins)
-#define ORBITAL_ALTITUDE_ABSOLUTE_MIN 0.1 * CINIS_ATMOSPHERE + CINIS_RADIUS  // at this point the station will just explode. Cannot go lower, since instantous station destruction (colliding with the planet) would be annoying for players.
+#define ORBITAL_ALTITUDE_LOW 0.5 * CINIS_ATMOSPHERE + CINIS_RADIUS // - Lower warning threshold (visual effects start and superstructure)
+#define ORBITAL_ALTITUDE_LOW_CRITICAL 0.25 * CINIS_ATMOSPHERE + CINIS_RADIUS // - Lower critical threshold (superstructure damage maximizes)
+#define ORBITAL_ALTITUDE_ABSOLUTE_MIN 0.1 * CINIS_ATMOSPHERE + CINIS_RADIUS  // - Cannot go lower, since instantous station destruction (colliding with the planet) would be annoying for players.
+
+#define ORBITAL_SUPERSTUCTURE_DAM_MAX 100 // how much damage the station superstructure take at ABSOLUTE_MIN (exponential)
 
 // Orbital directions
 #define PROGRADE 0

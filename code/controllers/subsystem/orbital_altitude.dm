@@ -7,15 +7,12 @@ SUBSYSTEM_DEF(orbital_altitude)
 	/// Current orbital altitude in meters
 	var/orbital_altitude = ORBITAL_ALTITUDE_DEFAULT
 
-	var/hull_integrity = 1000
-	var/shielding_integrity = 1000
-
 	// ---------------------------------------
 	// TRUE ORBIT VARS
 	// ---------------------------------------
 
 	var/semi_major_axis = ORBITAL_ALTITUDE_DEFAULT + CINIS_RADIUS
-	var/eccentricity = 0.3
+	var/eccentricity = 0
 	var/arg_of_periapsis = 0
 	var/orbital_epoch = 0
 
@@ -197,8 +194,7 @@ SUBSYSTEM_DEF(orbital_altitude)
 	update_thrust_from_thrusters()
 
 /datum/controller/subsystem/orbital_altitude/proc/orbital_altitude_change()
-	resistance = clamp(1 - (orbital_altitude - ORBITAL_ALTITUDE_ABSOLUTE_MIN) / (ORBITAL_ALTITUDE_HIGH_BOUND - ORBITAL_ALTITUDE_ABSOLUTE_MIN), ORBITAL_MINIMUM_DRAG, 1)
-
+	resistance = NUM_E ** (-orbital_altitude / CINIS_CALCULATED_DRAG_SCALE)
 	manage_orbit_keeping() // Lives here so small mistakes are not made due to out-of-date information
 
 	var/negative_velocity_magnitude = (ORBITAL_DRAG_COEFF * resistance) / (STATION_MASS * 1000)
@@ -243,6 +239,11 @@ SUBSYSTEM_DEF(orbital_altitude)
 		return
 	var/max_thrust = get_maximum_thrust()
 	set_all_throttle(max_thrust ? ORBITAL_DRAG_COEFF * resistance / max_thrust : 1)
+
+/datum/controller/subsystem/orbital_altitude/proc/reentry_effects()
+	if(orbital_altitude >= ORBITAL_ALTITUDE_LOW)
+		return
+	SSsuperstructure.damage_structure(resistance * ORBITAL_SUPERSTUCTURE_DAM_MAX)
 
 /datum/controller/subsystem/orbital_altitude/proc/process_countdown()
 	if(!final_countdown_active)
