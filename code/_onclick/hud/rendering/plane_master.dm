@@ -253,10 +253,6 @@ INITIALIZE_IMMEDIATE(/atom/movable/screen/plane_master)
 	// On non-station Z-levels, use the default starlight colour (original behavior)
 	if(!is_station_level(target.z))
 		return GLOB.starlight_colour || COLOR_STARLIGHT
-	// On station Z-levels, check if orbital visuals are being overridden
-	if(SSorbital_visuals.starlight_override)
-		// Overridden (e.g., Aurora Caelus) - use the default starlight colour
-		return GLOB.starlight_colour || COLOR_STARLIGHT
 	// Not overridden - use the orbital visual starlight colour
 	return GLOB.orbital_visual_starlight || COLOR_STARLIGHT
 

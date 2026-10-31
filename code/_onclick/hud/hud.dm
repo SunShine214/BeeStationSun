@@ -96,13 +96,6 @@ GLOBAL_LIST_INIT(available_ui_styles, list(
 	var/datum/plane_master_group/main/main_group = new(PLANE_GROUP_MAIN)
 	main_group.set_hud(src)
 
-	// TODO - FIX
-
-	for(var/mytype in subtypesof(/atom/movable/screen/plane_master) - /atom/movable/screen/plane_master/rendering_plate)
-		var/atom/movable/screen/plane_master/instance = new mytype(null, src)
-		plane_masters["[instance.plane]"] = instance
-		instance.backdrop(mymob)
-
 	for(var/mytype in subtypesof(/atom/movable/plane_master_controller))
 		var/atom/movable/plane_master_controller/controller_instance = new mytype(null, src)
 		plane_master_controllers[controller_instance.name] = controller_instance

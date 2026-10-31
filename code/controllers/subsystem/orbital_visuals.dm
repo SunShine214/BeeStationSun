@@ -2,7 +2,7 @@ SUBSYSTEM_DEF(orbital_visuals)
 	name = "Orbital Visuals"
 	can_fire = TRUE
 	wait = 0.1 SECONDS
-	flags = SS_NO_INIT | SS_KEEP_TIMING
+	ss_flags = SS_NO_INIT | SS_KEEP_TIMING
 
 	/// Whether atmospheric fire visual effects are active
 	var/atmospheric_fire_effect_active = FALSE

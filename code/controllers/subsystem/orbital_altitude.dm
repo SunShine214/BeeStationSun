@@ -368,10 +368,10 @@ SUBSYSTEM_DEF(orbital_altitude)
 
 		// Iterate through all non-space areas
 		for(var/area/A in GLOB.areas)
-			if(A.type == /area/space || istype(A, /area/space))
+			if(A.type == /area/misc/space || istype(A, /area/misc/space))
 				continue
 
-			var/list/area_turfs = A.get_contained_turfs()
+			var/list/area_turfs = A.get_turfs_by_zlevel(z_level)
 			if(!length(area_turfs))
 				continue
 
