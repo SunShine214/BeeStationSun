@@ -25,6 +25,7 @@
 
 /obj/machinery/multitile/Initialize(mapload)
 	. = ..()
+	template = reverseList(template)
 	build_from_template()
 
 /obj/machinery/multitile/Destroy()
@@ -37,25 +38,27 @@
 	. = ..()
 
 /obj/machinery/multitile/proc/child_destroyed()
-	Destroy()
+	SIGNAL_HANDLER
+	qdel(src)
 
 /obj/machinery/multitile/proc/build_from_template()
 	if(isnull(template))
 		return
-	var/iter_x = template_offset_x
+	var/iter_y = template_offset_y
 	for(var/list/row in template)
-		var/iter_y = template_offset_y
+		var/iter_x = template_offset_x
 		for(var/item in row)
 			if(isnull(item))
+				iter_x ++
 				continue
 			if(x == iter_x && y == iter_y)
 				stack_trace("Something is overlapping the main multitile machine! Fix it's template!")
 			var/obj/to_attach = null
 			if(islist(item))
 				to_attach = get_obj_from_template(item["template_type"], iter_x, iter_y)
-				if(item["layer"])
+				if(!isnull(item["layer"]))
 					to_attach.layer = item["layer"]
-				if(item["density"])
+				if(!isnull(item["density"]))
 					to_attach.density = item["density"]
 			else
 				to_attach = get_obj_from_template(item, iter_x, iter_y)

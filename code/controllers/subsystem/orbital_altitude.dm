@@ -11,7 +11,7 @@ SUBSYSTEM_DEF(orbital_altitude)
 	// TRUE ORBIT VARS
 	// ---------------------------------------
 
-	var/semi_major_axis = ORBITAL_ALTITUDE_DEFAULT + CINIS_RADIUS
+	var/semi_major_axis = ORBITAL_ALTITUDE_DEFAULT
 	var/eccentricity = 0
 	var/arg_of_periapsis = 0
 	var/orbital_epoch = 0
@@ -84,10 +84,9 @@ SUBSYSTEM_DEF(orbital_altitude)
 	calculate_pos_from_epoch()
 	calculate_velo_from_epoch()
 	orbital_altitude_change()
-	orbital_epoch += 1
-	// Spawn atmospheric drag damage effects when critical
-	if(orbital_stage == ORBITAL_LOW_CRIT)
-		spawn_atmospheric_drag()
+	orbital_epoch += 0.5
+
+	reentry_effects()
 
 /datum/controller/subsystem/orbital_altitude/proc/check_values()
 	if(semi_major_axis <= 0)
@@ -158,10 +157,25 @@ SUBSYSTEM_DEF(orbital_altitude)
 	cached_eccentric_anomaly = eccentric_anomaly
 
 /datum/controller/subsystem/orbital_altitude/proc/calculate_mean_anomaly()
-	return ((calculate_mean_motion() * orbital_epoch) * (180 / PI)) % 360
+	return ((calculate_mean_motion() * orbital_epoch) * (180 / PI)) %% 360
 
 /datum/controller/subsystem/orbital_altitude/proc/calculate_mean_motion()
 	return sqrt((CINIS_MASS * GRAVITATION_CONSTANT) / semi_major_axis ** 3)
+
+/datum/controller/subsystem/orbital_altitude/proc/calculate_adjusted_epoch()
+	var/relative_x = cached_station_pos[1] * cos(arg_of_periapsis) + cached_station_pos[2] * sin(arg_of_periapsis)
+	var/relative_y = -cached_station_pos[1] * sin(arg_of_periapsis) + cached_station_pos[2] * cos(arg_of_periapsis)
+
+	var/ecc_anom_x = relative_x / semi_major_axis + eccentricity
+	var/ecc_anom_y = relative_y / (semi_major_axis * sqrt(1 - eccentricity**2))
+
+	var/ecc_anom = ATAN2(ecc_anom_x, ecc_anom_y)
+	cached_eccentric_anomaly = ecc_anom %% 360
+
+	var/mean_motion = calculate_mean_motion()
+	var/mean_anomaly = cached_eccentric_anomaly - eccentricity * (180 / PI) * sin(cached_eccentric_anomaly)
+
+	orbital_epoch = (mean_anomaly * (PI / 180)) / mean_motion
 
 /datum/controller/subsystem/orbital_altitude/proc/get_maximum_thrust()
 	var/summed_thrust = 0
@@ -203,7 +217,7 @@ SUBSYSTEM_DEF(orbital_altitude)
 	orbital_angle = ATAN2(cached_station_velocity[1], cached_station_velocity[2])
 
 	if(abs(orbital_angle - actual_angle) < 0.001)
-		if((magnitude - negative_velocity_magnitude) < 0.001)
+		if(abs(magnitude - negative_velocity_magnitude) < 0.001)
 			return // Early return when the thrust vector is near equal to resistance- thus meaning no force is actually being applied.
 			//TODO - think about this and fix it
 
@@ -221,13 +235,22 @@ SUBSYSTEM_DEF(orbital_altitude)
 		return
 		//TODO: add message about thrusters being cut due to orbital extremes, also, make sure you it resets to a non-parabolic orbit should one occur somehow
 
-	semi_major_axis = 1 / (2 / pos_magnitude - velo_magnitude_sqrd / (CINIS_MASS * GRAVITATION_CONSTANT))
+
+	var/new_sma = 1 / (2 / pos_magnitude - velo_magnitude_sqrd / (CINIS_MASS * GRAVITATION_CONSTANT))
+
+	if(new_sma * (1 + eccentricity) > ORBITAL_ALTITUDE_HIGH_BOUND || new_sma * (1 - eccentricity) < ORBITAL_ALTITUDE_ABSOLUTE_MIN)
+		//TODO - add alert system ("SHUT DOWN THRUSTERS, TOO HIGH/TOO LOW")
+		return
+
+	semi_major_axis = new_sma
 
 	var/eccentricity_x = calculate_eccentricity_vector_comp(cached_station_pos[1], new_velo_x, pos_magnitude, radial_dot, velo_magnitude_sqrd)
 	var/eccentricity_y = calculate_eccentricity_vector_comp(cached_station_pos[2], new_velo_y, pos_magnitude, radial_dot, velo_magnitude_sqrd)
 
 	eccentricity = sqrt(eccentricity_x**2 + eccentricity_y**2)
 	arg_of_periapsis = eccentricity > 0 ? ATAN2(eccentricity_x, eccentricity_y) : 0
+
+	calculate_adjusted_epoch()
 
 /datum/controller/subsystem/orbital_altitude/proc/calculate_eccentricity_vector_comp(pos_component, velo_component, pos_magnitude, radial_dot, velo_magnitude_sqrd)
 	return ((velo_magnitude_sqrd - (CINIS_MASS * GRAVITATION_CONSTANT) / pos_magnitude) * pos_component - radial_dot * velo_component) / (CINIS_MASS * GRAVITATION_CONSTANT)
@@ -244,6 +267,7 @@ SUBSYSTEM_DEF(orbital_altitude)
 	if(orbital_altitude >= ORBITAL_ALTITUDE_LOW)
 		return
 	SSsuperstructure.damage_structure(resistance * ORBITAL_SUPERSTUCTURE_DAM_MAX)
+	//spawn_atmospheric_drag()
 
 /datum/controller/subsystem/orbital_altitude/proc/process_countdown()
 	if(!final_countdown_active)
