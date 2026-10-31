@@ -47,7 +47,7 @@
 	max_integrity = 1000
 	damage_deflection = 0
 	var/d_state = INTACT
-	flags_1 = NOJAUNT_1
+	turf_flags = NOJAUNT
 	icon = 'icons/turf/walls/clockwork_wall.dmi'
 	icon_state = "clockwork_wall-0"
 	base_icon_state = "clockwork_wall"
@@ -112,11 +112,10 @@
 /turf/closed/wall/clockwork/rcd_act(mob/user, obj/item/construction/rcd/the_rcd, passed_mode)
 	return
 
-/turf/closed/wall/clockwork/attack_hulk(mob/user, does_attack_animation)
+/turf/closed/wall/clockwork/attack_hulk(mob/user)
 	if(prob(10))
 		return ..()
 	to_chat(user, span_warning("Your slightly dent [src]."))
-	return
 
 //========Deconstruction Handled Here=======
 /turf/closed/wall/clockwork/deconstruction_hints(mob/user)
@@ -145,8 +144,13 @@
 		return 1
 	return
 
-/turf/closed/wall/clockwork/mech_melee_attack(obj/vehicle/sealed/mecha/M)
-	return
+/turf/closed/wall/clockwork/mech_melee_attack(obj/vehicle/sealed/mecha/mecha_attacker, mob/living/user)
+	SHOULD_CALL_PARENT(FALSE) //Me when I cant call grandparent so I shit out snowflake code hmmnngmg
+	. = 0 // immune
+	SEND_SIGNAL(src, COMSIG_ATOM_ATTACK_MECH, mecha_attacker)
+	mecha_attacker.do_attack_animation(src)
+	playsound(src, 'sound/weapons/tap.ogg', 50, TRUE)
+	mecha_attacker.visible_message(span_warning("[mecha_attacker] bounces off [src]!"), span_warning("You bounce off [src]!"), null, COMBAT_MESSAGE_RANGE)
 
 /turf/closed/wall/clockwork/update_icon()
 	. = ..()
@@ -192,7 +196,7 @@
 	for(var/obj/structure/lattice/L in src)
 		L.ratvar_act()
 
-/turf/open/floor/clockwork/try_replace_tile(obj/item/stack/tile/T, mob/user, params)
+/turf/open/floor/clockwork/try_replace_tile(obj/item/stack/tile/T, mob/user, list/modifiers)
 	return
 
 /turf/open/floor/clockwork/crowbar_act(mob/living/user, obj/item/I)
@@ -279,7 +283,7 @@
 /obj/structure/lattice/clockwork/Initialize(mapload)
 	. = ..()
 	ratvar_act()
-	if(is_reebe(z))
+	if(is_on_reebe(src))
 		resistance_flags |= INDESTRUCTIBLE
 
 /obj/structure/lattice/clockwork/ratvar_act()
@@ -312,7 +316,7 @@
 	if(!mapload)
 		new /obj/effect/temp_visual/ratvar/floor/catwalk(loc)
 		new /obj/effect/temp_visual/ratvar/beam/catwalk(loc)
-	if(is_reebe(z))
+	if(is_on_reebe(src))
 		resistance_flags |= INDESTRUCTIBLE
 
 /obj/structure/lattice/catwalk/clockwork/ratvar_act()
@@ -338,7 +342,7 @@
 	hackProof = TRUE
 	aiControlDisabled = 1
 	req_access = list(ACCESS_CLOCKCULT)
-	use_power = FALSE
+	use_power = NO_POWER_USE
 	resistance_flags = FIRE_PROOF | ACID_PROOF
 	damage_deflection = 30
 	normal_integrity = 240
@@ -366,6 +370,9 @@
 	. += gear_text
 
 /obj/machinery/door/airlock/clockwork/emp_act(severity)
+	. = ..()
+	if(. & EMP_PROTECT_SELF)
+		return
 	if(prob(80/severity))
 		open()
 
@@ -380,7 +387,7 @@
 /obj/machinery/door/airlock/clockwork/ratvar_act()
 	return 0
 
-/obj/machinery/door/airlock/clockwork/attackby(obj/item/I, mob/living/user, params)
+/obj/machinery/door/airlock/clockwork/attackby(obj/item/I, mob/living/user, list/modifiers)
 	if(!attempt_construction(I, user))
 		return ..()
 

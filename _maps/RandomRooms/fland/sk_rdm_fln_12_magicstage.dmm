@@ -17,8 +17,8 @@
 "f" = (
 /obj/structure/closet,
 /obj/item/storage/toolbox/mechanical,
-/obj/effect/spawner/lootdrop/maintenance/three,
-/obj/effect/spawner/lootdrop/gloves,
+/obj/effect/spawner/random/maintenance/three,
+/obj/effect/spawner/random/clothing/gloves,
 /turf/open/floor/carpet,
 /area/template_noop)
 "i" = (
@@ -46,10 +46,8 @@
 /area/template_noop)
 "u" = (
 /obj/structure/chair/stool/bar,
-/obj/structure/mirror{
-	pixel_y = 26
-	},
 /obj/machinery/light/small,
+/obj/structure/mirror/directional/north,
 /turf/open/floor/carpet,
 /area/template_noop)
 "v" = (

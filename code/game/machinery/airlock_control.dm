@@ -2,7 +2,9 @@
 
 // This code allows for airlocks to be controlled externally by setting an id_tag (disables ID access)
 /obj/machinery/door/airlock
-	idle_power_usage = 100 WATT
+	opens_with_door_remote = TRUE
+	
+	idle_power_usage = 10
 	smoothing_groups = list(SMOOTH_GROUP_AIRLOCK)
 
 	/// The current state of the airlock, used to construct the airlock overlays
@@ -71,7 +73,7 @@ SCREENTIP_ATTACK_HAND(/obj/machinery/airlock_sensor, "Use")
 	var/obj/machinery/airlock_controller/airlock_controller = GLOB.objects_by_id_tag[master_tag]
 	airlock_controller?.cycle()
 
-	flick("airlock_sensor_cycle", src)
+	z_flick("airlock_sensor_cycle", src)
 
 /obj/machinery/airlock_sensor/process()
 	if(on)

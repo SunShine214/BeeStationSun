@@ -6,8 +6,9 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/effect/baseturf_helper)
 	name = "baseturf editor"
 	icon = 'icons/effects/mapping_helpers.dmi'
 	icon_state = ""
-
+	/// Replacing a specific turf
 	var/list/baseturf_to_replace
+	/// The desired bottom turf
 	var/baseturf
 
 	plane = POINT_PLANE
@@ -33,23 +34,16 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/effect/baseturf_helper)
 
 	qdel(src)
 
+/// Replaces all the requested baseturfs (usually space/baseturfbottom) with the desired baseturf. Skips if its already there
 /obj/effect/baseturf_helper/proc/replace_baseturf(turf/thing)
+	thing.remove_baseturfs_from_typecache(baseturf_to_replace)
+
 	if(length(thing.baseturfs))
-		var/list/baseturf_cache = thing.baseturfs.Copy()
-		for(var/i in baseturf_cache)
-			if(baseturf_to_replace[i])
-				baseturf_cache -= i
-		thing.baseturfs = baseturfs_string_list(baseturf_cache, thing)
-		if(!baseturf_cache.len)
-			thing.assemble_baseturfs(baseturf)
-		else
-			thing.PlaceOnBottom(null, baseturf)
-	else if(baseturf_to_replace[thing.baseturfs])
-		thing.assemble_baseturfs(baseturf)
-	else
-		thing.PlaceOnBottom(null, baseturf)
+		var/turf/tile = thing.baseturfs[1]
+		if(tile == baseturf)
+			return
 
-
+	thing.place_on_bottom(baseturf)
 
 /obj/effect/baseturf_helper/space
 	name = "space baseturf editor"
@@ -92,6 +86,9 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/effect/mapping_helpers)
 /obj/effect/mapping_helpers
 	icon = 'icons/effects/mapping_helpers.dmi'
 	icon_state = ""
+	anchored = TRUE
+	// Unless otherwise specified, layer above everything
+	layer = ABOVE_ALL_MOB_LAYER
 	var/late = FALSE
 
 /obj/effect/mapping_helpers/Initialize(mapload)
@@ -142,11 +139,11 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/effect/mapping_helpers)
 			if(1 to 9)
 				var/turf/here = get_turf(src)
 				for(var/turf/closed/T in range(2, src))
-					here.PlaceOnTop(T.type)
+					here.place_on_top(T.type)
 					qdel(airlock)
 					qdel(src)
 					return
-				here.PlaceOnTop(/turf/closed/wall)
+				here.place_on_top(/turf/closed/wall)
 				qdel(airlock)
 				qdel(src)
 				return
@@ -188,6 +185,8 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/effect/mapping_helpers)
 /obj/effect/mapping_helpers/airlock/cyclelink_helper_multi/payload(obj/machinery/door/airlock/airlock)
 	if(airlock.closeOtherId)
 		log_mapping("[src] at [AREACOORD(src)] tried to set [airlock] closeOtherId, but it's already set!")
+	else if(!cycle_id)
+		log_mapping("[src] at [AREACOORD(src)] doesn't have a cycle_id to assign to [airlock]!")
 	else
 		airlock.closeOtherId = cycle_id
 
@@ -203,7 +202,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/effect/mapping_helpers)
 
 
 /obj/effect/mapping_helpers/airlock/unres
-	name = "airlock unresctricted side helper"
+	name = "airlock unrestricted side helper"
 	icon_state = "airlock_unres_helper"
 
 /obj/effect/mapping_helpers/airlock/unres/payload(obj/machinery/door/airlock/airlock)
@@ -287,7 +286,6 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/effect/mapping_helpers)
 //air alarm helpers
 /obj/effect/mapping_helpers/airalarm
 	desc = "You shouldn't see this. Report it please."
-	layer = ABOVE_OBJ_LAYER
 	late = TRUE
 
 /obj/effect/mapping_helpers/airalarm/Initialize(mapload)
@@ -298,7 +296,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/effect/mapping_helpers)
 
 	var/obj/machinery/airalarm/target = locate(/obj/machinery/airalarm) in loc
 	if(isnull(target))
-		var/area/target_area = get_area(target)
+		var/area/target_area = get_area(src)
 		log_mapping("[src] failed to find an air alarm at [AREACOORD(src)] ([target_area.type]).")
 	else
 		payload(target)
@@ -306,7 +304,6 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/effect/mapping_helpers)
 	return INITIALIZE_HINT_LATELOAD
 
 /obj/effect/mapping_helpers/airalarm/LateInitialize()
-	. = ..()
 	var/obj/machinery/airalarm/target = locate(/obj/machinery/airalarm) in loc
 
 	if(isnull(target))
@@ -585,47 +582,225 @@ INITIALIZE_IMMEDIATE(/obj/effect/mapping_helpers/no_lava)
 /obj/effect/mapping_helpers/no_lava/Initialize(mapload)
 	. = ..()
 	var/turf/T = get_turf(src)
-	T.flags_1 |= NO_LAVA_GEN_1
+	T.turf_flags |= NO_LAVA_GEN
 
-//This helper applies components to things on the map directly.
-/obj/effect/mapping_helpers/component_injector
-	name = "Component Injector"
+CREATION_TEST_IGNORE_SELF(/obj/effect/mapping_helpers/atom_injector)
+
+///Helpers used for injecting stuff into atoms on the map.
+/obj/effect/mapping_helpers/atom_injector
+	name = "Atom Injector"
+	icon_state = "injector"
 	late = TRUE
+	///Will inject into all fitting the criteria if false, otherwise first found.
+	var/first_match_only = TRUE
+	///Will inject into atoms of this type.
 	var/target_type
+	///Will inject into atoms with this name.
 	var/target_name
-	var/component_type
 
 //Late init so everything is likely ready and loaded (no warranty)
-/obj/effect/mapping_helpers/component_injector/LateInitialize()
-	if(!ispath(component_type,/datum/component))
-		CRASH("Wrong component type in [type] - [component_type] is not a component")
-	var/turf/T = get_turf(src)
-	for(var/atom/A in T.GetAllContents())
-		if(A == src)
-			continue
-		if(target_name && A.name != target_name)
-			continue
-		if(target_type && !istype(A,target_type))
-			continue
-		var/cargs = build_args()
-		A._AddComponent(cargs)
-		qdel(src)
+/obj/effect/mapping_helpers/atom_injector/LateInitialize()
+	if(!check_validity())
 		return
+	var/turf/target_turf = get_turf(src)
+	var/matches_found = 0
+	for(var/atom/atom_on_turf as anything in target_turf.GetAllContents())
+		if(atom_on_turf == src)
+			continue
+		if(target_name && atom_on_turf.name != target_name)
+			continue
+		if(target_type && !istype(atom_on_turf, target_type))
+			continue
+		inject(atom_on_turf)
+		matches_found++
+		if(first_match_only)
+			qdel(src)
+			return
+	if(!matches_found)
+		stack_trace(generate_stack_trace())
+	qdel(src)
 
-/obj/effect/mapping_helpers/component_injector/proc/build_args()
-	return list(component_type)
+///Checks if whatever we are trying to inject with is valid
+/obj/effect/mapping_helpers/atom_injector/proc/check_validity()
+	return TRUE
 
-/obj/effect/mapping_helpers/component_injector/infective
-	name = "Infective Injector"
-	icon_state = "component_infective"
-	component_type = /datum/component/infective
-	var/disease_type
+///Injects our stuff into the atom
+/obj/effect/mapping_helpers/atom_injector/proc/inject(atom/target)
+	return
 
-/obj/effect/mapping_helpers/component_injector/infective/build_args()
-	if(!ispath(disease_type,/datum/disease))
-		CRASH("Wrong disease type passed in.")
-	var/datum/disease/D = new disease_type()
-	return list(component_type,D)
+///Generates text for our stack trace
+/obj/effect/mapping_helpers/atom_injector/proc/generate_stack_trace()
+	. = "[name] found no targets at ([x], [y], [z]). First Match Only: [first_match_only ? "true" : "false"] target type: [target_type] | target name: [target_name]"
+
+/obj/effect/mapping_helpers/atom_injector/obj_flag
+	name = "Obj Flag Injector"
+	icon_state = "objflag_helper"
+	var/inject_flags = NONE
+
+/obj/effect/mapping_helpers/atom_injector/obj_flag/inject(atom/target)
+	if(!isobj(target))
+		return
+	var/obj/obj_target = target
+	obj_target.obj_flags |= inject_flags
+
+///This helper applies components to things on the map directly.
+/obj/effect/mapping_helpers/atom_injector/component_injector
+	name = "Component Injector"
+	icon_state = "component"
+	///Typepath of the component.
+	var/component_type
+	///Arguments for the component.
+	var/list/component_args = list()
+
+/obj/effect/mapping_helpers/atom_injector/component_injector/check_validity()
+	if(!ispath(component_type, /datum/component))
+		CRASH("Wrong component type in [type] - [component_type] is not a component")
+	return TRUE
+
+/obj/effect/mapping_helpers/atom_injector/component_injector/inject(atom/target)
+	var/arguments = list(component_type)
+	arguments += component_args
+	target._AddComponent(arguments)
+
+/obj/effect/mapping_helpers/atom_injector/component_injector/generate_stack_trace()
+	. = ..()
+	. += " | component type: [component_type] | component arguments: [list2params(component_args)]"
+
+///This helper applies elements to things on the map directly.
+/obj/effect/mapping_helpers/atom_injector/element_injector
+	name = "Element Injector"
+	icon_state = "element"
+	///Typepath of the element.
+	var/element_type
+	///Arguments for the element.
+	var/list/element_args = list()
+
+/obj/effect/mapping_helpers/atom_injector/element_injector/check_validity()
+	if(!ispath(element_type, /datum/element))
+		CRASH("Wrong element type in [type] - [element_type] is not a element")
+	return TRUE
+
+/obj/effect/mapping_helpers/atom_injector/element_injector/inject(atom/target)
+	var/arguments = list(element_type)
+	arguments += element_args
+	target._AddElement(arguments)
+
+/obj/effect/mapping_helpers/atom_injector/element_injector/generate_stack_trace()
+	. = ..()
+	. += " | element type: [element_type] | element arguments: [list2params(element_args)]"
+
+///This helper applies traits to things on the map directly.
+/obj/effect/mapping_helpers/atom_injector/trait_injector
+	name = "Trait Injector"
+	icon_state = "trait"
+	///Name of the trait, in the lower-case text (NOT the upper-case define) form.
+	var/trait_name
+
+/obj/effect/mapping_helpers/atom_injector/trait_injector/check_validity()
+	if(!istext(trait_name))
+		CRASH("Wrong trait in [type] - [trait_name] is not a trait")
+	if(!GLOB.trait_name_map)
+		GLOB.trait_name_map = generate_trait_name_map()
+	if(!GLOB.trait_name_map.Find(trait_name))
+		stack_trace("Possibly wrong trait in [type] - [trait_name] is not a trait in the global trait list")
+	return TRUE
+
+/obj/effect/mapping_helpers/atom_injector/trait_injector/inject(atom/target)
+	ADD_TRAIT(target, trait_name, MAPPING_HELPER_TRAIT)
+
+/obj/effect/mapping_helpers/atom_injector/trait_injector/generate_stack_trace()
+	. = ..()
+	. += " | trait name: [trait_name]"
+
+///Fetches an external dmi and applies to the target object
+/obj/effect/mapping_helpers/atom_injector/custom_icon
+	name = "Custom Icon Injector"
+	icon_state = "icon"
+	///This is the var tha will be set with the fetched icon. In case you want to set some secondary icon sheets like inhands and such.
+	var/target_variable = "icon"
+	///This should return raw dmi in response to http get request. For example: "https://github.com/tgstation/SS13-sprites/raw/master/mob/medu.dmi?raw=true"
+	var/icon_url
+	///The icon file we fetched from the http get request.
+	var/icon_file
+
+/obj/effect/mapping_helpers/atom_injector/custom_icon/check_validity()
+	var/static/icon_cache = list()
+	var/static/query_in_progress = FALSE //We're using a single tmp file so keep it linear.
+	if(query_in_progress)
+		UNTIL(!query_in_progress)
+	if(icon_cache[icon_url])
+		icon_file = icon_cache[icon_url]
+		return TRUE
+	log_asset("Custom Icon Helper fetching dmi from: [icon_url]")
+	var/datum/http_request/request = new()
+	var/file_name = "tmp/custom_map_icon.dmi"
+	request.prepare(RUSTG_HTTP_METHOD_GET, icon_url, "", "", file_name)
+	query_in_progress = TRUE
+	request.begin_async()
+	UNTIL(request.is_complete())
+	var/datum/http_response/response = request.into_response()
+	if(response.errored || response.status_code != 200)
+		query_in_progress = FALSE
+		CRASH("Failed to fetch mapped custom icon from url [icon_url], code: [response.status_code], error: [response.error]")
+	var/icon/new_icon = new(file_name)
+	icon_cache[icon_url] = new_icon
+	query_in_progress = FALSE
+	icon_file = new_icon
+	return TRUE
+
+/obj/effect/mapping_helpers/atom_injector/custom_icon/inject(atom/target)
+	if(IsAdminAdvancedProcCall())
+		return
+	target.vars[target_variable] = icon_file
+
+/obj/effect/mapping_helpers/atom_injector/custom_icon/generate_stack_trace()
+	. = ..()
+	. += " | target variable: [target_variable] | icon url: [icon_url]"
+
+///Fetches an external sound and applies to the target object
+/obj/effect/mapping_helpers/atom_injector/custom_sound
+	name = "Custom Sound Injector"
+	icon_state = "sound"
+	///This is the var that will be set with the fetched sound.
+	var/target_variable = "hitsound"
+	///This should return raw sound in response to http get request. For example: "https://github.com/tgstation/tgstation/blob/master/sound/misc/bang.ogg?raw=true"
+	var/sound_url
+	///The sound file we fetched from the http get request.
+	var/sound_file
+
+/obj/effect/mapping_helpers/atom_injector/custom_sound/check_validity()
+	var/static/sound_cache = list()
+	var/static/query_in_progress = FALSE //We're using a single tmp file so keep it linear.
+	if(query_in_progress)
+		UNTIL(!query_in_progress)
+	if(sound_cache[sound_url])
+		sound_file = sound_cache[sound_url]
+		return TRUE
+	log_asset("Custom Sound Helper fetching sound from: [sound_url]")
+	var/datum/http_request/request = new()
+	var/file_name = "tmp/custom_map_sound.ogg"
+	request.prepare(RUSTG_HTTP_METHOD_GET, sound_url, "", "", file_name)
+	query_in_progress = TRUE
+	request.begin_async()
+	UNTIL(request.is_complete())
+	var/datum/http_response/response = request.into_response()
+	if(response.errored || response.status_code != 200)
+		query_in_progress = FALSE
+		CRASH("Failed to fetch mapped custom sound from url [sound_url], code: [response.status_code], error: [response.error]")
+	var/sound/new_sound = new(file_name)
+	sound_cache[sound_url] = new_sound
+	query_in_progress = FALSE
+	sound_file = new_sound
+	return TRUE
+
+/obj/effect/mapping_helpers/atom_injector/custom_sound/inject(atom/target)
+	if(IsAdminAdvancedProcCall())
+		return
+	target.vars[target_variable] = sound_file
+
+/obj/effect/mapping_helpers/atom_injector/custom_sound/generate_stack_trace()
+	. = ..()
+	. += " | target variable: [target_variable] | sound url: [sound_url]"
 
 /obj/effect/mapping_helpers/dead_body_placer
 	name = "Dead Body placer"
@@ -665,9 +840,9 @@ INITIALIZE_IMMEDIATE(/obj/effect/mapping_helpers/no_lava)
 	var/list/found_container = list()
 
 	// search_view_range
-	//   [Negative]: area search, get_contained_turfs()
+	//   [Negative]: area search, get_turfs_by_zlevel()
 	if(search_view_range < 0)
-		for(var/turf/each_turf in current_area.get_contained_turfs())
+		for(var/turf/each_turf as anything in current_area.get_turfs_by_zlevel(z))
 			for(var/obj/each_container in each_turf)
 				for(var/acceptable_path in accepted_list)
 					if(istype(each_container, acceptable_path))
@@ -684,11 +859,12 @@ INITIALIZE_IMMEDIATE(/obj/effect/mapping_helpers/no_lava)
 					found_container += each_container
 					break
 
-	while(bodycount-- > 0)
+	while(bodycount > 0)
 		if(length(found_container))
 			spawn_dead_human_in_tray(pick(found_container))
 		else // if we have found no container, just spawn onto a turf
 			spawn_dead_human_in_tray(get_turf(src))
+		bodycount--
 
 	qdel(src)
 
@@ -846,7 +1022,7 @@ INITIALIZE_IMMEDIATE(/obj/effect/mapping_helpers/no_lava)
 
 	// well, it's a bad idea to put a directional window here. Mapping failsafe process here.
 	if(unliable_atmos_blocking && (isspaceturf(my_turf) || isopenspace(my_turf)))
-		my_turf.PlaceOnTop(list(/turf/open/floor/plating, /turf/open/floor/iron), flags = CHANGETURF_INHERIT_AIR)
+		my_turf.place_on_top(/turf/open/floor/plating, flags = CHANGETURF_INHERIT_AIR)
 		for(var/turf/each_turf in nearby_turfs)
 			if(isspaceturf(each_turf) || isopenspace(each_turf))
 				var/obj/d_glass = new window_type(my_turf)
@@ -997,3 +1173,241 @@ INITIALIZE_IMMEDIATE(/obj/effect/mapping_helpers/foodpreserver)
 	for(var/obj/structure/closet/closet in T.contents)
 		for(var/obj/item/food/preservee in closet.contents)
 			preservee.preserved_food = TRUE
+
+/obj/effect/mapping_helpers/broken_floor
+	name = "broken floor"
+	icon = 'icons/turf/damaged.dmi'
+	icon_state = "damaged1"
+	layer = ABOVE_NORMAL_TURF_LAYER
+	late = TRUE
+
+/obj/effect/mapping_helpers/broken_floor/LateInitialize()
+	var/turf/open/floor/floor = get_turf(src)
+	floor.break_tile()
+	qdel(src)
+
+/obj/effect/mapping_helpers/burnt_floor
+	name = "burnt floor"
+	icon = 'icons/turf/damaged.dmi'
+	icon_state = "floorscorched1"
+	layer = ABOVE_NORMAL_TURF_LAYER
+	late = TRUE
+
+/obj/effect/mapping_helpers/burnt_floor/LateInitialize()
+	var/turf/open/floor/floor = get_turf(src)
+	floor.burn_tile()
+	qdel(src)
+
+///Applies BROKEN flag to the first found machine on a tile
+/obj/effect/mapping_helpers/broken_machine
+	name = "broken machine helper"
+	icon_state = "broken_machine"
+	late = TRUE
+
+/obj/effect/mapping_helpers/broken_machine/Initialize(mapload)
+	. = ..()
+	if(!mapload)
+		log_mapping("[src] spawned outside of mapload!")
+		return INITIALIZE_HINT_QDEL
+
+	var/obj/machinery/target = locate(/obj/machinery) in loc
+	if(isnull(target))
+		var/area/target_area = get_area(src)
+		log_mapping("[src] failed to find a machine at [AREACOORD(src)] ([target_area.type]).")
+	else
+		payload(target)
+
+	return INITIALIZE_HINT_LATELOAD
+
+/obj/effect/mapping_helpers/broken_machine/LateInitialize()
+	var/obj/machinery/target = locate(/obj/machinery) in loc
+
+	if(isnull(target))
+		qdel(src)
+		return
+
+	target.update_appearance()
+	qdel(src)
+
+/obj/effect/mapping_helpers/broken_machine/proc/payload(obj/machinery/target)
+	if(target.machine_stat & BROKEN)
+		var/area/area = get_area(target)
+		log_mapping("[src] at [AREACOORD(src)] [(area.type)] tried to break [target] but it's already broken!")
+	target.set_machine_stat(target.machine_stat | BROKEN)
+
+///Deals random damage to the first window found on a tile to appear cracked
+/obj/effect/mapping_helpers/damaged_window
+	name = "damaged window helper"
+	icon_state = "damaged_window"
+	late = TRUE
+	/// Minimum roll of integrity damage in percents needed to show cracks
+	var/integrity_damage_min = 0.25
+	/// Maximum roll of integrity damage in percents needed to show cracks
+	var/integrity_damage_max = 0.85
+
+/obj/effect/mapping_helpers/damaged_window/Initialize(mapload)
+	. = ..()
+	if(!mapload)
+		log_mapping("[src] spawned outside of mapload!")
+		return INITIALIZE_HINT_QDEL
+	return INITIALIZE_HINT_LATELOAD
+
+/obj/effect/mapping_helpers/damaged_window/LateInitialize()
+	var/obj/structure/window/target = locate(/obj/structure/window) in loc
+
+	if(isnull(target))
+		var/area/target_area = get_area(src)
+		log_mapping("[src] failed to find a window at [AREACOORD(src)] ([target_area.type]).")
+		qdel(src)
+		return
+	else
+		payload(target)
+
+	target.update_appearance()
+	qdel(src)
+
+/obj/effect/mapping_helpers/damaged_window/proc/payload(obj/structure/window/target)
+	if(target.get_integrity() < target.max_integrity)
+		var/area/area = get_area(target)
+		log_mapping("[src] at [AREACOORD(src)] [(area.type)] tried to damage [target] but it's already damaged!")
+	target.take_damage(rand(target.max_integrity * integrity_damage_min, target.max_integrity * integrity_damage_max))
+
+///Gives a cable a forced node
+/obj/effect/mapping_helpers/power_node
+	name = "power node helper"
+	icon_state = "power_node"
+	late = TRUE
+
+/obj/effect/mapping_helpers/power_node/Initialize(mapload)
+	. = ..()
+	if(!mapload)
+		log_mapping("[src] spawned outside of mapload!")
+		return INITIALIZE_HINT_QDEL
+
+/obj/effect/mapping_helpers/power_node/LateInitialize()
+	var/obj/structure/cable/target = locate(/obj/structure/cable) in loc
+
+	if(isnull(target))
+		var/area/target_area = get_area(src)
+		log_mapping("[src] failed to find a cable at [AREACOORD(src)] ([target_area.type]).")
+		qdel(src)
+		return
+
+	target.add_power_node()
+	qdel(src)
+
+/// Used to execute a payload when the round lacks a certain amount of a specific job or population at roundstart
+/obj/effect/mapping_helpers/lowpop
+	abstract_type = /obj/effect/mapping_helpers/lowpop
+	late = TRUE
+
+	/// The payload is executed if the roundstart station population is less than this
+	var/minimum_pop = 0
+	/// The payload is executed if the configured job's roundstart amount is less than this
+	var/minimum_job_amount = 0
+	/// A list of job datum types to compare [minimum_job_amount] against
+	var/list/targeted_job_types = null
+	/**
+	 * It's highly likely that there will be several lowpop mapping helpers with an identical configuration.
+	 *
+	 * To avoid repeated checks, we generate a unique identifier for this mapping helper's configuration and store
+	 * whether or not it passed in a static associative list formatted as: [check identifier --> TRUE/FALSE].
+	 */
+	VAR_PROTECTED/static/list/cached_succeeded_checks = list()
+
+/obj/effect/mapping_helpers/lowpop/Initialize(mapload)
+	. = ..()
+	if(!mapload)
+		log_mapping("[src] spawned outside of mapload!")
+		return INITIALIZE_HINT_QDEL
+
+	// Make us invisible, otherwise people who observe roundstart will see us
+	icon = null
+
+	register_payload_check_signal()
+
+/obj/effect/mapping_helpers/lowpop/proc/register_payload_check_signal()
+	RegisterSignal(SSticker, COMSIG_TICKER_ROUND_STARTING, PROC_REF(check_payload))
+
+/obj/effect/mapping_helpers/lowpop/proc/check_payload()
+	SIGNAL_HANDLER
+
+	var/cached_check_identifier = "[targeted_job_types.Join(",")];[minimum_job_amount];[minimum_pop]"
+	if(!isnull(cached_succeeded_checks[cached_check_identifier]))
+		if(cached_succeeded_checks[cached_check_identifier])
+			payload()
+	else
+		var/amount_of_specified_jobs = 0
+		for(var/job_type in targeted_job_types)
+			amount_of_specified_jobs += SSjob.get_job_type(job_type)?.current_positions
+
+		if(length(GLOB.manifest.general) < minimum_pop || amount_of_specified_jobs < minimum_job_amount)
+			cached_succeeded_checks[cached_check_identifier] = TRUE
+			payload()
+		else
+			cached_succeeded_checks[cached_check_identifier] = FALSE
+
+	qdel(src)
+
+/obj/effect/mapping_helpers/lowpop/proc/payload()
+	SHOULD_NOT_SLEEP(TRUE)
+	return
+
+/obj/effect/mapping_helpers/lowpop/cable_spawner
+	name = "lowpop cable spawner"
+	icon_state = "lowpop_cable"
+	minimum_job_amount = 1
+	targeted_job_types = list(/datum/job/station_engineer, /datum/job/chief_engineer)
+
+	/// The type of cable to spawn
+	var/cable_type = /obj/structure/cable
+
+/obj/effect/mapping_helpers/lowpop/cable_spawner/payload()
+	var/obj/structure/cable/spawned_cable = new cable_type(loc)
+	// Be sure to create a power node if there's a machine above our cable
+	if(locate(/obj/machinery/power) in loc)
+		spawned_cable.add_power_node()
+
+/obj/effect/mapping_helpers/lowpop/solar_console
+	name = "lowpop solar console enabler"
+	icon_state = "lowpop_solar"
+	minimum_job_amount = 1
+	targeted_job_types = list(/datum/job/station_engineer, /datum/job/chief_engineer)
+
+/obj/effect/mapping_helpers/lowpop/solar_console/register_payload_check_signal()
+	RegisterSignal(SSdcs, COMSIG_GLOB_POST_START, PROC_REF(check_payload))
+
+/obj/effect/mapping_helpers/lowpop/solar_console/payload()
+	var/obj/machinery/power/solar_control/solar_control = locate(/obj/machinery/power/solar_control) in loc
+	if(!solar_control)
+		log_mapping("[src] failed to find a solar control at [AREACOORD(src)]")
+		return
+
+	if(solar_control.track == SOLAR_TRACK_AUTO)
+		log_mapping("[src] was deployed on a solar panel console that had already been enabled.")
+		return
+
+	// Copy & pasted from the solar control's ui_act()
+	solar_control.search_for_connected()
+	if(solar_control.connected_tracker)
+		solar_control.track = SOLAR_TRACK_AUTO
+		solar_control.connected_tracker.sun_update(SSsun, SSsun.azimuth)
+
+/obj/effect/mapping_helpers/lowpop/smes_configurer
+	name = "lowpop smes configurer"
+	icon_state = "lowpop_smes"
+	minimum_job_amount = 1
+	targeted_job_types = list(/datum/job/station_engineer, /datum/job/chief_engineer)
+
+	/// What to set the SMES's input level to
+	var/input_level = /obj/machinery/power/smes::input_level_max
+	/// What to set the SMES's output level to
+	var/output_level = /obj/machinery/power/smes::output_level
+
+/obj/effect/mapping_helpers/lowpop/smes_configurer/payload()
+	var/obj/machinery/power/smes/smes = locate(/obj/machinery/power/smes) in loc
+	if(!smes)
+		log_mapping("[src] failed to find a SMES at [AREACOORD(src)]")
+		return
+	smes.input_level = input_level
+	smes.output_level = output_level

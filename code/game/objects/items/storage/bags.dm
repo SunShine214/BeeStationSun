@@ -20,6 +20,7 @@
 
 //  Generic non-item
 /obj/item/storage/bag
+	abstract_type = /obj/item/storage/bag
 	slot_flags = ITEM_SLOT_BELT
 
 /obj/item/storage/bag/Initialize(mapload)
@@ -85,6 +86,12 @@
 		else
 			icon_state = "[initial(icon_state)]"
 	return ..()
+
+/obj/item/storage/bag/trash/filled/PopulateContents()
+	. = ..()
+	for(var/i in 1 to rand(1, 7))
+		new /obj/effect/spawner/random/trash/garbage(src)
+	update_icon_state()
 
 /obj/item/storage/bag/trash/cyborg
 	insertable = FALSE
@@ -293,7 +300,7 @@
 	actions_types = list(/datum/action/item_action/portaseeder_dissolve)
 
 /obj/item/storage/bag/plants/portaseeder/proc/dissolve_contents()
-	if(usr.incapacitated())
+	if(usr.incapacitated)
 		return
 	for(var/obj/item/O in contents)
 		seedify(O, 1)
@@ -384,7 +391,7 @@
 	throwforce = 10
 	throw_speed = 3
 	throw_range = 5
-	flags_1 = CONDUCT_1
+	obj_flags = CONDUCTS_ELECTRICITY
 	slot_flags = ITEM_SLOT_BELT
 	custom_materials = list(/datum/material/iron=3000)
 
@@ -392,7 +399,7 @@
 	. = ..()
 	atom_storage.max_specific_storage = WEIGHT_CLASS_BULKY
 	atom_storage.set_holdable(list(
-		/obj/item/clothing/mask/cigarette,
+		/obj/item/cigarette,
 		/obj/item/food,
 		/obj/item/kitchen,
 		/obj/item/lighter,
@@ -473,17 +480,15 @@
 	. = ..()
 	atom_storage.max_total_storage = 200
 	atom_storage.max_slots = 50
-	atom_storage.set_holdable(
-		list(
-			/obj/item/reagent_containers/pill,
-			/obj/item/reagent_containers/cup/beaker,
-			/obj/item/reagent_containers/cup/bottle,
-			/obj/item/reagent_containers/medspray,
-			/obj/item/reagent_containers/syringe,
-			/obj/item/reagent_containers/dropper,
-			/obj/item/reagent_containers/cup/glass/waterbottle
-			)
-		)
+	atom_storage.set_holdable(list(
+		/obj/item/reagent_containers/applicator,
+		/obj/item/reagent_containers/cup/beaker,
+		/obj/item/reagent_containers/cup/bottle,
+		/obj/item/reagent_containers/medspray,
+		/obj/item/reagent_containers/syringe,
+		/obj/item/reagent_containers/dropper,
+		/obj/item/reagent_containers/cup/glass/waterbottle,
+	))
 
 /*
  *  Biowaste bag (mostly for xenobiologists)
@@ -518,7 +523,7 @@
 			)
 		)
 
-/obj/item/storage/bag/bio/pre_attack(atom/A, mob/living/user, params)
+/obj/item/storage/bag/bio/pre_attack(atom/A, mob/living/user, list/modifiers)
 	if(istype(A, /obj/item/slimecross/reproductive))
 		return TRUE
 	return ..()

@@ -52,7 +52,7 @@
 
 	init_processing = TRUE
 
-	var/datum/looping_sound/gravgen/soundloop
+	var/datum/looping_sound/gas_rig/soundloop
 
 	var/obj/machinery/atmospherics/components/unary/gasrig/shielding_input/shielding_input
 
@@ -153,13 +153,9 @@
 /obj/machinery/atmospherics/gasrig/core/proc/get_shield_damage(datum/gas_mixture/air)
 	var/datum/gas_mixture/temp_air = new
 	air.pump_gas_to(temp_air, 4500)
-	var/gas_power = 0 //Gases with no gas power dont provide much for shielding
-	var/gas_modifier = 0 //To encourage balancing a mix rather then just getting the gas with the most gas power
-	var/total_moles = 1 //so the log doesnt start negative
-	for (var/datum/gas/gas_id as anything in temp_air.gases)
-		gas_power += initial(gas_id.gasrig_shielding_power)*temp_air.gases[gas_id][MOLES]
-		gas_modifier += initial(gas_id.gasrig_shielding_modifier)*temp_air.gases[gas_id][MOLES]
-		total_moles += temp_air.gases[gas_id][MOLES]
+	var/gas_power = temp_air.gas_rig_shielding_power() //Gases with no gas power dont provide much for shielding
+	var/gas_modifier = temp_air.gas_rig_shielding_modifier() //To encourage balancing a mix rather then just getting the gas with the most gas power
+	var/total_moles = 1 + temp_air.total_moles() //so the log doesnt start negative
 
 	var/aver_gas_modifier = 0
 
@@ -203,8 +199,8 @@
 	// Scale power usage based on extension: at max extension (10000), use full active_power_usage (25 kW)
 	var/temp_power_usage = max(initial(active_power_usage) * (extension_amt / GASRIG_MAX_EXTENSION), 2 KILOWATT)
 	if (active_power_usage != temp_power_usage)
-		active_power_usage = temp_power_usage // At 5000 extension: 12.5 kW, at 10000 extension: 25 kW
-		update_current_power_usage()
+		// 100 depth is 12.5 kW/s, 200 is 25, 300 is 37.5, 1000 is 125 kW.
+		update_mode_power_usage(ACTIVE_POWER_USE, temp_power_usage)
 
 /obj/machinery/atmospherics/gasrig/core/proc/get_fracking_efficiency(datum/gas_mixture/air)
 	var/datum/gas_mixture/temp_air = new
@@ -340,7 +336,7 @@
 		balloon_alert(user, "You repair the rig's damage!")
 		return TRUE
 
-/obj/machinery/atmospherics/gasrig/core/attackby(obj/item/attacking_item, mob/user, params)
+/obj/machinery/atmospherics/gasrig/core/attackby(obj/item/attacking_item, mob/user, list/modifiers)
 	if(istype(attacking_item, /obj/item/stack/sheet/plasteel))
 		var/obj/item/stack/sheet/plasteel/plasteel_sheets = attacking_item
 		if(!needs_repairs)
@@ -437,9 +433,8 @@
 
 /obj/machinery/atmospherics/gasrig/core/proc/add_gas_to_output(datum/gas/to_add, datum/gas_mixture/air, amount, temp)
 	var/datum/gas_mixture/merger = new
-	merger.assert_gas(to_add)
-	merger.gases[to_add][MOLES] = amount
-	merger.temperature = temp
+	merger.set_gas(to_add, amount)
+	merger.set_temperature(temp)
 	air.merge(merger)
 
 /obj/machinery/atmospherics/gasrig/core/proc/calculate_gas_to_output(gas_constant, datum/gas/gas_type, datum/gas_mixture/air, efficiency, delta_time)
@@ -478,8 +473,8 @@
 	if(parent.welder_act(user, tool))
 		return TRUE
 
-/obj/machinery/atmospherics/components/unary/gasrig/attackby(obj/item/I, mob/user, params)
-	return parent.attackby(I, user, params)
+/obj/machinery/atmospherics/components/unary/gasrig/attackby(obj/item/I, mob/user, list/modifiers)
+	return parent.attackby(I, user, modifiers)
 
 /obj/machinery/atmospherics/components/unary/gasrig/ui_interact(mob/user, datum/tgui/ui)
 	ui = SStgui.try_update_ui(user, src, ui)
@@ -549,8 +544,8 @@
 	if(parent.welder_act(user, tool))
 		return TRUE
 
-/obj/machinery/atmospherics/gasrig/dummy/attackby(obj/item/I, mob/user, params)
-	return parent.attackby(I, user, params)
+/obj/machinery/atmospherics/gasrig/dummy/attackby(obj/item/I, mob/user, list/modifiers)
+	return parent.attackby(I, user, modifiers)
 
 /obj/machinery/atmospherics/gasrig/dummy/ui_interact(mob/user, datum/tgui/ui)
 	ui = SStgui.try_update_ui(user, src, ui)

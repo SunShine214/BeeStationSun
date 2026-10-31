@@ -27,7 +27,7 @@
 		QDEL_NULL(foldedbag_instance)
 	return ..()
 
-/obj/structure/closet/body_bag/attackby(obj/item/I, mob/user, params)
+/obj/structure/closet/body_bag/attackby(obj/item/I, mob/user, list/modifiers)
 	if (istype(I, /obj/item/pen) || istype(I, /obj/item/toy/crayon))
 		if(!user.is_literate())
 			to_chat(user, span_notice("You scribble illegibly on [src]!"))
@@ -55,7 +55,7 @@
 	if(tagged)
 		. += "bodybag_label"
 
-/obj/structure/closet/body_bag/open(mob/living/user)
+/obj/structure/closet/body_bag/open(mob/living/user, force = FALSE, special_effects)
 	. = ..()
 	if(.)
 		mouse_drag_pointer = MOUSE_INACTIVE_POINTER

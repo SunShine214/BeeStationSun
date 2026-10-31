@@ -4,7 +4,6 @@
 	icon = 'icons/mob/slimes.dmi'
 	icon_state = "grey baby slime"
 	pass_flags = PASSTABLE | PASSGRILLE
-	ventcrawler = VENTCRAWLER_ALWAYS
 	gender = NEUTER
 	var/is_adult = 0
 	var/docile = 0
@@ -25,7 +24,7 @@
 	chat_color = "#A6E398"
 	mobchatspan = "slimemobsay"
 
-	atmos_requirements = list("min_oxy" = 0, "max_oxy" = 0, "min_tox" = 0, "max_tox" = 0, "min_co2" = 0, "max_co2" = 0, "min_n2" = 0, "max_n2" = 0)
+	atmos_requirements = list("min_oxy" = 0, "max_oxy" = 0, "min_plas" = 0, "max_tox" = 0, "min_co2" = 0, "max_co2" = 0, "min_n2" = 0, "max_n2" = 0)
 
 	maxHealth = 150
 	health = 150
@@ -47,7 +46,7 @@
 
 	hardattacks = TRUE //A sharp blade wont cut a slime from a mere parry
 
-	discovery_points = 1000
+	discovery_points = TECHWEB_TIER_1_POINTS
 
 	var/cores = 1 // the number of /obj/item/slime_extract's the slime has left inside
 	var/mutation_chance = 30 // Chance of mutating, should be between 25 and 35
@@ -148,6 +147,8 @@ CREATION_TEST_IGNORE_SUBTYPES(/mob/living/simple_animal/slime)
 	set_nutrition(SLIME_DEFAULT_NUTRITION)
 	if(transformeffects & SLIME_EFFECT_LIGHT_PINK)
 		set_playable(ROLE_SENTIENCE)
+
+	add_traits(list(TRAIT_CAN_MOUNT_HUMANS, TRAIT_VENTCRAWLER_ALWAYS), INNATE_TRAIT)
 
 /mob/living/simple_animal/slime/Destroy()
 	set_target(null)
@@ -270,7 +271,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/mob/living/simple_animal/slime)
 			tab_data["Power Level"] = GENERATE_STAT_TEXT("[powerlevel]")
 	return tab_data
 
-/mob/living/simple_animal/slime/adjustFireLoss(amount, updating_health = TRUE, forced = FALSE)
+/mob/living/simple_animal/slime/adjustFireLoss(amount, updating_health = TRUE, forced = FALSE, required_bodytype)
 	if(!forced)
 		burn_damage_stored += abs(amount)
 		amount = -abs(amount)
@@ -339,10 +340,9 @@ CREATION_TEST_IGNORE_SUBTYPES(/mob/living/simple_animal/slime)
 	if(..()) //successful larva bite.
 		attacked += 10
 
-/mob/living/simple_animal/slime/attack_hulk(mob/living/carbon/human/user, does_attack_animation = 0)
-	if(user.combat_mode)
-		discipline_slime(user)
-		return ..()
+/mob/living/simple_animal/slime/attack_hulk(mob/living/carbon/human/user)
+	discipline_slime(user)
+	return ..()
 
 /mob/living/simple_animal/slime/attack_hand(mob/living/carbon/human/M, modifiers)
 	if(buckled)
@@ -362,9 +362,9 @@ CREATION_TEST_IGNORE_SUBTYPES(/mob/living/simple_animal/slime)
 	else
 		if(stat == DEAD && surgeries.len)
 			if(!M.combat_mode || LAZYACCESS(modifiers, RIGHT_CLICK))
-				for(var/datum/surgery/S in surgeries)
-					if(S.next_step(M, modifiers))
-						return 1
+				for(var/datum/surgery/operations as anything in surgeries)
+					if(operations.next_step(M, modifiers))
+						return TRUE
 		if(..()) //successful attack
 			attacked += 10
 
@@ -374,12 +374,11 @@ CREATION_TEST_IGNORE_SUBTYPES(/mob/living/simple_animal/slime)
 		discipline_slime(M)
 
 
-/mob/living/simple_animal/slime/attackby(obj/item/W, mob/living/user, params)
+/mob/living/simple_animal/slime/attackby(obj/item/W, mob/living/user, list/modifiers)
 	if(stat == DEAD && surgeries.len)
-		var/list/modifiers = params2list(params)
 		if(!user.combat_mode || (LAZYACCESS(modifiers, RIGHT_CLICK)))
-			for(var/datum/surgery/S in surgeries)
-				if(S.next_step(user, modifiers))
+			for(var/datum/surgery/operations as anything in surgeries)
+				if(operations.next_step(user, modifiers))
 					return 1
 	if(istype(W, /obj/item/stack/sheet/mineral/plasma) && !stat) //Let's you feed slimes plasma.
 		add_friendship(user, 1)
@@ -533,10 +532,6 @@ CREATION_TEST_IGNORE_SUBTYPES(/mob/living/simple_animal/slime)
 /mob/living/simple_animal/slime/pet
 	docile = 1
 
-/mob/living/simple_animal/slime/get_mob_buckling_height(mob/seat)
-	if(..())
-		return 3
-
 /mob/living/simple_animal/slime/can_be_implanted()
 	return TRUE
 
@@ -577,7 +572,11 @@ CREATION_TEST_IGNORE_SUBTYPES(/mob/living/simple_animal/slime/random)
 	LAZYADD(GLOB.mob_spawners["[master ? "[src.master.real_name]'s slime" : "free [src.colour] slime"]"], src)
 	SSmobs.update_spawners()
 	if (!key)	//ping only if there is no one inhabiting this mob
-		notify_ghosts("[name] can be controlled", null, enter_link="<a href='byond://?src=[REF(src)];activate=1'>(Click to play)</a>", source=src, action=NOTIFY_ATTACK, ignore_key = poll_ignore_key)
+		notify_ghosts(
+			"[name] can be controlled",
+			source=src,
+			ignore_key = poll_ignore_key
+		)
 		AddElement(/datum/element/point_of_interest)
 
 CREATION_TEST_IGNORE_SUBTYPES(/mob/living/simple_animal/slime/rainbow)

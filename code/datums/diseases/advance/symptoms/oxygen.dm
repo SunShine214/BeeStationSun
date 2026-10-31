@@ -28,9 +28,10 @@ Bonus
 	base_message_chance = 5
 	symptom_delay_min = 1
 	symptom_delay_max = 1
+	required_organ = ORGAN_SLOT_LUNGS
 	prefixes = list("Breathless ", "Anaerobic ")
-	var/regenerate_blood = FALSE
 	threshold_desc = "<b>Resistance 8:</b> Additionally regenerates lost blood.<br>"
+	var/regenerate_blood = FALSE
 
 /datum/symptom/oxygen/Start(datum/disease/advance/A)
 	if(!..())
@@ -44,8 +45,8 @@ Bonus
 	var/mob/living/carbon/M = A.affected_mob
 	switch(A.stage)
 		if(4, 5)
-			M.adjustOxyLoss(-7, 0)
 			M.losebreath = max(0, M.losebreath - 4)
+			M.adjustOxyLoss(-7)
 			if(regenerate_blood && M.blood_volume < BLOOD_VOLUME_NORMAL)
 				M.blood_volume += 1
 		else

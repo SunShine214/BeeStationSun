@@ -9,24 +9,18 @@
 	name = "\improper Mothman"
 	plural_form = "Mothmen"
 	id = SPECIES_MOTH
-	bodyflag = FLAG_MOTH
-	species_traits = list(
-		LIPS,
-		HAS_MARKINGS
-	)
 	inherent_traits = list(
-		TRAIT_TACKLING_WINGED_ATTACKER
+		TRAIT_MUTANT_COLORS,
+		TRAIT_HAS_MARKINGS,
 	)
 	inherent_biotypes = MOB_ORGANIC | MOB_HUMANOID |  MOB_BUG
 	mutant_bodyparts = list(
 		"moth_wings" = "Plain",
 		"moth_antennae" = "Plain",
-		"moth_markings" = "None",
+		"moth_markings" = SPRITE_ACCESSORY_NONE,
+		"moth_eyes" = "Default",
 		"body_size" = "Normal"
 	)
-	attack_verb = "slash"
-	attack_sound = 'sound/weapons/slash.ogg'
-	miss_sound = 'sound/weapons/slashmiss.ogg'
 	var/datum/action/innate/cocoon/cocoon_action
 	meat = /obj/item/food/meat/slab/human/mutant/moth
 	mutanteyes = /obj/item/organ/eyes/moth
@@ -48,28 +42,31 @@
 
 	species_height = SPECIES_HEIGHTS(2, 1, 0)
 
-/datum/species/moth/random_name(gender, unique, lastname, attempts)
-	. = "[pick(GLOB.moth_first)]"
-
-	if(lastname)
-		. += " [lastname]"
-	else
-		. += " [pick(GLOB.moth_last)]"
-
-	if(unique && attempts < 10)
-		if(findname(.))
-			. = .(gender, TRUE, lastname, ++attempts)
-
-/datum/species/moth/handle_chemicals(datum/reagent/chem, mob/living/carbon/human/H, delta_time, times_fired)
+/datum/species/moth/handle_chemical(datum/reagent/chem, mob/living/carbon/human/affected, delta_time, times_fired)
+	. = ..()
+	if(. & COMSIG_MOB_STOP_REAGENT_CHECK)
+		return
 	if(chem.type == /datum/reagent/toxin/pestkiller)
-		H.adjustToxLoss(3 * REAGENTS_EFFECT_MULTIPLIER * delta_time)
-		H.reagents.remove_reagent(chem.type, REAGENTS_METABOLISM * delta_time)
-		return FALSE
-	return ..()
-/datum/species/moth/check_species_weakness(obj/item/weapon, mob/living/attacker)
-	if(istype(weapon, /obj/item/melee/flyswatter))
-		return 9 //flyswatters deal 10x damage to moths
-	return 0
+		affected.adjustToxLoss(3 * REM * delta_time)
+
+/datum/species/moth/on_species_gain(mob/living/carbon/human/human_who_gained_species, datum/species/old_species)
+	if(human_who_gained_species.dna?.features["moth_eyes"] == "Domestic")
+		mutanteyes = /obj/item/organ/eyes/moth/domestic
+	else
+		mutanteyes = /obj/item/organ/eyes/moth
+	human_who_gained_species.dna?.features["mcolor"] = "#f4d697"
+	. = ..()
+	RegisterSignal(human_who_gained_species, COMSIG_MOB_APPLY_DAMAGE_MODIFIERS, PROC_REF(damage_weakness))
+
+/datum/species/moth/on_species_loss(mob/living/carbon/human/C, datum/species/new_species)
+	. = ..()
+	UnregisterSignal(C, COMSIG_MOB_APPLY_DAMAGE_MODIFIERS)
+
+/datum/species/moth/proc/damage_weakness(datum/source, list/damage_mods, damage_amount, damagetype, def_zone, sharpness, attack_direction, obj/item/attacking_item)
+	SIGNAL_HANDLER
+
+	if(istype(attacking_item, /obj/item/melee/flyswatter))
+		damage_mods += 10 // Yes, a 10x damage modifier
 
 /datum/species/moth/get_laugh_sound(mob/living/carbon/user)
 	return 'sound/emotes/moth/mothlaugh.ogg'
@@ -88,13 +85,14 @@
 	QDEL_NULL(cocoon_action)
 
 /datum/species/moth/spec_life(mob/living/carbon/human/H)
+	. = ..()
 	if(cocoon_action)
 		cocoon_action.update_buttons()
 
 /datum/action/innate/cocoon
 	name = "Cocoon"
 	desc = "Restore your wings and antennae, and heal some damage. If your cocoon is broken externally you will take heavy damage!"
-	check_flags = AB_CHECK_HANDS_BLOCKED|AB_CHECK_INCAPACITATED|AB_CHECK_CONSCIOUS
+	check_flags = AB_CHECK_INCAPACITATED|AB_CHECK_HANDS_BLOCKED|AB_CHECK_IMMOBILE|AB_CHECK_CONSCIOUS
 	button_icon_state = "wrap_0"
 	button_icon = 'icons/hud/actions/actions_animal.dmi'
 
@@ -117,7 +115,7 @@
 		if(!ismoth(H))
 			to_chat(H, span_warning("You have lost your mandibles and cannot weave anymore!."))
 			return
-		if(H.incapacitated())
+		if(H.incapacitated)
 			to_chat(H, span_warning("You cannot weave a cocoon in your current state."))
 			return
 		if(!HAS_TRAIT(H, TRAIT_MOTH_BURNT))
@@ -242,3 +240,7 @@
 	)
 
 	return to_add
+
+/datum/species/moth/prepare_human_for_preview(mob/living/carbon/human/human)
+	human.dna.features["mcolor"] = "#f4d697"
+	human.update_body(TRUE)

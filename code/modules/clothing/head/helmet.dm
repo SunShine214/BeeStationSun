@@ -12,7 +12,7 @@
 	min_cold_protection_temperature = HELMET_MIN_TEMP_PROTECT
 	max_heat_protection_temperature = HELMET_MAX_TEMP_PROTECT
 	strip_delay = 60
-	clothing_flags = SNUG_FIT
+	clothing_flags = SNUG_FIT | STACKABLE_HELMET_EXEMPT
 	flags_cover = HEADCOVERSEYES
 	flags_inv = HIDEHAIR
 	bang_protect = 1
@@ -34,12 +34,13 @@
 	AddElement(/datum/element/update_icon_updates_onmob)
 
 /obj/item/clothing/head/helmet/sec
+	hair_mask = /datum/hair_mask/standard_hat_low
 
 /obj/item/clothing/head/helmet/sec/Initialize(mapload)
 	. = ..()
 	AddComponent(/datum/component/seclite_attachable, light_icon_state = "flight")
 
-/obj/item/clothing/head/helmet/sec/attackby(obj/item/attacking_item, mob/user, params)
+/obj/item/clothing/head/helmet/sec/attackby(obj/item/attacking_item, mob/user, list/modifiers)
 	if(issignaler(attacking_item))
 		var/obj/item/assembly/signaler/attached_signaler = attacking_item
 		// There's a flashlight in us. Remove it first, or it'll be lost forever!
@@ -62,6 +63,17 @@
 		return TRUE
 
 	return ..()
+
+/obj/item/clothing/head/helmet/sec/attack_self(mob/user)
+	. = ..()
+	if(.)
+		return
+	balloon_alert(user, "[flags_inv & HIDEHAIR ? "loosening" : "tightening"] straps...")
+	if(!do_after(user, 3 SECONDS, src))
+		return
+	flags_inv ^= HIDEHAIR
+	balloon_alert(user, "[flags_inv & HIDEHAIR ? "tightened" : "loosened"] straps")
+	return TRUE
 
 /obj/item/clothing/head/helmet/alt
 	name = "bulletproof helmet"
@@ -111,7 +123,7 @@
 	if(.)
 		return
 	//Fails if user incapacitated or try_toggle doesnt complete
-	if(user.incapacitated() || !try_toggle())
+	if(user.incapacitated || !try_toggle())
 		return
 	up = !up
 	flags_1 ^= visor_flags
@@ -213,9 +225,9 @@
 	min_cold_protection_temperature = SPACE_HELM_MIN_TEMP_PROTECT
 	heat_protection = HEAD
 	max_heat_protection_temperature = SPACE_HELM_MAX_TEMP_PROTECT
-	clothing_flags = STOPSPRESSUREDAMAGE | SNUG_FIT
+	clothing_flags = STOPSPRESSUREDAMAGE | SNUG_FIT | STACKABLE_HELMET_EXEMPT
 	strip_delay = 80
-
+	dog_fashion = null
 
 /datum/armor/helmet_swat
 	melee = 40
@@ -233,7 +245,6 @@
 	name = "police officer's hat"
 	desc = "A police officer's Hat. This hat emphasizes that you are THE LAW."
 	icon_state = "policehelm"
-	dynamic_hair_suffix = ""
 
 /obj/item/clothing/head/helmet/swat/nanotrasen
 	name = "\improper SWAT helmet"

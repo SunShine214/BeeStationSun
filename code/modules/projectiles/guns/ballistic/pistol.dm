@@ -22,9 +22,6 @@
 	spawnwithmagazine = FALSE
 	caliber = list("10mm")
 
-/obj/item/gun/ballistic/automatic/pistol/locker
-	desc = "A small, easily concealable 10mm handgun. Has a threaded barrel for suppressors. This one is rusted from being inside of a locker for so long."
-
 /obj/item/gun/ballistic/automatic/pistol/suppressed/Initialize(mapload)
 	. = ..()
 	var/obj/item/suppressor/S = new(src)
@@ -142,12 +139,12 @@
 	trade_flags = NONE
 	var/stripe_state = "officer_com"
 
-/obj/item/gun/ballistic/automatic/pistol/service/update_icon()
+/obj/item/gun/ballistic/automatic/pistol/service/update_overlays()
 	. = ..()
 	var/mutable_appearance/stripe = mutable_appearance(icon, stripe_state)
 	if (bolt_locked)
 		stripe.pixel_x = -5
-	add_overlay(stripe)
+	. += stripe
 
 /obj/item/gun/ballistic/automatic/pistol/service/captain
 	stripe_state = "officer_com"
@@ -200,5 +197,5 @@
 	. += "<i>The corporate-issue NPS-10 is a slim, nondescript sidearm built for reliability on a budget. \
 			Its brushed-gray slide and ergonomic polymer grip keep it unflashy, while the semi-auto action with \
 			optional two-round burst and 12-round magazine ensure effective self defense when called upon. \
-			Designed to blend into any uniform yet hold its own in close quarters, it’s the pragmatic choice for \
+			Designed to blend into any uniform yet hold its own in close quarters, it's the pragmatic choice for \
 			private security operators.</i>"

@@ -14,13 +14,17 @@
 	custom_price = 550
 
 	use_power = NO_POWER_USE
-	idle_power_usage = 500 WATT
-	active_power_usage = 5 KILOWATT
+	idle_power_usage = 10
+	active_power_usage = 600
 
+	/// The icon state used by the emitter when it's on.
 	var/icon_state_on = "emitter_+a"
+	/// The icon state used by the emitter when it's on and low on power.
 	var/icon_state_underpowered = "emitter_+u"
 	///Is the machine active?
 	var/active = FALSE
+	///Does the machine have power?
+	var/powered = FALSE
 	///Seconds before the next shot
 	var/fire_delay = 10 SECONDS
 	///Max delay before firing
@@ -72,7 +76,7 @@
 	sparks = new
 	sparks.attach(src)
 	sparks.set_up(5, TRUE, src)
-	AddComponent(/datum/component/simple_rotation)
+	AddElement(/datum/element/simple_rotation)
 	AddElement(/datum/element/empprotection, EMP_PROTECT_SELF | EMP_PROTECT_WIRES)
 
 /obj/machinery/power/emitter/welded/Initialize(mapload)
@@ -85,20 +89,21 @@
 		welded = FALSE
 
 /obj/machinery/power/emitter/RefreshParts()
+	. = ..()
 	var/max_fire_delay = 12 SECONDS
 	var/fire_shoot_delay = 12 SECONDS
 	var/min_fire_delay = 2.4 SECONDS
 	var/power_usage = 350
-	for(var/obj/item/stock_parts/micro_laser/laser in component_parts)
-		max_fire_delay -= 2 SECONDS * laser.rating
-		min_fire_delay -= 0.4 SECONDS * laser.rating
-		fire_shoot_delay -= 2 SECONDS * laser.rating
-		parts_damage_bonus = 5 * laser.rating
+	for(var/datum/stock_part/micro_laser/laser in component_parts)
+		max_fire_delay -= 2 SECONDS * laser.tier
+		min_fire_delay -= 0.4 SECONDS * laser.tier
+		fire_shoot_delay -= 2 SECONDS * laser.tier
+		parts_damage_bonus = 5 * laser.tier
 	maximum_fire_delay = max_fire_delay
 	minimum_fire_delay = min_fire_delay
 	fire_delay = fire_shoot_delay
-	for(var/obj/item/stock_parts/manipulator/manipulator in component_parts)
-		power_usage -= 50 * manipulator.rating
+	for(var/datum/stock_part/manipulator/manipulator in component_parts)
+		power_usage -= 50 * manipulator.tier
 	update_mode_power_usage(ACTIVE_POWER_USE, power_usage)
 
 /obj/machinery/power/emitter/examine(mob/user)
@@ -110,7 +115,7 @@
 	else
 		. += span_info("It's not anchored to the floor. You can secure it in place with a <b>wrench</b>.")
 
-	if(!in_range(user, src) || !isobserver(user))
+	if(!in_range(user, src) && !isobserver(user))
 		return
 
 	if(!active)
@@ -132,11 +137,14 @@
 	return ..()
 
 /obj/machinery/power/emitter/update_icon_state()
+	. = ..()
 	if(!active || !powernet)
 		icon_state = base_icon_state
-		return ..()
+		return
+	if(panel_open)
+		icon_state = "[base_icon_state]_open"
+		return
 	icon_state = avail(active_power_usage) ? icon_state_on : icon_state_underpowered
-	return ..()
 
 /obj/machinery/power/emitter/interact(mob/user)
 	add_fingerprint(user)
@@ -161,7 +169,7 @@
 	message_admins("Emitter turned [active ? "ON" : "OFF"] by [ADMIN_LOOKUPFLW(user)] in [ADMIN_VERBOSEJMP(src)]")
 	log_game("Emitter turned [active ? "ON" : "OFF"] by [key_name(user)] in [AREACOORD(src)]")
 	investigate_log("turned [active ? "<font color='green'>ON</font>" : "<font color='red'>OFF</font>"] by [key_name(user)] at [AREACOORD(src)]", INVESTIGATE_ENGINES)
-	update_appearance()
+	update_appearance(UPDATE_ICON_STATE)
 
 /obj/machinery/power/emitter/attack_animal(mob/living/simple_animal/M)
 	if(ismegafauna(M) && anchored)
@@ -177,19 +185,23 @@
 		return
 	if(!welded || (!powernet && active_power_usage))
 		active = FALSE
-		update_appearance()
+		update_appearance(UPDATE_ICON_STATE)
 		return
 	if(!active)
-		update_use_power(IDLE_POWER_USE)
 		return
-	update_use_power(ACTIVE_POWER_USE)
-	if(!powered())
-		update_appearance()
+	if(active_power_usage && surplus() < active_power_usage)
+		if(powered)
+			powered = FALSE
+			update_appearance(UPDATE_ICON_STATE)
+			investigate_log("lost power and turned <font color='red'>OFF</font> at [AREACOORD(src)]", INVESTIGATE_ENGINES)
+			log_game("Emitter lost power in [AREACOORD(src)]")
+		return
+
+	add_load(active_power_usage)
+	if(!powered)
+		powered = TRUE
+		update_appearance(UPDATE_ICON_STATE)
 		investigate_log("regained power and turned <font color='green'>ON</font> at [AREACOORD(src)]", INVESTIGATE_ENGINES)
-	else
-		update_appearance()
-		investigate_log("lost power and turned <font color='red'>OFF</font> at [AREACOORD(src)]", INVESTIGATE_ENGINES)
-		log_game("Emitter lost power in [AREACOORD(src)]")
 	if(charge <= 80)
 		charge += 2.5 * delta_time
 	if(!check_delay() || manual == TRUE)
@@ -269,7 +281,6 @@
 		welded = FALSE
 		to_chat(user, span_notice("You cut [src] free from the floor."))
 		disconnect_from_network()
-		//update_cable_icons_on_turf(get_turf(src))
 		return TRUE
 
 	if(!anchored)
@@ -285,24 +296,21 @@
 	welded = TRUE
 	to_chat(user, span_notice("You weld [src] to the floor."))
 	connect_to_network()
-	//update_cable_icons_on_turf(get_turf(src))
 	return TRUE
 
-/obj/machinery/power/emitter/crowbar_act(mob/living/user, obj/item/item)
+/obj/machinery/power/emitter/crowbar_act(mob/living/user, obj/item/tool)
 	if(panel_open && gun)
 		return remove_gun(user)
-	default_deconstruction_crowbar(item)
-	return TRUE
 
-/obj/machinery/power/emitter/screwdriver_act(mob/living/user, obj/item/item)
-	if(..())
-		update_appearance()
+	if(default_deconstruction_crowbar(tool))
 		return TRUE
-	default_deconstruction_screwdriver(user, "emitter_open", "emitter", item)
-	update_appearance()
-	return TRUE
 
-/obj/machinery/power/emitter/attackby(obj/item/item, mob/user, params)
+/obj/machinery/power/emitter/screwdriver_act(mob/living/user, obj/item/tool)
+	if(default_deconstruction_screwdriver(user, "[base_icon_state]_open", base_icon_state, tool))
+		update_appearance(UPDATE_ICON_STATE)
+		return TRUE
+
+/obj/machinery/power/emitter/attackby(obj/item/item, mob/user, list/modifiers)
 	if(item.GetID())
 		if(obj_flags & EMAGGED)
 			to_chat(user, span_danger("Access denied."))
@@ -317,13 +325,9 @@
 	if(is_wire_tool(item) && panel_open)
 		wires.interact(user)
 		return
-	if(panel_open && !gun && istype(item,/obj/item/gun/energy))
-		if(integrate(item,user))
-			return
+	if(panel_open && !gun && istype(item, /obj/item/gun/energy) && integrate(item,user))
+		return
 	return ..()
-
-/obj/machinery/power/emitter/AltClick(mob/user)
-	return ..() // This hotkey is BLACKLISTED since it's used by /datum/component/simple_rotation
 
 /obj/machinery/power/emitter/proc/integrate(obj/item/gun/energy/energy_gun, mob/user)
 	if(!istype(energy_gun, /obj/item/gun/energy))
@@ -340,7 +344,7 @@
 		return
 	user.put_in_hands(gun)
 	gun = null
-	playsound(src, 'sound/items/deconstruct.ogg', 50, 1)
+	playsound(src, 'sound/items/deconstruct.ogg', 50, TRUE)
 	gun_properties = list()
 	set_projectile()
 	return TRUE
@@ -421,7 +425,7 @@
 			user.pixel_x = 8
 			user.pixel_y = -12
 
-	emitter.last_projectile_params = calculate_projectile_angle_and_pixel_offsets(user, clickparams)
+	emitter.last_projectile_params = calculate_projectile_angle_and_pixel_offsets(user, null, clickparams)
 
 	if(emitter.charge >= 10 && world.time > delay)
 		emitter.charge -= 10
@@ -459,4 +463,5 @@
 	welded = TRUE
 
 /obj/machinery/power/emitter/energycannon/RefreshParts()
+	SHOULD_CALL_PARENT(FALSE)
 	return

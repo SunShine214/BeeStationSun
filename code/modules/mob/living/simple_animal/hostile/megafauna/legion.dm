@@ -20,6 +20,7 @@ Difficulty: Medium
 	attack_verb_continuous = "chomps"
 	attack_verb_simple = "chomp"
 	attack_sound = 'sound/magic/demon_attack1.ogg'
+	attack_vis_effect = ATTACK_EFFECT_BITE
 	speak_emote = list("echoes")
 	armour_penetration = 50
 	melee_damage = 25
@@ -35,15 +36,17 @@ Difficulty: Medium
 	achievement_type = /datum/award/achievement/boss/legion_kill
 	crusher_achievement_type = /datum/award/achievement/boss/legion_crusher
 	score_achievement_type = /datum/award/score/legion_score
-	SET_BASE_PIXEL(-32, -16)
+	SET_BASE_PIXEL(-75, -90)
 	loot = list(/obj/item/stack/sheet/bone = 3)
 	vision_range = 13
 	wander = FALSE
 	elimination = TRUE
 	appearance_flags = LONG_GLIDE
 	mouse_opacity = MOUSE_OPACITY_ICON
-	attack_action_types = list(/datum/action/innate/megafauna_attack/create_skull,
-							   /datum/action/innate/megafauna_attack/charge_target)
+	attack_action_types = list(
+		/datum/action/innate/megafauna_attack/create_skull,
+		/datum/action/innate/megafauna_attack/charge_target
+	)
 	small_sprite_type = /datum/action/small_sprite/megafauna/legion
 
 /datum/action/innate/megafauna_attack/create_skull
@@ -99,7 +102,7 @@ Difficulty: Medium
 	if(target)
 		wander = TRUE
 
-/mob/living/simple_animal/hostile/megafauna/legion/adjustHealth(amount, updating_health = TRUE, forced = FALSE)
+/mob/living/simple_animal/hostile/megafauna/legion/adjustHealth(amount, updating_health = TRUE, forced = FALSE, required_bodytype)
 	if(GLOB.necropolis_gate && true_spawn)
 		GLOB.necropolis_gate.toggle_the_gate(null, TRUE) //very clever.
 	return ..()
@@ -125,7 +128,7 @@ Difficulty: Medium
 	if(health > 0)
 		return
 	if(size > 1)
-		adjustHealth(-maxHealth) //heal ourself to full in prep for splitting
+		adjustHealth(-(maxHealth * 2)) //heal ourself to full in prep for splitting, 2x multiplier otherwise health gets wonky when we overkill
 		var/mob/living/simple_animal/hostile/megafauna/legion/L = new(loc)
 
 		L.maxHealth = round(maxHealth * 0.6,DAMAGE_PRECISION)
@@ -137,12 +140,10 @@ Difficulty: Medium
 		size--
 		L.size = size
 
-		L.resize = L.size * 0.2
 		transform = initial(transform)
-		resize = size * 0.2
 
-		L.update_transform()
-		update_transform()
+		L.update_transform(L.size * 0.2)
+		update_transform(size * 0.2)
 
 		L.faction = faction.Copy()
 
@@ -156,7 +157,7 @@ Difficulty: Medium
 				last_legion = FALSE
 				break
 		if(last_legion)
-			loot = list(/obj/structure/closet/crate/necropolis/legion, /obj/effect/spawner/lootdrop/megafaunaore)
+			loot = list(/obj/structure/closet/crate/necropolis/legion, /obj/effect/spawner/random/unsorted/megafaunaore)
 			elimination = FALSE
 		else if(prob(5))
 			loot = list(/obj/structure/closet/crate/necropolis/tendril)

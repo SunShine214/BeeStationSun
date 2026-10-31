@@ -48,6 +48,7 @@
   * Captalism in the year 2525, everything in a vending machine, even love
   */
 /obj/machinery/vending
+	abstract_type = /obj/machinery/vending
 	name = "\improper Vendomat"
 	desc = "A generic vending machine."
 	icon = 'icons/obj/vending.dmi'
@@ -57,7 +58,7 @@
 	verb_say = "beeps"
 	verb_ask = "beeps"
 	verb_exclaim = "beeps"
-	idle_power_usage = 100 WATT
+	idle_power_usage = 10
 	max_integrity = 300
 	integrity_failure = 0.33
 	armor_type = /datum/armor/machinery_vending
@@ -200,10 +201,6 @@
 	fire = 50
 	acid = 70
 
-/obj/item/circuitboard
-	///determines if the circuit board originated from a vendor off station or not.
-	var/onstation = TRUE
-
 /**
   * Initialize the vending machine
   *
@@ -249,11 +246,19 @@
 	QDEL_NULL(wires)
 	return ..()
 
-/obj/machinery/vending/can_speak()
-	return !shut_up
+/obj/machinery/vending/can_speak(allow_mimes)
+	return is_operational && !shut_up && ..()
+
+/obj/machinery/vending/emp_act(severity)
+	. = ..()
+	var/datum/language_holder/vending_languages = get_language_holder()
+	var/datum/wires/vending/vending_wires = wires
+	// if the language wire got pulsed during an EMP, this will make sure the language_iterator is synched correctly
+	vending_languages.selected_language = vending_languages.spoken_languages[vending_wires.language_iterator]
 
 //Better would be to make constructable child
 /obj/machinery/vending/RefreshParts()
+	SHOULD_CALL_PARENT(FALSE)
 	if(!component_parts)
 		return
 
@@ -536,7 +541,7 @@
 		return FALSE
 	if(default_unfasten_wrench(user, I, time = 6 SECONDS))
 		unbuckle_all_mobs(TRUE)
-		return TOOL_ACT_TOOLTYPE_SUCCESS
+		return ITEM_INTERACT_SUCCESS
 	return FALSE
 
 /obj/machinery/vending/screwdriver_act(mob/living/user, obj/item/I)
@@ -551,7 +556,7 @@
 		to_chat(user, span_warning("You must first secure [src]."))
 	return TRUE
 
-/obj/machinery/vending/attackby(obj/item/I, mob/living/user, params)
+/obj/machinery/vending/attackby(obj/item/I, mob/living/user, list/modifiers)
 	if(panel_open && is_wire_tool(I))
 		wires.interact(user)
 		return
@@ -1032,8 +1037,8 @@
 		message_admins("Vending machine exploit attempted by [ADMIN_LOOKUPFLW(usr)]!")
 		return FALSE
 	if (R.amount <= 0)
-		say("Sold out of [R.name].")
-		flick(icon_deny,src)
+		speak("Sold out of [R.name].")
+		z_flick(icon_deny,src)
 		vend_ready = TRUE
 		return FALSE
 	if(onstation)
@@ -1042,13 +1047,13 @@
 			var/mob/living/L = usr
 			C = L.get_idcard(TRUE)
 		if(!C)
-			say("No card found.")
-			flick(icon_deny,src)
+			speak("No card found.")
+			z_flick(icon_deny,src)
 			vend_ready = TRUE
 			return FALSE
 		else if (!C.registered_account)
-			say("No account found.")
-			flick(icon_deny,src)
+			speak("No account found.")
+			z_flick(icon_deny,src)
 			vend_ready = TRUE
 			return FALSE
 		var/datum/bank_account/account = C.registered_account
@@ -1057,8 +1062,8 @@
 		if(LAZYLEN(R.returned_products))
 			price_to_use = 0 //returned items are free
 		if(price_to_use && !account.adjust_money(-price_to_use))
-			say("You do not possess the funds to purchase [R.name].")
-			flick(icon_deny,src)
+			speak("You do not possess the funds to purchase [R.name].")
+			z_flick(icon_deny,src)
 			vend_ready = TRUE
 			return FALSE
 		if(price_to_use && seller_department)
@@ -1073,12 +1078,13 @@
 						log_econ("[price_to_use] credits were inserted into [src] by [D.account_holder] to buy [R].")
 
 	if(last_shopper != REF(usr) || purchase_message_cooldown < world.time)
-		say(vend_reply)
+		var/vend_response = vend_reply || "Thank you for shopping with [src]!"
+		speak(vend_response)
 		purchase_message_cooldown = world.time + 5 SECONDS
 		last_shopper = REF(usr)
-	use_power(500 WATT)
+	use_power(active_power_usage)
 	if(icon_vend) //Show the vending animation if needed
-		flick(icon_vend,src)
+		z_flick(icon_vend,src)
 	playsound(src, 'sound/machines/machine_vend.ogg', 50, TRUE, extrarange = -3)
 	var/obj/item/vended_item
 	if(!LAZYLEN(R.returned_products)) //always give out free returned stuff first, e.g. to avoid walling a traitor objective in a bag behind paid items
@@ -1090,7 +1096,7 @@
 	if(greyscale_colors)
 		vended_item.set_greyscale(colors=greyscale_colors)
 	R.amount--
-	if(usr.CanReach(src) && usr.put_in_hands(vended_item))
+	if(IsReachableBy(usr) && usr.put_in_hands(vended_item))
 		to_chat(usr, span_notice("You take [R.name] out of the slot."))
 	else
 		to_chat(usr, span_warning("[capitalize(R.name)] falls onto the floor!"))
@@ -1257,13 +1263,13 @@
 /obj/machinery/vending/custom/canLoadItem(obj/item/I, mob/user)
 	. = FALSE
 	if(I.flags_1 & HOLOGRAM_1)
-		say("This vendor cannot accept nonexistent items.")
+		speak("This vendor cannot accept nonexistent items.")
 		return
 	if(loaded_items >= max_loaded_items)
-		say("There are too many items in stock.")
+		speak("There are too many items in stock.")
 		return
 	if(isstack(I))
-		say("Loose items may cause problems, try to use it inside wrapping paper.")
+		speak("Loose items may cause problems, try to use it inside wrapping paper.")
 		return
 	if(I.custom_price)
 		return TRUE
@@ -1292,7 +1298,7 @@
 			var/list/data = list(
 				name = O,
 				price = item_price,
-				img = base64,
+				image = base64,
 				amount = vending_machine_input[O],
 				colorable = FALSE,
 				path = "[replacetext(replacetext("[item_path]", "/obj/item/", ""), "/", "-")]-[O]"
@@ -1323,12 +1329,12 @@
 					if(compartmentLoadAccessCheck(usr))
 						vending_machine_input[N] = max(vending_machine_input[N] - 1, 0)
 						S.forceMove(drop_location())
-						if (usr.CanReach(src) && usr.put_in_hands(S))
+						if (IsReachableBy(usr) && usr.put_in_hands(S))
 							to_chat(usr, span_notice("You take [S.name] out of the slot."))
 						else
 							to_chat(usr, span_warning("[capitalize(S.name)] falls onto the floor!"))
 						loaded_items--
-						use_power(500 WATT)
+						use_power(active_power_usage)
 						vend_ready = TRUE
 						return TRUE
 					//var/datum/bank_account/account = C?.registered_account
@@ -1341,8 +1347,8 @@
 							additional_message += "No ID card found. "
 						if(!C?.registered_account)
 							additional_message += "No account found. "
-						say("[additional_message]Not enough funds to purchase [S.name].")
-						flick(icon_deny,src)
+						speak("[additional_message]Not enough funds to purchase [S.name].")
+						z_flick(icon_deny,src)
 						vend_ready = TRUE
 						return
 			vend_ready = TRUE
@@ -1361,20 +1367,20 @@
 	SSblackbox.record_feedback("amount", "vending_spent", bought_item.custom_price)
 	vending_machine_input[N] = max(vending_machine_input[N] - 1, 0)
 	bought_item.forceMove(drop_location())
-	if (usr.CanReach(src) && usr.put_in_hands(bought_item))
+	if (IsReachableBy(usr) && usr.put_in_hands(bought_item))
 		to_chat(usr, span_notice("You take [bought_item.name] out of the slot."))
 	else
 		to_chat(usr, span_warning("[capitalize(bought_item.name)] falls onto the floor!"))
 	playsound(src, 'sound/machines/machine_vend.ogg', 50, TRUE, extrarange = -3)
 	loaded_items--
-	use_power(500 WATT)
+	use_power(5)
 	if(last_shopper != REF(usr) || COOLDOWN_FINISHED(src, purchase_message_cooldown))
-		say("Thank you for buying local and purchasing [bought_item]!")
+		speak("Thank you for buying local and purchasing [bought_item]!")
 		COOLDOWN_START(src, purchase_message_cooldown, (5 SECONDS))
 		last_shopper = REF(usr)
 	vend_ready = TRUE
 
-/obj/machinery/vending/custom/attackby(obj/item/I, mob/user, params)
+/obj/machinery/vending/custom/attackby(obj/item/I, mob/user, list/modifiers)
 	if(!private_a)
 		var/mob/living/carbon/human/H
 		var/obj/item/card/id/C
@@ -1383,7 +1389,7 @@
 			C = H.get_idcard(TRUE)
 			if(C?.registered_account)
 				private_a = C.registered_account
-				say("\The [src] has been linked to [C].")
+				speak("\The [src] has been linked to [C].")
 
 	if(compartmentLoadAccessCheck(user))
 		if(istype(I, /obj/item/pen))

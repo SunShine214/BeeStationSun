@@ -373,7 +373,7 @@
 	allowed_suit_storage = list(
 		/obj/item/analyzer,
 		/obj/item/construction/rcd,
-		/obj/item/melee/classic_baton/police/telescopic,
+		/obj/item/melee/baton/telescopic,
 		/obj/item/pipe_dispenser,
 		/obj/item/storage/bag/construction,
 		/obj/item/t_scanner,
@@ -618,7 +618,7 @@
 		/obj/item/reagent_containers/cup/beaker,
 		/obj/item/reagent_containers/cup/bottle,
 		/obj/item/reagent_containers/hypospray,
-		/obj/item/reagent_containers/pill,
+		/obj/item/reagent_containers/applicator,
 		/obj/item/reagent_containers/syringe,
 		/obj/item/stack/medical,
 		/obj/item/sensor_device,
@@ -724,14 +724,14 @@
 		/obj/item/reagent_containers/cup/beaker,
 		/obj/item/reagent_containers/cup/bottle,
 		/obj/item/reagent_containers/hypospray,
-		/obj/item/reagent_containers/pill,
+		/obj/item/reagent_containers/applicator,
 		/obj/item/reagent_containers/syringe,
 		/obj/item/stack/medical,
 		/obj/item/sensor_device,
 		/obj/item/storage/pill_bottle,
 		/obj/item/storage/bag/chemistry,
 		/obj/item/storage/bag/bio,
-		/obj/item/melee/classic_baton/police/telescopic,
+		/obj/item/melee/baton/telescopic,
 		/obj/item/storage/firstaid,
 	)
 	variants = list(
@@ -803,7 +803,7 @@
 		//obj/item/biopsy_tool,
 		//obj/item/experi_scanner,
 		/obj/item/storage/bag/bio,
-		/obj/item/melee/classic_baton/police/telescopic,
+		/obj/item/melee/baton/telescopic,
 	)
 	variants = list(
 		"research" = list(

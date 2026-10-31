@@ -11,14 +11,14 @@
 	var/prefix = "sharpened"
 
 
-/obj/item/sharpener/attackby(obj/item/I, mob/user, params)
+/obj/item/sharpener/attackby(obj/item/I, mob/user, list/modifiers)
 	if(used)
 		to_chat(user, span_warning("The sharpening block is too worn to use again!"))
 		return
 	if(I.force >= max || I.throwforce >= max)//no esword sharpening
 		to_chat(user, span_warning("[I] is much too powerful to sharpen further!"))
 		return
-	if(!I.is_sharp())
+	if(!I.get_sharpness())
 		to_chat(user, span_warning("You can only sharpen items that are already sharp, such as knives!"))
 		return
 	if(is_type_in_list(I, list(/obj/item/melee/energy, /obj/item/dualsaber))) //You can't sharpen the photons in energy meelee weapons

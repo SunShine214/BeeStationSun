@@ -1,6 +1,7 @@
 #define TELEPORT_COOLDOWN 60 SECONDS
 
 /datum/symptom/heal
+	abstract_type = /datum/symptom/heal
 	name = "Basic Healing (does nothing)" //warning for adminspawn viruses
 	desc = "You should not be seeing this."
 	stealth = 0
@@ -45,6 +46,7 @@
 
 /datum/symptom/heal/chem
 	name = "Toxolysis"
+	desc = "The virus rapidly breaks down any foreign chemicals in the bloodstream."
 	stealth = 0
 	resistance = -2
 	stage_speed = 2
@@ -52,10 +54,10 @@
 	level = 6
 	power = 2
 	prefixes = list("Toxo")
-	var/food_conversion = FALSE
-	desc = "The virus rapidly breaks down any foreign chemicals in the bloodstream."
+	required_organ = ORGAN_SLOT_HEART
 	threshold_desc = "<b>Resistance 7:</b> Increases chem removal speed.<br>\
 						<b>Stage Speed 6:</b> Consumed chemicals nourish the host."
+	var/food_conversion = FALSE
 
 /datum/symptom/heal/chem/Start(datum/disease/advance/A)
 	if(!..())
@@ -159,8 +161,8 @@
 	if(!parts.len)
 		return
 
-	for(var/obj/item/bodypart/L in parts)
-		if(L.heal_damage(heal_amt/parts.len, heal_amt/parts.len, null, BODYTYPE_ORGANIC))
+	for(var/obj/item/bodypart/bodypart in parts)
+		if(bodypart.heal_damage(heal_amt/parts.len, heal_amt/parts.len, required_bodytype = BODYTYPE_ORGANIC))
 			M.update_damage_overlays()
 
 	if(active_coma && M.getBruteLoss() + M.getFireLoss() == 0)
@@ -202,12 +204,12 @@
 	var/healed = FALSE
 
 	if(M.getBruteLoss() && M.getBruteLoss() <= threshold)
-		M.heal_overall_damage(power, required_status = BODYTYPE_ORGANIC)
+		M.heal_overall_damage(power, required_bodytype = BODYTYPE_ORGANIC)
 		healed = TRUE
 		scarcounter++
 
 	if(M.getFireLoss() && M.getFireLoss() <= threshold)
-		M.heal_overall_damage(burn = power, required_status = BODYTYPE_ORGANIC)
+		M.heal_overall_damage(burn = power, required_bodytype = BODYTYPE_ORGANIC)
 		healed = TRUE
 		scarcounter++
 
@@ -228,19 +230,20 @@
 
 /datum/symptom/heal/metabolism
 	name = "Metabolic Boost"
+	desc = "The virus causes the host's metabolism to accelerate rapidly, making them process chemicals twice as fast,\
+		but also causing increased hunger."
 	stealth = -1
 	resistance = -2
 	stage_speed = 2
 	transmission = 1
 	level = 6
+	required_organ = ORGAN_SLOT_STOMACH
 	prefixes = list("Metabolic ", "Junkie's ", "Chemical ")
 	bodies = list("Hunger")
-	var/triple_metabolism = FALSE
-	var/reduced_hunger = FALSE
-	desc = "The virus causes the host's metabolism to accelerate rapidly, making them process chemicals twice as fast,\
-		but also causing increased hunger."
 	threshold_desc = "<b>Stealth 3:</b> Reduces hunger rate.<br>\
 						<b>Stage Speed 10:</b> Chemical metabolization is tripled instead of doubled."
+	var/triple_metabolism = FALSE
+	var/reduced_hunger = FALSE
 
 /datum/symptom/heal/metabolism/Start(datum/disease/advance/A)
 	if(!..())
@@ -366,7 +369,7 @@ im not even gonna bother with these for the following symptoms. typed em out, co
 	var/mob/living/carbon/M = A.affected_mob
 	switch(A.stage)
 		if(4, 5)
-			M.adjust_fire_stacks(-5)
+			M.adjust_wet_stacks(5)
 			if(!ammonia && prob(30))
 				var/turf/open/OT = get_turf(M)
 				if(istype(OT))
@@ -465,7 +468,7 @@ im not even gonna bother with these for the following symptoms. typed em out, co
 					do_teleport(M, location_return, 0, asoundin = 'sound/effects/phasein.ogg') //Teleports home
 					do_sparks(5, FALSE, M)
 					if(burnheal)
-						M.adjust_fire_stacks(-10)
+						M.adjust_wet_stacks(10)
 					location_return = null
 					COOLDOWN_START(src, teleport_cooldown, TELEPORT_COOLDOWN)
 			if(COOLDOWN_FINISHED(src, teleport_cooldown))
@@ -519,8 +522,7 @@ im not even gonna bother with these for the following symptoms. typed em out, co
 	ownermind = M.mind
 	if(!A.carrier && !A.dormant)
 		sizemult = clamp((0.5 + A.stage_rate / 10), 1.1, 1.5)
-		M.resize = sizemult
-		M.update_transform()
+		M.update_transform(sizemult)
 
 /datum/symptom/growth/Activate(datum/disease/advance/A)
 	if(!..())
@@ -537,16 +539,16 @@ im not even gonna bother with these for the following symptoms. typed em out, co
 					if(prob(60) && M.mind && ishuman(M))
 						if(tetsuo && prob(15))
 							if(A.affected_mob.job == JOB_NAME_CLOWN)
-								new /obj/effect/spawner/lootdrop/teratoma/major/clown(M.loc)
+								new /obj/effect/spawner/random/medical/teratoma/major/clown(M.loc)
 							if(A.infectable_biotypes & MOB_ROBOTIC)
 								new /obj/effect/decal/cleanable/robot_debris(M.loc)
-								new /obj/effect/spawner/lootdrop/teratoma/robot(M.loc)
-						new /obj/effect/spawner/lootdrop/teratoma/minor(M.loc)
+								new /obj/effect/spawner/random/medical/teratoma/robot(M.loc)
+						new /obj/effect/spawner/random/medical/teratoma/minor(M.loc)
 				if(tetsuo)
 					var/list/missing = M.get_missing_limbs()
 					if(prob(35) && M.mind && ishuman(M) && M.stat != DEAD)
 						new /obj/effect/decal/cleanable/blood/gibs(M.loc) //yes. this is very messy. very, very messy.
-						new /obj/effect/spawner/lootdrop/teratoma/major(M.loc)
+						new /obj/effect/spawner/random/medical/teratoma/major(M.loc)
 					if(missing.len) //we regrow one missing limb
 						for(var/Z in missing) //uses the same text and sound a ling's regen does. This can false-flag the host as a changeling.
 							if(M.regenerate_limb(Z, TRUE))
@@ -570,7 +572,7 @@ im not even gonna bother with these for the following symptoms. typed em out, co
 									M.grab_ghost()
 								break
 			if(bruteheal)
-				M.heal_overall_damage(2 * power, required_status = BODYTYPE_ORGANIC)
+				M.heal_overall_damage(2 * power, required_bodytype = BODYTYPE_ORGANIC)
 				if(prob(33) && tetsuo)
 					M.adjustCloneLoss(1)
 		else
@@ -582,8 +584,7 @@ im not even gonna bother with these for the following symptoms. typed em out, co
 	. = ..()
 	var/mob/living/carbon/M = A.affected_mob
 	to_chat(M, span_notice("You lose your balance and stumble as you shrink, and your legs come out from underneath you!"))
-	M.resize = 1/sizemult
-	M.update_transform()
+	M.update_transform(1/sizemult)
 
 #undef TELEPORT_COOLDOWN
 
@@ -675,7 +676,7 @@ im not even gonna bother with these for the following symptoms. typed em out, co
 						M.blood_volume = max((M.blood_volume + 3 * power), BLOOD_VOLUME_NORMAL) //bloodpoints are valued at 4 units of blood volume per point, so this is diminished
 					else if(bruteheal && M.getBruteLoss())
 						bloodpoints -= 1
-						M.heal_overall_damage(2, required_status = BODYTYPE_ORGANIC)
+						M.heal_overall_damage(2, required_bodytype = BODYTYPE_ORGANIC)
 					if(prob(60) && !M.stat)
 						bloodpoints -- //you cant just accumulate blood and keep it as a battery of healing. the quicker the symptom is, the faster your bloodpoints decay
 				else if(prob(20) && M.blood_volume >= BLOOD_VOLUME_BAD)//the virus continues to extract blood if you dont have any stored up. higher probability due to BP value
@@ -987,7 +988,7 @@ im not even gonna bother with these for the following symptoms. typed em out, co
 				to_chat(M, span_notice("[pick("You feel energetic!", "You feel well-rested.", "You feel great!")]"))
 		if(4 to 5)
 			M.adjustStaminaLoss((-5 * power), 0)
-			M.drowsyness = max(0, M.drowsyness - 10 * power)
+			M.set_drowsiness_if_lower(4 SECONDS * power)
 			M.AdjustSleeping(-10 * power)
 			M.AdjustUnconscious(-10 * power)
 			if(prob(power) && prob(50))

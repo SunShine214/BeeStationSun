@@ -28,7 +28,7 @@
 	return INITIALIZE_HINT_LATELOAD
 
 /obj/effect/particle_effect/sparks/LateInitialize()
-	flick(icon_state, src) // replay the animation
+	z_flick(icon_state, src) // replay the animation
 	playsound(src, "sparks", 100, TRUE)
 	var/turf/T = loc
 	if(isturf(T))
@@ -77,7 +77,7 @@
 /obj/effect/particle_effect/sparks/shield/Initialize(mapload)
 	. = ..()
 	// every particle has a little different color
-	var/generator/gen_color = generator("color", LIGHT_COLOR_WHITE, LIGHT_COLOR_ELECTRIC_CYAN)
+	var/generator/gen_color = generator("color", COLOR_WHITE, LIGHT_COLOR_ELECTRIC_CYAN)
 	var/rand_color = gen_color.Rand()
 	color = rand_color
 	set_light_color(rand_color)

@@ -41,7 +41,7 @@
 		return ..()
 	return //unplateable
 
-/turf/open/floor/engine/try_replace_tile(obj/item/stack/tile/T, mob/user, params)
+/turf/open/floor/engine/try_replace_tile(obj/item/stack/tile/T, mob/user, list/modifiers)
 	return
 
 /turf/open/floor/engine/crowbar_act(mob/living/user, obj/item/I)
@@ -57,7 +57,7 @@
 		ScrapeAway(flags = CHANGETURF_INHERIT_AIR)
 	return TRUE
 
-/turf/open/floor/engine/singularity_pull(S, current_size)
+/turf/open/floor/engine/singularity_pull(obj/anomaly/singularity/singularity, current_size)
 	..()
 	if(current_size >= STAGE_FIVE)
 		if(floor_tile)

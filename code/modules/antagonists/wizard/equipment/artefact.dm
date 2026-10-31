@@ -61,7 +61,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/effect/rend)
 	if(spawn_amt_left <= 0)
 		qdel(src)
 
-/obj/effect/rend/attackby(obj/item/I, mob/user, params)
+/obj/effect/rend/attackby(obj/item/I, mob/user, list/modifiers)
 	if(istype(I, /obj/item/nullrod))
 		user.visible_message(span_danger("[user] seals \the [src] with \the [I]."))
 		qdel(src)
@@ -69,10 +69,10 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/effect/rend)
 	else
 		return ..()
 
-/obj/effect/rend/singularity_pull()
+/obj/effect/rend/singularity_pull(obj/anomaly/singularity/singularity, current_size)
 	return
 
-/obj/effect/rend/singularity_pull()
+/obj/effect/rend/singularity_pull(obj/anomaly/singularity/singularity, current_size)
 	return
 
 /obj/item/veilrender/vealrender
@@ -151,7 +151,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/effect/rend)
 /obj/tear_in_reality/proc/deranged(mob/living/carbon/C)
 	if(!C || C.stat == DEAD)
 		return
-	C.vomit(0, TRUE, TRUE, 3, TRUE)
+	C.vomit(VOMIT_CATEGORY_BLOOD, lost_nutrition = 0, distance = 3)
 	C.spew_organ(3, 2)
 	C.investigate_log("has died from using telekinesis on a tear in reality.", INVESTIGATE_DEATHS)
 	C.death()
@@ -172,7 +172,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/effect/rend)
 		if(ismob(A))
 			to_chat(A, span_warning("There is no way out of this place..."))
 		return
-	var/atom/return_thing = pick(GLOB.destabliization_exits) || pick(get_safe_random_station_turfs())
+	var/atom/return_thing = pick(GLOB.destabliization_exits) || get_safe_random_station_turfs()
 	var/turf/T = get_turf(return_thing)
 	if(!T)
 		return
@@ -332,9 +332,9 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/effect/rend)
 	custom_price = 10000
 	max_demand = 10
 
-/obj/item/voodoo/attackby(obj/item/I, mob/user, params)
+/obj/item/voodoo/attackby(obj/item/I, mob/user, list/modifiers)
 	if(target && cooldown < world.time)
-		if(I.is_hot())
+		if(I.get_temperature())
 			to_chat(target, span_userdanger("You suddenly feel very hot"))
 			target.adjust_bodytemperature(50)
 			GiveHint(target)
@@ -345,7 +345,9 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/effect/rend)
 		else if(istype(I, /obj/item/bikehorn))
 			to_chat(target, span_userdanger("HONK"))
 			SEND_SOUND(target, 'sound/items/airhorn.ogg')
-			target.adjustEarDamage(0,3)
+			var/obj/item/organ/ears/ears = user.get_organ_slot(ORGAN_SLOT_EARS)
+			if(ears)
+				ears.adjustEarDamage(0, 3)
 			GiveHint(target)
 		cooldown = world.time +cooldown_time
 		return
@@ -359,7 +361,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/effect/rend)
 
 /obj/item/voodoo/check_eye(mob/user)
 	if(loc != user)
-		user.reset_perspective(null)
+		user.set_mob_eye_to(MOB_EYE_SELF)
 		user.unset_machine()
 
 /obj/item/voodoo/attack_self(mob/user)
@@ -399,9 +401,9 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/effect/rend)
 				log_game("[key_name(user)] made [key_name(target)] say [wgw] with a voodoo doll.")
 			if(BODY_ZONE_PRECISE_EYES)
 				user.set_machine(src)
-				user.reset_perspective(target)
+				user.set_mob_eye_to(target)
 				spawn(100)
-					user.reset_perspective(null)
+					user.set_mob_eye_to(MOB_EYE_SELF)
 					user.unset_machine()
 			if(BODY_ZONE_R_LEG,BODY_ZONE_L_LEG)
 				to_chat(user, span_notice("You move the doll's legs around."))
@@ -412,7 +414,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/effect/rend)
 				GiveHint(target)
 			if(BODY_ZONE_HEAD)
 				to_chat(user, span_notice("You smack the doll's head with your hand."))
-				target.Dizzy(10)
+				target.adjust_dizzy(20 SECONDS)
 				to_chat(target, span_warning("You suddenly feel as if your head was hit with a hammer!"))
 				GiveHint(target,user)
 		cooldown = world.time + cooldown_time
@@ -444,7 +446,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/effect/rend)
 /obj/item/voodoo/fire_act(exposed_temperature, exposed_volume)
 	if(target)
 		target.adjust_fire_stacks(20)
-		target.IgniteMob()
+		target.ignite_mob()
 		GiveHint(target,1)
 	return ..()
 
@@ -469,7 +471,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/effect/rend)
 	var/mob/living/carbon/last_user
 
 /obj/item/warpwhistle/proc/interrupted(mob/living/carbon/user)
-	if(!user || QDELETED(src) || user.notransform)
+	if(!user || QDELETED(src) || HAS_TRAIT(user, TRAIT_NO_TRANSFORM))
 		on_cooldown = FALSE
 		return TRUE
 	return FALSE
@@ -500,7 +502,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/effect/rend)
 	var/breakout = 0
 	while(breakout < 50)
 		var/turf/potential_T = find_safe_turf()
-		if(T.get_virtual_z_level() != potential_T.get_virtual_z_level() || abs(get_dist_euclidian(potential_T,T)) > 50 - breakout)
+		if(T.get_virtual_z_level() != potential_T.get_virtual_z_level() || abs(get_dist_euclidean(potential_T,T)) > 50 - breakout)
 			do_teleport(user, potential_T, channel = TELEPORT_CHANNEL_MAGIC_SELF, teleport_mode = TELEPORT_ALLOW_WIZARD)
 			T = potential_T
 			break

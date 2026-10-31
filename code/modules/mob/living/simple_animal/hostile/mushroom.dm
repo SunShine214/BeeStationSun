@@ -21,17 +21,17 @@
 	attack_verb_continuous = "chomps"
 	attack_verb_simple = "chomp"
 	attack_sound = 'sound/weapons/bite.ogg'
+	attack_vis_effect = ATTACK_EFFECT_BITE
 	faction = list(FACTION_MUSHROOM)
 	environment_smash = ENVIRONMENT_SMASH_NONE
 	stat_attack = DEAD
 	mouse_opacity = MOUSE_OPACITY_ICON
 	speed = 1
-	ventcrawler = VENTCRAWLER_ALWAYS
 	robust_searching = 1
 	unique_name = 1
 	speak_emote = list("squeaks")
-	deathmessage = "fainted."
-	var/cap_color = "#ffffff"
+	death_message = "fainted."
+	var/cap_color = COLOR_WHITE
 	var/powerlevel = 0 //Tracks our general strength level gained from eating other shrooms
 	var/bruised = 0 //If someone tries to cheat the system by attacking a shroom to lower its health, punish them so that it wont award levels to shrooms that eat it
 	var/recovery_cooldown = 0 //So you can't repeatedly revive it during a fight
@@ -63,6 +63,8 @@
 	health = maxHealth
 	. = ..()
 
+	ADD_TRAIT(src, TRAIT_VENTCRAWLER_ALWAYS, INNATE_TRAIT)
+
 /mob/living/simple_animal/hostile/mushroom/CanAttack(atom/the_target) // Mushroom-specific version of CanAttack to handle stupid attack_same = 2 crap so we don't have to do it for literally every single simple_animal/hostile because this shit never gets spawned
 	if(!the_target || isturf(the_target) || istype(the_target, /atom/movable/lighting_object))
 		return FALSE
@@ -82,7 +84,7 @@
 
 	return FALSE
 
-/mob/living/simple_animal/hostile/mushroom/adjustHealth(amount, updating_health = TRUE, forced = FALSE) //Possibility to flee from a fight just to make it more visually interesting
+/mob/living/simple_animal/hostile/mushroom/adjustHealth(amount, updating_health = TRUE, forced = FALSE, required_bodytype) //Possibility to flee from a fight just to make it more visually interesting
 	if(!retreat_distance && prob(33))
 		retreat_distance = 5
 		addtimer(CALLBACK(src, PROC_REF(stop_retreat)), 30)
@@ -153,7 +155,7 @@
 		src.visible_message("The [src.name] was bruised!")
 		bruised = 1
 
-/mob/living/simple_animal/hostile/mushroom/attackby(obj/item/I, mob/user, params)
+/mob/living/simple_animal/hostile/mushroom/attackby(obj/item/I, mob/user, list/modifiers)
 	if(istype(I, /obj/item/food/grown/mushroom))
 		if(stat == DEAD && !recovery_cooldown)
 			Recover()

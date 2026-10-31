@@ -31,7 +31,7 @@
 //BUCKLE HOOKS
 
 /obj/machinery/manned_turret/unbuckle_mob(mob/living/buckled_mob,force = FALSE)
-	playsound(src,'sound/mecha/mechmove01.ogg', 50, 1)
+	playsound(src,'sound/mecha/mechmove01.ogg', 50, TRUE)
 	for(var/obj/item/I in buckled_mob.held_items)
 		if(istype(I, /obj/item/gun_control))
 			qdel(I)
@@ -46,7 +46,7 @@
 	LAZYREMOVE(buckled_mob, src)
 
 /obj/machinery/manned_turret/user_buckle_mob(mob/living/M, mob/user, check_loc = TRUE)
-	if(user.incapacitated() || !istype(user))
+	if(user.incapacitated || !istype(user))
 		return
 	M.forceMove(get_turf(src))
 	. = ..()
@@ -64,7 +64,7 @@
 	M.pixel_y = 14
 	layer = ABOVE_MOB_LAYER
 	setDir(SOUTH)
-	playsound(src,'sound/mecha/mechmove01.ogg', 50, 1)
+	playsound(src, 'sound/mecha/mechmove01.ogg', 50, TRUE)
 	anchored = TRUE
 	if(M.client)
 		M.client.view_size.setTo(view_range)
@@ -74,22 +74,23 @@
 	if (!update_positioning())
 		return PROCESS_KILL
 
-/obj/machinery/manned_turret/proc/update_positioning(mouseObject, params)
+/obj/machinery/manned_turret/proc/update_positioning()
 	if (!LAZYLEN(buckled_mobs))
 		return FALSE
 	var/mob/living/controller = buckled_mobs[1]
 	if(!istype(controller))
 		return FALSE
-	var/client/C = controller.client
-	if(C)
-		var/atom/A = mouseObject
-		var/turf/T = get_turf(A)
-		if(istype(T))	//They're hovering over something in the map.
-			direction_track(controller, T)
-			calculated_projectile_vars = calculate_projectile_angle_and_pixel_offsets(controller, params)
+	var/client/controlling_client = controller.client
+	if(controlling_client)
+		var/list/modifiers = params2list(controlling_client.mouseParams)
+		var/atom/target_atom = controlling_client.mouse_object_ref?.resolve()
+		var/turf/target_turf = get_turf(target_atom)
+		if(istype(target_turf)) //They're hovering over something in the map.
+			direction_track(controller, target_turf)
+			calculated_projectile_vars = calculate_projectile_angle_and_pixel_offsets(controller, target_turf, modifiers)
 
 /obj/machinery/manned_turret/proc/direction_track(mob/user, atom/targeted)
-	if(user.incapacitated())
+	if(user.incapacitated)
 		return
 	setDir(get_dir(src,targeted))
 	user.setDir(dir)
@@ -129,7 +130,7 @@
 
 /obj/machinery/manned_turret/proc/checkfire(atom/targeted_atom, mob/user)
 	target = targeted_atom
-	if(target == user || user.incapacitated() || target == get_turf(src))
+	if(target == user || user.incapacitated || target == get_turf(src))
 		return
 	if(world.time < cooldown)
 		if(!warned && world.time > (cooldown - cooldown_duration + rate_of_fire*number_of_shots)) // To capture the window where one is done firing
@@ -147,7 +148,7 @@
 		addtimer(CALLBACK(src, TYPE_PROC_REF(/obj/machinery/manned_turret, fire_helper), user), i*rate_of_fire)
 
 /obj/machinery/manned_turret/proc/fire_helper(mob/user)
-	if(user.incapacitated() || !(user in buckled_mobs))
+	if(user.incapacitated || !(user in buckled_mobs))
 		return
 	update_positioning()
 	var/turf/targets_from = get_turf(src)
@@ -200,7 +201,7 @@
 /obj/item/gun_control/CanItemAutoclick()
 	return TRUE
 
-/obj/item/gun_control/attack_atom(obj/O, mob/living/user, params)
+/obj/item/gun_control/attack_atom(obj/O, mob/living/user, list/modifiers)
 	user.changeNext_move(CLICK_CD_MELEE)
 	O.attacked_by(src, user)
 
@@ -210,9 +211,9 @@
 	M.attacked_by(src, user)
 	add_fingerprint(user)
 
-/obj/item/gun_control/afterattack(atom/targeted_atom, mob/user, flag, params)
+/obj/item/gun_control/afterattack(atom/targeted_atom, mob/user, flag, list/modifiers)
 	. = ..()
 	var/obj/machinery/manned_turret/E = user.buckled
-	E.calculated_projectile_vars = calculate_projectile_angle_and_pixel_offsets(user, params)
+	E.calculated_projectile_vars = calculate_projectile_angle_and_pixel_offsets(user, targeted_atom, modifiers)
 	E.direction_track(user, targeted_atom)
 	E.checkfire(targeted_atom, user)

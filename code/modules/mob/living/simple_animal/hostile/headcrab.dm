@@ -7,24 +7,29 @@
 	icon_living = "headcrab"
 	icon_dead = "headcrab_dead"
 	gender = NEUTER
+	density = FALSE
 	health = 50
 	maxHealth = 50
 	melee_damage = 10
 	attack_verb_continuous = "chomps"
 	attack_verb_simple = "chomp"
 	attack_sound = 'sound/weapons/bite.ogg'
+	attack_vis_effect = ATTACK_EFFECT_BITE
 	faction = list(FACTION_NEUTRAL)
 	robust_searching = 1
 	stat_attack = DEAD
 	obj_damage = 0
 	environment_smash = ENVIRONMENT_SMASH_NONE
 	speak_emote = list("squeaks")
-	ventcrawler = VENTCRAWLER_ALWAYS
 	/// The mind to transfer to our egg when it hatches
 	var/datum/mind/origin
 	/// Set to true once we've implanted our egg
 	var/egg_lain = FALSE
-	discovery_points = 2000
+	discovery_points = TECHWEB_TIER_2_POINTS
+
+/mob/living/simple_animal/hostile/headcrab/Initialize(mapload)
+	. = ..()
+	ADD_TRAIT(src, TRAIT_VENTCRAWLER_ALWAYS, INNATE_TRAIT)
 
 /mob/living/simple_animal/hostile/headcrab/proc/Infect(mob/living/carbon/victim)
 	var/obj/item/organ/body_egg/changeling_egg/egg = new(victim)

@@ -20,10 +20,10 @@
 		var/obj/item/clothing/CS = wear_suit
 		var/obj/item/clothing/CH = head
 		if (CS.clothing_flags & CH.clothing_flags & THICKMATERIAL)
-			return 1
+			return TRUE
 	if(HAS_TRAIT(src, TRAIT_BEEFRIEND))
-		return 1
-	return 0
+		return TRUE
+	return FALSE
 
 
 /obj/structure/beebox
@@ -144,7 +144,7 @@
 		. += span_warning("There's no room for more honeycomb!")
 
 
-/obj/structure/beebox/attackby(obj/item/I, mob/user, params)
+/obj/structure/beebox/attackby(obj/item/I, mob/user, list/modifiers)
 	if(istype(I, /obj/item/honey_frame))
 		var/obj/item/honey_frame/HF = I
 		if(honey_frames.len < BEEBOX_MAX_FRAMES)

@@ -33,7 +33,7 @@
 	. = list()
 	//Get all orbital bodies on the map.
 	for(var/collision_zone in collision_zone_bodies)
-		for(var/datum/orbital_object/body as() in collision_zone_bodies[collision_zone])
+		for(var/datum/orbital_object/body as anything in collision_zone_bodies[collision_zone])
 			//Distance check last for optimisations
 			if(body != source && body.relevant_gravity_range && source.position.DistanceTo(body.position) <= body.relevant_gravity_range)
 				. += body

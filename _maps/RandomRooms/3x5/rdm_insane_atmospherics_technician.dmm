@@ -13,7 +13,7 @@
 	pixel_y = 32
 	},
 /obj/effect/decal/cleanable/dirt,
-/obj/machinery/atmospherics/pipe/layer_manifold/general/visible,
+/obj/machinery/atmospherics/pipe/smart/manifold4w/dark/visible/layer5,
 /turf/open/floor/plating,
 /area/template_noop)
 "e" = (
@@ -136,7 +136,8 @@
 	pixel_y = -32
 	},
 /obj/effect/decal/cleanable/dirt,
-/obj/machinery/atmospherics/pipe/layer_manifold/general/visible,
+/obj/machinery/atmospherics/pipe/smart/manifold4w/green/visible/layer1,
+/obj/machinery/atmospherics/pipe/smart/manifold4w/dark/visible/layer5,
 /turf/open/floor/plating,
 /area/template_noop)
 "O" = (
@@ -144,7 +145,7 @@
 /obj/machinery/light{
 	dir = 8
 	},
-/obj/effect/spawner/lootdrop/crate_spawner,
+/obj/effect/spawner/random/structure/crate_abandoned,
 /obj/structure/disposalpipe/segment,
 /obj/structure/railing{
 	dir = 1
@@ -160,7 +161,7 @@
 /turf/open/floor/plating,
 /area/template_noop)
 "U" = (
-/obj/effect/spawner/lootdrop/crate_spawner,
+/obj/effect/spawner/random/structure/crate_abandoned,
 /obj/structure/disposalpipe/segment{
 	dir = 5
 	},
@@ -191,7 +192,7 @@
 	pixel_x = -5;
 	pixel_y = -6
 	},
-/obj/item/clothing/mask/cigarette{
+/obj/item/cigarette{
 	starts_lit = 1;
 	pixel_x = -7
 	},

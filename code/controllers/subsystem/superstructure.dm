@@ -1,6 +1,6 @@
 SUBSYSTEM_DEF(superstructure)
 	name = "Superstructure"
-	flags = SS_NO_FIRE
+	ss_flags = SS_NO_FIRE
 
 	/// What health is the station at?
 	var/hull_integrity = 1000

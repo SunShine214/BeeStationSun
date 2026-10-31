@@ -1,4 +1,5 @@
 /datum/supply_pack
+	abstract_type = /datum/supply_pack
 	var/name = "Crate"
 	var/group = ""
 	var/hidden = FALSE
@@ -70,6 +71,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 /datum/supply_pack/emergency
+	abstract_type = /datum/supply_pack/emergency
 	group = "Emergency"
 
 /datum/supply_pack/emergency/vehicle
@@ -385,6 +387,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 /datum/supply_pack/security
+	abstract_type = /datum/supply_pack/security
 	group = "Security"
 	access = ACCESS_SECURITY
 	access_budget = ACCESS_SECURITY
@@ -415,23 +418,18 @@
 
 /datum/supply_pack/security/secpistol_ammo
 	name = "x200 LAW - NPS ammo Crate"
-	desc = "A box of x200 LAW; steel-cartridged low velocity ammo for law enforcement firearms, and 3 twelve-packs alongside. Requires Security access to open."
-	cost = 950
+	desc = "A box of x200 LAW; steel-cartridged low velocity ammo for law enforcement firearms. Contains a total of 16 lethal bullets, 2 magazines worth. Requires Security access to open."
+	cost = 600
 	max_supply = 2
-	contains = list(/obj/item/ammo_box/x200law,
-					/obj/item/ammo_box/pouch/x200law,
-					/obj/item/ammo_box/pouch/x200law,
-					/obj/item/ammo_box/pouch/x200law)
+	contains = list(/obj/item/ammo_box/x200law)
 	crate_name = "ammo crate"
 
 /datum/supply_pack/security/secpistol_mags
-	name = "NPS-10 magazines Crate"
-	desc = "Three standard issue NPS-10 compatible magazines for law enforcement firearms. Does not come pre-loaded. Requires Security access to open."
-	cost = 1200
+	name = "NPS-10 spare magazine"
+	desc = "A spare magazine for the standard issue NPS-10 firearm. Does not come pre-loaded. Requires Security access to open."
+	cost = 450
 	max_supply = 2
-	contains = list(/obj/item/ammo_box/magazine/x200law/empty,
-					/obj/item/ammo_box/magazine/x200law/empty,
-					/obj/item/ammo_box/magazine/x200law/empty)
+	contains = list(/obj/item/ammo_box/magazine/x200law/empty)
 	crate_name = "magazine crate"
 
 /datum/supply_pack/security/taser
@@ -605,9 +603,9 @@
 	desc = "Arm the Civil Protection Forces with three stun batons. Batteries included. Requires Security access to open."
 	cost = 900
 	max_supply = 4
-	contains = list(/obj/item/melee/baton/loaded,
-					/obj/item/melee/baton/loaded,
-					/obj/item/melee/baton/loaded)
+	contains = list(/obj/item/melee/baton/security/loaded,
+					/obj/item/melee/baton/security/loaded,
+					/obj/item/melee/baton/security/loaded)
 	crate_name = "stun baton crate"
 
 /datum/supply_pack/security/wall_flash
@@ -887,7 +885,7 @@
 		/obj/item/clothing/gloves/tackler/combat,
 		/obj/item/clothing/under/syndicate/rus_army,
 		/obj/item/clothing/under/costume/soviet,
-		/obj/item/clothing/mask/russian_balaclava,
+		/obj/item/clothing/mask/balaclava/russian_balaclava,
 		/obj/item/clothing/head/helmet/rus_ushanka,
 		/obj/item/clothing/suit/armor/vest/russian_coat,
 		/obj/item/gun/ballistic/rifle/boltaction,
@@ -1037,6 +1035,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 /datum/supply_pack/engineering
+	abstract_type = /datum/supply_pack/engineering
 	group = "Engineering"
 	crate_type = /obj/structure/closet/crate/engineering
 	access_budget = ACCESS_ENGINE
@@ -1334,7 +1333,7 @@
 /datum/supply_pack/engineering/shuttle_construction
 	name = "Shuttle Construction Kit"
 	desc = "A DIY kit for building your own shuttle! Comes with all the parts you need to get your people to the stars!"
-	cost = 5000
+	cost = 7500
 	max_supply = 2
 	contains = list(
 		/obj/machinery/portable_atmospherics/canister/plasma,
@@ -1349,7 +1348,8 @@
 		/obj/item/circuitboard/machine/shuttle/engine/plasma,
 		/obj/item/circuitboard/machine/shuttle/engine/plasma,
 		/obj/item/circuitboard/machine/shuttle/heater,
-		/obj/item/circuitboard/machine/shuttle/heater
+		/obj/item/circuitboard/machine/shuttle/heater,
+		/obj/item/survivalcapsule/shuttle_husk
 		)
 	crate_name = "shuttle construction crate"
 	crate_type = /obj/structure/closet/crate/large
@@ -1383,6 +1383,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 /datum/supply_pack/engine
+	abstract_type = /datum/supply_pack/engine
 	group = "Engine Construction"
 	crate_type = /obj/structure/closet/crate/engineering
 	access_budget = ACCESS_ENGINE
@@ -1549,6 +1550,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 /datum/supply_pack/materials
+	abstract_type = /datum/supply_pack/materials
 	group = "Canisters & Materials"
 
 /datum/supply_pack/materials/cardboard50
@@ -1791,6 +1793,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 /datum/supply_pack/medical
+	abstract_type = /datum/supply_pack/medical
 	group = "Medical"
 	access_budget = ACCESS_MEDICAL
 	crate_type = /obj/structure/closet/crate/medical
@@ -1932,27 +1935,29 @@
 	desc = "Contains a little bit of everything needed to stock a medbay or to form your own."
 	cost = 2000
 	max_supply = 3
-	contains = list(/obj/item/reagent_containers/cup/bottle/charcoal,
-					/obj/item/reagent_containers/cup/bottle/epinephrine,
-					/obj/item/reagent_containers/cup/bottle/morphine,
-					/obj/item/reagent_containers/cup/bottle/toxin,
-					/obj/item/reagent_containers/cup/beaker/large,
-					/obj/item/reagent_containers/pill/insulin,
-					/obj/item/stack/medical/gauze,
-					/obj/item/storage/box/beakers,
-					/obj/item/storage/box/medsprays,
-					/obj/item/storage/box/syringes,
-					/obj/item/storage/box/bodybags,
-					/obj/item/storage/firstaid/regular,
-					/obj/item/storage/firstaid/o2,
-					/obj/item/storage/firstaid/toxin,
-					/obj/item/storage/firstaid/brute,
-					/obj/item/storage/firstaid/fire,
-					/obj/item/defibrillator/loaded,
-					/obj/item/reagent_containers/blood/OMinus,
-					/obj/item/storage/pill_bottle/mining,
-					/obj/item/reagent_containers/pill/neurine,
-					/obj/item/vending_refill/medical)
+	contains = list(
+		/obj/item/reagent_containers/cup/bottle/charcoal,
+		/obj/item/reagent_containers/cup/bottle/epinephrine,
+		/obj/item/reagent_containers/cup/bottle/morphine,
+		/obj/item/reagent_containers/cup/bottle/toxin,
+		/obj/item/reagent_containers/cup/beaker/large,
+		/obj/item/reagent_containers/applicator/pill/insulin,
+		/obj/item/stack/medical/gauze,
+		/obj/item/storage/box/beakers,
+		/obj/item/storage/box/medsprays,
+		/obj/item/storage/box/syringes,
+		/obj/item/storage/box/bodybags,
+		/obj/item/storage/firstaid/regular,
+		/obj/item/storage/firstaid/o2,
+		/obj/item/storage/firstaid/toxin,
+		/obj/item/storage/firstaid/brute,
+		/obj/item/storage/firstaid/fire,
+		/obj/item/defibrillator/loaded,
+		/obj/item/reagent_containers/blood/o_minus,
+		/obj/item/storage/pill_bottle/mining,
+		/obj/item/reagent_containers/applicator/pill/neurine,
+		/obj/item/vending_refill/medical,
+	)
 	crate_name = "medical supplies crate"
 
 /datum/supply_pack/medical/supplies/fill(obj/structure/closet/crate/C)
@@ -2076,6 +2081,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 /datum/supply_pack/science
+	abstract_type = /datum/supply_pack/science
 	group = "Science"
 	access_budget = ACCESS_RESEARCH
 	crate_type = /obj/structure/closet/crate/science
@@ -2133,7 +2139,7 @@
 	max_supply = 4
 	access = ACCESS_ROBOTICS
 	contains = list(/obj/item/stack/sheet/iron/five,
-					/obj/item/stack/cable_coil/random/five,
+					/obj/item/stack/cable_coil,
 					/obj/item/circuitboard/machine/cyborgrecharger,
 					/obj/item/stock_parts/capacitor,
 					/obj/item/stock_parts/cell,
@@ -2245,6 +2251,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 /datum/supply_pack/service
+	abstract_type = /datum/supply_pack/service
 	group = "Service"
 
 /datum/supply_pack/service/cargo_supples
@@ -2298,7 +2305,7 @@
 					/obj/item/clothing/suit/caution,
 					/obj/item/storage/bag/trash,
 					/obj/item/reagent_containers/spray/cleaner,
-					/obj/item/reagent_containers/cup/rag,
+					/obj/item/rag,
 					/obj/item/grenade/chem_grenade/cleaner,
 					/obj/item/grenade/chem_grenade/cleaner,
 					/obj/item/grenade/chem_grenade/cleaner)
@@ -2373,7 +2380,7 @@
 
 /datum/supply_pack/service/carpet_exotic
 	name = "Exotic Carpet Crate"
-	desc = "Exotic carpets straight from Space Russia, for all your decorating needs. Contains 100 tiles each of 8 different flooring patterns."
+	desc = "Exotic carpets straight from Space Russia, for all your decorating needs. Contains 100 tiles each of 10 different flooring patterns."
 	cost = 2000
 	max_supply = 3
 	contains = list(/obj/item/stack/tile/carpet/blue/fifty,
@@ -2388,6 +2395,8 @@
 					/obj/item/stack/tile/carpet/purple/fifty,
 					/obj/item/stack/tile/carpet/red/fifty,
 					/obj/item/stack/tile/carpet/red/fifty,
+					/obj/item/stack/tile/carpet/olive/fifty,
+					/obj/item/stack/tile/carpet/olive/fifty,
 					/obj/item/stack/tile/carpet/royalblue/fifty,
 					/obj/item/stack/tile/carpet/royalblue/fifty,
 					/obj/item/stack/tile/eighties/fifty,
@@ -2516,6 +2525,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 /datum/supply_pack/organic
+	abstract_type = /datum/supply_pack/organic
 	group = "Food & Hydroponics"
 	crate_type = /obj/structure/closet/crate/freezer
 
@@ -2864,6 +2874,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 /datum/supply_pack/critter
+	abstract_type = /datum/supply_pack/critter
 	group = "Livestock"
 	crate_type = /obj/structure/closet/crate/critter
 	max_supply = 4
@@ -2899,7 +2910,7 @@
 	name = "Cat Crate"
 	desc = "The cat goes meow! Comes with a collar and a nice cat toy! Cheeseburger not included."//i can't believe im making this reference
 	cost = 5000 //Cats are worth as much as corgis.
-	contains = list(/mob/living/simple_animal/pet/cat,
+	contains = list(/mob/living/basic/pet/cat,
 					/obj/item/clothing/neck/petcollar,
 					/obj/item/toy/cattoy)
 	crate_name = "cat crate"
@@ -2907,9 +2918,9 @@
 /datum/supply_pack/critter/cat/generate()
 	. = ..()
 	if(prob(50))
-		var/mob/living/simple_animal/pet/cat/C = locate() in .
+		var/mob/living/basic/pet/cat/C = locate() in .
 		qdel(C)
-		new /mob/living/simple_animal/pet/cat/Proc(.)
+		new /mob/living/basic/pet/cat/_proc(.)
 
 /datum/supply_pack/critter/cat/exotic
 	name = "Exotic Cat Crate"
@@ -2923,15 +2934,15 @@
 	. = ..()
 	switch(rand(1, 5))
 		if(1)
-			new /mob/living/simple_animal/pet/cat/original(.)
+			new /mob/living/basic/pet/cat/original(.)
 		if(2)
-			new /mob/living/simple_animal/pet/cat/breadcat(.)
+			new /mob/living/basic/pet/cat/breadcat(.)
 		if(3)
-			new /mob/living/simple_animal/pet/cat/cak(.)
+			new /mob/living/basic/pet/cat/cak(.)
 		if(4)
-			new /mob/living/simple_animal/pet/cat/space(.)
+			new /mob/living/basic/pet/cat/space(.)
 		if(5)
-			new /mob/living/simple_animal/pet/cat/halal(.)
+			new /mob/living/basic/pet/cat/halal(.)
 
 /datum/supply_pack/critter/chick
 	name = "Chicken Crate"
@@ -3072,6 +3083,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 /datum/supply_pack/costumes_toys
+	abstract_type = /datum/supply_pack/costumes_toys
 	group = "Costumes & Toys"
 
 /datum/supply_pack/costumes_toys/randomised
@@ -3415,6 +3427,21 @@
 		plush_nomoth = pick(_temporary_list_plush_nomoth)
 		new plush_nomoth(C)
 
+/datum/supply_pack/costumes_toys/ducks
+	name = "Rubber Duck Crate"
+	desc = "A crate filled with 5 adorable rubber ducks!"
+	cost = 2000
+	max_supply = 5
+	contains = list(
+		/obj/item/bikehorn/rubberducky,
+		/obj/item/bikehorn/rubberducky,
+		/obj/item/bikehorn/rubberducky,
+		/obj/item/bikehorn/rubberducky,
+		/obj/item/bikehorn/rubberducky,
+	)
+	crate_name = "duck crate"
+	crate_type = /obj/structure/closet/crate/wooden
+
 //////////////////////////////////////////////////////////////////////////////
 ///////////////////////// Wardrobe Resupplies ////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
@@ -3513,6 +3540,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 /datum/supply_pack/misc
+	abstract_type = /datum/supply_pack/misc
 	group = "Miscellaneous Supplies"
 
 /datum/supply_pack/misc/artsupply
@@ -3568,8 +3596,8 @@
 
 /datum/supply_pack/misc/bicycle/generate(atom/A, datum/bank_account/paying_account)
 	. = ..()
-	for(var/client/C as() in GLOB.clients)
-		if(C?.mob.mind.assigned_role == JOB_NAME_QUARTERMASTER || C?.mob.mind.assigned_role == JOB_NAME_CARGOTECHNICIAN)
+	for(var/client/C as anything in GLOB.clients)
+		if(C?.mob.mind.assigned_role.title == JOB_NAME_QUARTERMASTER || C?.mob.mind.assigned_role.title == JOB_NAME_CARGOTECHNICIAN)
 			C?.give_award(/datum/award/achievement/misc/bike, C?.mob)
 
 /datum/supply_pack/misc/bigband
@@ -3595,8 +3623,7 @@
 	cost = 1200
 	max_supply = 3
 	access_budget = ACCESS_LIBRARY
-	contains = list(/obj/item/book/codex_gigas,
-					/obj/item/book/manual/random/,
+	contains = list(/obj/item/book/manual/random/,
 					/obj/item/book/manual/random/,
 					/obj/item/book/manual/random/,
 					/obj/item/book/random,

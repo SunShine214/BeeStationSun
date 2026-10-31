@@ -49,7 +49,7 @@
 	get_user()
 	if(player)
 		sound_channel = rand(200, 800)
-		player.playsound_local(computer, 'sound/soundtrack/PinkSuzuki_HappyPlace.ogg', 50, channel = sound_channel)
+		player.playsound_local(computer, 'sound/music/misc/PinkSuzuki_HappyPlace.ogg', 50, channel = sound_channel)
 		sound = TRUE
 
 /datum/computer_file/program/coil_virus/ui_act(action, list/params, datum/tgui/ui)
@@ -80,9 +80,9 @@
 	var/obj/item/computer_hardware/hard_drive/drive = computer.all_components[MC_HDD]
 	if(card)
 		if(drive.virus_lethality)
-			computer.add_log("SYSnotice :: Executable anomaly detected... Manual execution of *UNKNOWN* at: [card.identification_string] (NID ?%&!).", log_id = FALSE)
+			computer.add_log("SYSnotice :: Executable anomaly detected... Manual execution of *UNKNOWN* at: [card.identification_string] (NID ?%&!).")
 		else
-			computer.add_log("SYSnotice :: Executable anomaly detected... Manual execution of *UNKNOWN* at: [card.get_network_tag()].", log_id = FALSE)
+			computer.add_log("SYSnotice :: Executable anomaly detected... Manual execution of *UNKNOWN* at: [card.get_network_tag()].")
 	var/obj/item/computer_hardware/hard_drive/role/virus/disk = computer.all_components[MC_HDD_JOB]
 	disk.component_qdel()
 
@@ -102,7 +102,7 @@
 	var/obj/item/computer_hardware/network_card/card = computer.all_components[MC_NET]
 	var/obj/item/computer_hardware/hard_drive/role/virus/disk = computer.all_components[MC_HDD_JOB]
 	if(card)
-		computer.add_log("ALERT: Execution of unsafe class [filename] file detected in [card.get_network_tag()]!", log_id = FALSE)
+		computer.add_log("ALERT: Execution of unsafe class [filename] file detected in [card.get_network_tag()]!")
 	disk.component_qdel()
 
 /datum/computer_file/program/breacher_virus
@@ -121,11 +121,11 @@
 	get_user()
 	if(player)
 		sound_channel = rand(200, 800)
-		player.playsound_local(computer, 'sound/soundtrack/PinkSuzuki_DaxtersPlaceOutro.ogg', 50, channel = sound_channel)
+		player.playsound_local(computer, 'sound/music/misc/PinkSuzuki_DaxtersPlaceOutro.ogg', 50, channel = sound_channel)
 		sound = TRUE
 	var/obj/item/computer_hardware/network_card/card = computer.all_components[MC_NET]
 	if(card)
-		computer.add_log("ALERT: Execution of unsafe class [filename] file detected in [card.get_network_tag()]!", log_id = FALSE)
+		computer.add_log("ALERT: Execution of unsafe class [filename] file detected in [card.get_network_tag()]!")
 
 /datum/computer_file/program/breacher_virus/kill_program(mob/user, forced)
 	. = ..()
@@ -203,7 +203,7 @@
 	get_user()
 	if(player)
 		sound_channel = rand(200, 800)
-		player.playsound_local(computer, 'sound/soundtrack/PinkSuzuki_HellraiserAnthem.ogg', 50, channel = sound_channel)
+		player.playsound_local(computer, 'sound/music/misc/PinkSuzuki_HellraiserAnthem.ogg', 50, channel = sound_channel)
 		sound = TRUE
 
 /datum/computer_file/program/sledge_virus/on_ui_close(mob/user, datum/tgui/tgui)
@@ -224,7 +224,7 @@
 	if(triggered)
 		var/obj/item/computer_hardware/network_card/card = computer.all_components[MC_NET]
 		if(card)
-			computer.add_log("ALERT: Execution of unsafe class [filename] file detected in [card.get_network_tag()]!", log_id = FALSE)
+			computer.add_log("ALERT: Execution of unsafe class [filename] file detected in [card.get_network_tag()]!")
 		return
 	var/obj/item/computer_hardware/hard_drive/drive = computer.all_components[MC_HDD]
 	drive.virus_defense = ANTIVIRUS_NONE
@@ -234,9 +234,9 @@
 	var/obj/item/computer_hardware/network_card/card = computer.all_components[MC_NET]
 	if(card)
 		if(drive.virus_lethality)
-			computer.add_log("SYSnotice :: Executable anomaly detected... Manual execution of *UNKNOWN* at: [card.identification_string] (NID ?%&!).", log_id = FALSE)
+			computer.add_log("SYSnotice :: Executable anomaly detected... Manual execution of *UNKNOWN* at: [card.identification_string] (NID ?%&!).")
 		else
-			computer.add_log("SYSnotice :: Executable anomaly detected... Manual execution of *UNKNOWN* at: [card.get_network_tag()].", log_id = FALSE)
+			computer.add_log("SYSnotice :: Executable anomaly detected... Manual execution of *UNKNOWN* at: [card.get_network_tag()].")
 	var/obj/item/computer_hardware/hard_drive/role/virus/disk = computer.all_components[MC_HDD_JOB]
 	disk.component_qdel()
 

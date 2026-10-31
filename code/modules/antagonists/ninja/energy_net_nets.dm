@@ -16,6 +16,7 @@
 	anchored = TRUE //Can't drag/grab the net.
 	layer = ABOVE_ALL_MOB_LAYER
 	//plane = ABOVE_GAME_PLANE
+	mouse_opacity = MOUSE_OPACITY_OPAQUE // The net is mostly holes, so this can have the issue of hitting yourself trying to hit the net
 	max_integrity = 60 //How much health it has.
 	can_buckle = TRUE
 	buckle_lying = 0
@@ -36,10 +37,17 @@
 	underlay.plane = GAME_PLANE
 	add_overlay(underlay)
 	START_PROCESSING(SSobj, src)
+	ADD_TRAIT(src, TRAIT_DANGEROUS_BUCKLE, INNATE_TRAIT)
 
 /obj/structure/energy_net/Destroy()
 	STOP_PROCESSING(SSobj, src)
 	. = ..()
+
+/obj/structure/energy_net/examine(mob/user) // Every click is going towards the net, so.. we can still examine whoever is inside
+	. = ..()
+	for(var/mob/living/caught as anything in buckled_mobs)
+		. += span_warning("[caught] is tangled up inside!")
+		. += caught.examine(user)
 
 /obj/structure/energy_net/play_attack_sound(damage, damage_type = BRUTE, damage_flag = 0)
 	if(damage_type == BRUTE || damage_type == BURN)
@@ -62,7 +70,7 @@
 	qdel(src)
 	if(ishuman(affecting))
 		var/mob/living/carbon/human/affected_human = affecting
-		var/list/target_contents = affected_human.get_equipped_items(include_pockets = TRUE) + affected_human.held_items
+		var/list/target_contents = affected_human.get_equipped_items(INCLUDE_POCKETS) + affected_human.held_items
 		for(var/obj/item/item in target_contents)
 			if(item == affected_human.w_uniform || item == affected_human.shoes)
 				ADD_TRAIT(item, TRAIT_NODROP, NINJA_KIDNAPPED_TRAIT)
@@ -102,7 +110,7 @@
 	// Drop any items acquired from the location
 	if(ishuman(target))
 		var/mob/living/carbon/human/target_human = target
-		var/list/target_contents = target_human.get_equipped_items(include_pockets = TRUE) + target_human.held_items
+		var/list/target_contents = target_human.get_equipped_items(INCLUDE_POCKETS) + target_human.held_items
 		for(var/obj/item/item in target_contents)
 			if(item == target_human.w_uniform || item == target_human.shoes)
 				REMOVE_TRAIT(item, TRAIT_NODROP, NINJA_KIDNAPPED_TRAIT)

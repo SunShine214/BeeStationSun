@@ -13,9 +13,7 @@
 /turf/open/floor/iron/dark,
 /area/ruin/space/has_grav/listeningstation)
 "cX" = (
-/obj/effect/spawner/randomvend/snack{
-	hacked = 1
-	},
+/obj/effect/spawner/random/vending/snackvend,
 /obj/effect/decal/cleanable/dirt,
 /obj/effect/decal/cleanable/dirt,
 /obj/structure/sign/poster/contraband/random{
@@ -44,10 +42,7 @@
 /turf/open/floor/iron,
 /area/ruin/space/has_grav/listeningstation)
 "er" = (
-/obj/structure/sink{
-	dir = 4;
-	pixel_x = 11
-	},
+/obj/structure/sink/directional/west,
 /obj/machinery/iv_drip,
 /obj/machinery/light/small,
 /obj/machinery/airalarm/directional/north,
@@ -133,8 +128,8 @@
 	pixel_y = -3
 	},
 /obj/effect/decal/cleanable/dirt,
-/obj/effect/spawner/lootdrop/ruinloot/security,
-/obj/effect/spawner/lootdrop/ruinloot/security,
+/obj/effect/spawner/random/ruinloot/security,
+/obj/effect/spawner/random/ruinloot/security,
 /obj/effect/turf_decal/tile/neutral/fourcorners/contrasted,
 /turf/open/floor/iron/dark,
 /area/ruin/space/has_grav/listeningstation)
@@ -241,9 +236,7 @@
 /obj/machinery/power/terminal{
 	dir = 1
 	},
-/obj/structure/cable{
-	icon_state = "0-2"
-	},
+/obj/structure/cable,
 /obj/structure/reagent_dispensers/fueltank,
 /obj/item/clothing/head/utility/welding,
 /obj/item/weldingtool/largetank,
@@ -332,7 +325,7 @@
 /obj/item/storage/firstaid/regular,
 /obj/item/clothing/neck/stethoscope,
 /obj/effect/decal/cleanable/dirt,
-/obj/effect/spawner/lootdrop/ruinloot/medical,
+/obj/effect/spawner/random/ruinloot/medical,
 /turf/open/floor/iron/white/side{
 	dir = 10
 	},
@@ -357,16 +350,11 @@
 /turf/open/floor/iron/dark,
 /area/ruin/space/has_grav/listeningstation)
 "tf" = (
-/obj/structure/sink{
-	dir = 4;
-	pixel_x = 11
-	},
+/obj/structure/sink/directional/west,
 /obj/structure/toilet{
 	pixel_y = 18
 	},
-/obj/structure/mirror{
-	pixel_x = 28
-	},
+/obj/structure/mirror/directional/east,
 /obj/effect/decal/cleanable/dirt,
 /turf/open/floor/iron/showroomfloor,
 /area/ruin/space/has_grav/listeningstation)
@@ -394,9 +382,7 @@
 /turf/open/floor/iron/dark,
 /area/ruin/space/has_grav/listeningstation)
 "ux" = (
-/obj/structure/cable/yellow{
-	icon_state = "0-8"
-	},
+/obj/structure/cable/yellow,
 /obj/machinery/atmospherics/pipe/smart/simple/supply/hidden,
 /obj/machinery/power/apc/syndicate{
 	dir = 4;
@@ -418,7 +404,6 @@
 /area/ruin/space/has_grav/listeningstation)
 "wf" = (
 /obj/effect/mob_spawn/human/lavaland_syndicate/comms/space{
-	assignedrole = "Space Syndicate";
 	dir = 8
 	},
 /obj/machinery/atmospherics/components/unary/vent_scrubber/on{
@@ -440,9 +425,7 @@
 /turf/open/floor/iron,
 /area/ruin/space/has_grav/listeningstation)
 "xC" = (
-/obj/effect/spawner/randomvend/cola{
-	hacked = 1
-	},
+/obj/effect/spawner/random/vending/colavend,
 /obj/effect/decal/cleanable/dirt,
 /obj/effect/decal/cleanable/dirt,
 /turf/open/floor/iron/white/corner{
@@ -553,7 +536,7 @@
 /obj/effect/decal/cleanable/dirt,
 /obj/machinery/airalarm/directional/east,
 /obj/effect/mapping_helpers/airalarm/syndicate_access,
-/obj/effect/spawner/lootdrop/ruinloot/important,
+/obj/effect/spawner/random/ruinloot/important,
 /turf/open/floor/iron/dark,
 /area/ruin/space/has_grav/listeningstation)
 "Df" = (
@@ -629,7 +612,7 @@
 	pixel_x = -27;
 	pixel_y = 1
 	},
-/obj/effect/spawner/lootdrop/ruinloot/important,
+/obj/effect/spawner/random/ruinloot/important,
 /obj/effect/turf_decal/tile/neutral/fourcorners/contrasted,
 /turf/open/floor/iron/dark,
 /area/ruin/space/has_grav/listeningstation)
@@ -645,11 +628,11 @@
 /area/ruin/space/has_grav/listeningstation)
 "Kg" = (
 /obj/structure/closet/crate/freezer,
-/obj/item/reagent_containers/blood/OMinus{
+/obj/item/reagent_containers/blood/o_minus{
 	pixel_x = -3;
 	pixel_y = 3
 	},
-/obj/item/reagent_containers/blood/OMinus,
+/obj/item/reagent_containers/blood/o_minus,
 /obj/effect/decal/cleanable/dirt,
 /obj/machinery/atmospherics/components/unary/vent_scrubber/on{
 	dir = 4;
@@ -723,15 +706,13 @@
 /area/ruin/space/has_grav/listeningstation)
 "LZ" = (
 /obj/machinery/door/airlock/external{
-	id_tag = "syndie_listeningpost_external";
-	req_access_txt = "150"
+	id_tag = "syndie_listeningpost_external"
 	},
+/obj/effect/mapping_helpers/airlock/access/all/syndicate/general,
 /turf/open/floor/plating,
 /area/ruin/space/has_grav/listeningstation)
 "Of" = (
-/obj/structure/cable/yellow{
-	icon_state = "0-4"
-	},
+/obj/structure/cable/yellow,
 /obj/machinery/power/smes{
 	charge = 5e+006
 	},
@@ -776,9 +757,9 @@
 	pixel_y = 5
 	},
 /obj/machinery/door/airlock/hatch{
-	name = "Telecommunications";
-	req_access_txt = "150"
+	name = "Telecommunications"
 	},
+/obj/effect/mapping_helpers/airlock/access/all/syndicate/general,
 /obj/effect/turf_decal/tile/neutral/fourcorners/contrasted,
 /turf/open/floor/iron/dark,
 /area/ruin/space/has_grav/listeningstation)
@@ -789,7 +770,7 @@
 	req_access = null;
 	req_access_txt = "150"
 	},
-/obj/effect/spawner/lootdrop/ruinloot/medical,
+/obj/effect/spawner/random/ruinloot/medical,
 /turf/open/floor/iron/white,
 /area/ruin/space/has_grav/listeningstation)
 "TD" = (
@@ -860,9 +841,9 @@
 	pixel_y = 5
 	},
 /obj/machinery/door/airlock/hatch{
-	name = "E.V.A. Equipment";
-	req_access_txt = "150"
+	name = "E.V.A. Equipment"
 	},
+/obj/effect/mapping_helpers/airlock/access/all/syndicate/general,
 /obj/effect/turf_decal/tile/neutral/fourcorners/contrasted,
 /turf/open/floor/iron/dark,
 /area/ruin/space/has_grav/listeningstation)

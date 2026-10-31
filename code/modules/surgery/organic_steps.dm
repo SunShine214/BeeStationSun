@@ -23,7 +23,7 @@
 	)
 
 /datum/surgery_step/incise/tool_check(mob/user, obj/item/tool)
-	if(implement_type == /obj/item && !tool.is_sharp())
+	if(implement_type == /obj/item && !tool.get_sharpness())
 		return FALSE
 
 	return TRUE
@@ -99,9 +99,9 @@
 	display_results(
 		user,
 		target,
-		span_notice("You begin to retract the skin in [target]'s [parse_zone(target_zone)]..."),
-		span_notice("[user] begins to retract the skin in [target]'s [parse_zone(target_zone)]."),
-		span_notice("[user] begins to retract the skin in [target]'s [parse_zone(target_zone)]."),
+		span_notice("You begin to retract the skin in [target]'s [target.parse_zone_with_bodypart(target_zone)]..."),
+		span_notice("[user] begins to retract the skin in [target]'s [target.parse_zone_with_bodypart(target_zone)]."),
+		span_notice("[user] begins to retract the skin in [target]'s [target.parse_zone_with_bodypart(target_zone)]."),
 	)
 
 //close incision
@@ -121,21 +121,22 @@
 	display_results(
 		user,
 		target,
-		span_notice("You begin to mend the incision in [target]'s [parse_zone(target_zone)]..."),
-		span_notice("[user] begins to mend the incision in [target]'s [parse_zone(target_zone)]."),
-		span_notice("[user] begins to mend the incision in [target]'s [parse_zone(target_zone)]."),
+		span_notice("You begin to mend the incision in [target]'s [target.parse_zone_with_bodypart(target_zone)]..."),
+		span_notice("[user] begins to mend the incision in [target]'s [target.parse_zone_with_bodypart(target_zone)]."),
+		span_notice("[user] begins to mend the incision in [target]'s [target.parse_zone_with_bodypart(target_zone)]."),
 	)
 
 /datum/surgery_step/close/tool_check(mob/user, obj/item/tool)
 	if(implement_type == TOOL_WELDER || implement_type == /obj/item)
-		return tool.is_hot()
+		return tool.get_temperature()
 
 	return TRUE
 
 /datum/surgery_step/close/success(mob/user, mob/living/carbon/target, target_zone, obj/item/tool, datum/surgery/surgery)
 	if(locate(/datum/surgery_step/saw) in surgery.steps)
-		target.heal_bodypart_damage(45,0)
-	target.cauterise_wounds()
+		target.heal_bodypart_damage(45, 0)
+	if(ishuman(target))
+		target.cauterise_wounds()
 	return ..()
 
 //saw bone
@@ -170,7 +171,7 @@
 	)
 
 /datum/surgery_step/saw/tool_check(mob/user, obj/item/tool)
-	if(implement_type == /obj/item && !(tool.is_sharp() && (tool.force >= 10)))
+	if(implement_type == /obj/item && !(tool.get_sharpness() && (tool.force >= 10)))
 		return FALSE
 
 	return TRUE

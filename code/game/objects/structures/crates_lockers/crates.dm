@@ -83,7 +83,6 @@
 	is_animating_door = FALSE
 	vis_contents -= door_obj
 	update_icon()
-	COMPILE_OVERLAYS(src)
 
 /obj/structure/closet/crate/get_door_transform(crateanim_1, crateanim_2)
 	var/matrix/M = matrix()
@@ -116,7 +115,7 @@
 	var/mob/living/user = usr
 	if(!isliving(user))
 		return // Ghosts busted.
-	if(!isturf(user.loc) || user.incapacitated() || !(user.mobility_flags & MOBILITY_STAND))
+	if(!isturf(user.loc) || user.incapacitated || !(user.mobility_flags & MOBILITY_STAND))
 		return // If the user is in a weird state, don't bother trying.
 	if(get_dist(user, src) != 1 || get_dist(drop_atom, user) != 1)
 		return // Check whether the user is next to the shelf and if the crate is next to the user.
@@ -138,7 +137,7 @@
 	AddElement(/datum/element/climbable, climb_time = crate_climb_time, climb_stun = 0)
 
 
-/obj/structure/closet/crate/open(mob/living/user)
+/obj/structure/closet/crate/open(mob/living/user, force = FALSE, special_effects)
 	. = ..()
 	if(. && manifest)
 		to_chat(user, span_notice("The manifest is torn off [src]."))
@@ -147,6 +146,16 @@
 		manifest = null
 		update_appearance()
 
+///Spawns two to six maintenance spawners inside the closet
+/obj/structure/closet/proc/populate_with_random_maint_loot()
+	SIGNAL_HANDLER
+
+	for (var/i in 1 to rand(2,6))
+		new /obj/effect/spawner/random/maintenance(src)
+
+	UnregisterSignal(src, COMSIG_CLOSET_CONTENTS_INITIALIZED)
+
+///Removes the supply manifest from the closet
 /obj/structure/closet/crate/proc/tear_manifest(mob/user)
 	to_chat(user, span_notice("You tear the manifest off of [src]."))
 	playsound(src, 'sound/items/poster_ripped.ogg', 75, 1)
@@ -167,6 +176,20 @@
 	name = "trash cart"
 	icon_state = "trashcart"
 
+/obj/structure/closet/crate/trashcart/filled
+
+/obj/structure/closet/crate/trashcart/filled/Initialize(mapload)
+	. = ..()
+	if(mapload)
+		new /obj/effect/spawner/random/trash/grime(loc) //needs to be done before the trashcart is opened because it spawns things in a range outside of the trashcart
+
+/obj/structure/closet/crate/trashcart/filled/PopulateContents()
+	. = ..()
+	for(var/i in 1 to rand(7,15))
+		new /obj/effect/spawner/random/trash/garbage(src)
+		if(prob(12))
+			new /obj/item/storage/bag/trash/filled(src)
+
 /obj/structure/closet/crate/medical
 	desc = "A medical crate."
 	name = "medical crate"
@@ -180,7 +203,7 @@
 //Snowflake organ freezer code
 //Order is important, since we check source, we need to do the check whenever we have all the organs in the crate
 
-/obj/structure/closet/crate/freezer/open()
+/obj/structure/closet/crate/freezer/open(mob/living/user, force, special_effects)
 	recursive_organ_check(src)
 	..()
 
@@ -204,17 +227,18 @@
 	. = ..()
 	new /obj/item/reagent_containers/blood(src)
 	new /obj/item/reagent_containers/blood(src)
-	new /obj/item/reagent_containers/blood/AMinus(src)
-	new /obj/item/reagent_containers/blood/BMinus(src)
-	new /obj/item/reagent_containers/blood/BPlus(src)
-	new /obj/item/reagent_containers/blood/OMinus(src)
-	new /obj/item/reagent_containers/blood/OPlus(src)
+	new /obj/item/reagent_containers/blood/a_minus(src)
+	new /obj/item/reagent_containers/blood/b_minus(src)
+	new /obj/item/reagent_containers/blood/b_plus(src)
+	new /obj/item/reagent_containers/blood/o_minus(src)
+	new /obj/item/reagent_containers/blood/o_plus(src)
 	new /obj/item/reagent_containers/blood/lizard(src)
 	new /obj/item/reagent_containers/blood/synthetic(src)
 	new /obj/item/reagent_containers/blood/ethereal(src)
 	new /obj/item/reagent_containers/blood/oozeling(src)
 	for(var/i in 1 to 3)
 		new /obj/item/reagent_containers/blood/random(src)
+	new /obj/item/paper/fluff/jobs/medical/blood_types(src)
 
 /obj/structure/closet/crate/freezer/surplus_limbs
 	name = "surplus prosthetic limbs"
@@ -265,22 +289,6 @@
 	desc = "A science crate."
 	icon_state = "sci_crate"
 
-/obj/structure/closet/crate/science/debug
-	name = "science crate"
-	desc = "debug cyborg modules."
-	icon_state = "sci_crate"
-
-/obj/structure/closet/crate/science/debug/obj/structure/closet/crate/science/debug/PopulateContents()
-	..()
-	new /obj/item/robot_model/standard(src)
-	new /obj/item/robot_model/peacekeeper(src)
-	new /obj/item/robot_model/miner(src)
-	new /obj/item/robot_model/medical(src)
-	new /obj/item/robot_model/janitor(src)
-	new /obj/item/robot_model/engineering(src)
-	new /obj/item/robot_model/clown(src)
-	new /obj/item/robot_model/service(src)
-
 /obj/structure/closet/crate/solarpanel_small
 	name = "budget solar panel crate"
 	icon_state = "engi_e_crate"
@@ -293,14 +301,25 @@
 	new /obj/item/paper/guides/jobs/engi/solars(src)
 	new /obj/item/electronics/tracker(src)
 
+/obj/structure/closet/crate/mod
+	name = "\improper MOD crate"
+	icon_state = "sci_crate"
+
+/obj/structure/closet/crate/mod/PopulateContents()
+	for(var/i in 1 to 3)
+		new /obj/item/mod/core/standard(src)
+	for(var/i in 1 to 2)
+		new /obj/item/clothing/neck/link_scryer/loaded(src)
+
 /obj/structure/closet/crate/goldcrate
 	name = "gold crate"
 
 /obj/structure/closet/crate/goldcrate/PopulateContents()
-	..()
+	new /obj/item/storage/belt/champion(src)
+
+/obj/structure/closet/crate/goldcrate/populate_contents_immediate()
 	for(var/i in 1 to 3)
 		new /obj/item/stack/sheet/mineral/gold(src, 1, FALSE)
-	new /obj/item/storage/belt/champion(src)
 
 /obj/structure/closet/crate/silvercrate
 	name = "silver crate"
@@ -309,6 +328,15 @@
 	..()
 	for(var/i in 1 to 5)
 		new /obj/item/coin/silver(src)
+
+/obj/structure/closet/crate/decorations
+	icon_state = "engi_crate"
+	base_icon_state = "engi_crate"
+
+/obj/structure/closet/crate/decorations/PopulateContents()
+	. = ..()
+	for(var/i in 1 to 4)
+		new /obj/effect/spawner/random/decoration/generic(src)
 
 /obj/structure/closet/crate/capsule
 	name = "bluespace capsule"
@@ -344,7 +372,7 @@
 		addtimer(CALLBACK(src, PROC_REF(compress)), 2 SECONDS)
 		return ..()
 
-/obj/structure/closet/crate/capsule/open(mob/living/user)
+/obj/structure/closet/crate/capsule/open(mob/living/user, force = FALSE, special_effects)
 	if(!closing)
 		return ..()
 

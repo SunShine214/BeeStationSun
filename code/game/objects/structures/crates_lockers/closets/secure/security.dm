@@ -13,6 +13,7 @@
 	new /obj/item/storage/backpack/captain(src)
 	new /obj/item/storage/backpack/satchel/cap(src)
 	new /obj/item/storage/backpack/duffelbag/captain(src)
+	new /obj/item/storage/backpack/messenger/cap(src)
 	new	/obj/item/clothing/suit/armor/vest/capcarapace/jacket(src)
 	new /obj/item/clothing/suit/armor/vest/capcarapace(src)
 	new /obj/item/clothing/suit/armor/vest/capcarapace/captains_formal(src)
@@ -50,8 +51,9 @@
 	new /obj/item/clothing/under/rank/captain(src)
 	new /obj/item/clothing/under/rank/captain/skirt(src)
 	new /obj/item/clothing/under/rank/captain/parade(src)
+	new /obj/item/clothing/neck/cloak/captain_mantle(src)
 	new /obj/item/clothing/head/hats/caphat(src)
-	new /obj/item/clothing/head/caphat/beret(src)
+	new /obj/item/clothing/head/hats/caphat/beret(src)
 	new /obj/item/clothing/head/hats/caphat/parade(src)
 	new /obj/item/clothing/head/costume/crown/fancy(src)
 	new /obj/item/clothing/shoes/sneakers/brown(src)
@@ -99,12 +101,23 @@
 	name = "compression box of head of personnel outfits"
 
 /obj/item/storage/box/suitbox/hop/PopulateContents()
-	new /obj/item/clothing/under/rank/civilian/head_of_personnel(src)
-	new /obj/item/clothing/under/rank/civilian/head_of_personnel/skirt(src)
-	new /obj/item/clothing/under/rank/civilian/head_of_personnel/alt(src)
-	new /obj/item/clothing/under/rank/civilian/head_of_personnel/alt/skirt(src)
 	new /obj/item/clothing/head/hats/hopcap(src)
+	new /obj/item/clothing/head/hats/hopcap/beret(src)
+	new /obj/item/clothing/neck/cloak/hop_mantle(src)
+	new /obj/item/clothing/suit/armor/vest(src)
+	new /obj/item/clothing/suit/armor/vest/hop(src)
+	new /obj/item/clothing/under/rank/civilian/hop(src)
+	new /obj/item/clothing/under/rank/civilian/hop/skirt(src)
+	new /obj/item/clothing/under/rank/civilian/hop/dress(src)
+	new /obj/item/clothing/under/rank/civilian/hop/formal(src)
+	new /obj/item/clothing/under/rank/civilian/hop/oldman(src)
+	new /obj/item/clothing/under/rank/civilian/hop/turtleneck(src)
+	new /obj/item/clothing/under/suit/black(src)
 	new /obj/item/clothing/shoes/sneakers/brown(src)
+	new /obj/item/clothing/shoes/sneakers/black(src)
+	new /obj/item/clothing/shoes/laceup(src)
+	new /obj/item/clothing/shoes/sneakers/white(src)
+	new /obj/item/clothing/glasses/sunglasses(src)
 
 /obj/structure/closet/secure_closet/brig_physician
 	name = "\proper brig physician's locker"
@@ -114,6 +127,7 @@
 /obj/structure/closet/secure_closet/brig_physician/PopulateContents()
 	..()
 	new /obj/item/defibrillator/loaded(src)
+	new /obj/item/storage/box/suitbox/brigphys(src)
 	new /obj/item/radio/headset/headset_medsec(src)
 	new	/obj/item/storage/firstaid/regular(src)
 	new /obj/item/storage/firstaid/toxin(src)
@@ -122,10 +136,23 @@
 	new /obj/item/storage/firstaid/fire(src)
 	new /obj/item/storage/belt/medical(src)
 	new /obj/item/clothing/gloves/color/latex/nitrile(src)
+	new /obj/item/wallframe/defib_mount(src)
+	new /obj/item/storage/box/bodybags(src)
+
+/obj/item/storage/box/suitbox/brigphys
+	name = "compression box of brig physician outfits"
+
+/obj/item/storage/box/suitbox/brigphys/PopulateContents()
 	new /obj/item/clothing/under/rank/brig_physician(src)
 	new /obj/item/clothing/under/rank/brig_physician/skirt(src)
+	new /obj/item/clothing/under/rank/medical/scrubs/purple(src)
 	new /obj/item/clothing/suit/hooded/wintercoat/brigphys(src)
-	new /obj/item/wallframe/defib_mount(src)
+	new /obj/item/clothing/suit/hazardvest/brig_physician(src)
+	new /obj/item/clothing/suit/toggle/labcoat/brig_physician(src)
+	new /obj/item/clothing/suit/toggle/labcoat/brig_physician2(src)
+	new /obj/item/clothing/shoes/sneakers/white(src)
+	new /obj/item/clothing/head/soft/sec/brig_physician(src)
+	new /obj/item/clothing/glasses/hud/health/sunglasses(src)
 
 /obj/structure/closet/secure_closet/hos
 	name = "\proper head of security's locker"
@@ -186,6 +213,7 @@
 	new /obj/item/clothing/under/rank/security/head_of_security/grey(src)
 	new /obj/item/clothing/under/rank/security/head_of_security/parade/female(src)
 	new /obj/item/clothing/under/rank/security/head_of_security/parade(src)
+	new /obj/item/clothing/neck/cloak/hos_mantle(src)
 	new /obj/item/clothing/head/hats/hos(src)
 
 /obj/structure/closet/secure_closet/warden
@@ -234,7 +262,6 @@
 	new /obj/item/radio/headset/headset_sec/alt(src)
 	new /obj/item/clothing/glasses/hud/security/sunglasses(src)
 	new /obj/item/flashlight/seclite(src)
-	new /obj/item/storage/belt/sabre/carbon_fiber(src)
 
 /obj/structure/closet/secure_closet/security/sec
 

@@ -8,8 +8,8 @@
 	inhand_icon_state = "knife"
 	worn_icon_state = "knife"
 	desc = "The original knife, it is said that all other knives are only copies of this one."
-	flags_1 = CONDUCT_1
-	force = 10
+	obj_flags = CONDUCTS_ELECTRICITY
+	force = 14
 	w_class = WEIGHT_CLASS_SMALL
 	throwforce = 10
 	hitsound = 'sound/weapons/bladeslice.ogg'
@@ -41,12 +41,12 @@
 	set_butchering()
 
 /obj/item/knife/attack(mob/living/carbon/M, mob/living/carbon/user)
-	if(user.is_zone_selected(BODY_ZONE_PRECISE_EYES))
+	if(user.is_zone_selected(BODY_ZONE_PRECISE_EYES, precise_only = TRUE) || user.is_zone_selected(BODY_GROUP_CHEST_HEAD))
 		if(HAS_TRAIT(user, TRAIT_CLUMSY) && prob(50))
 			M = user
-		return eyestab(M,user)
-	else
-		return ..()
+		if (eyestab(M, user, src, silent = user.is_zone_selected(BODY_GROUP_CHEST_HEAD)))
+			return TRUE
+	return ..()
 
 ///Adds the butchering component, used to override stats for special cases
 /obj/item/knife/proc/set_butchering()
@@ -72,7 +72,6 @@
 	icon_state = "butch"
 	inhand_icon_state = "butch"
 	desc = "A huge thing used for chopping and chopping up meat. This includes clowns and clown by-products."
-	flags_1 = CONDUCT_1
 	force = 15
 	throwforce = 10
 	custom_materials = list(/datum/material/iron=18000)
@@ -88,7 +87,6 @@
 	inhand_icon_state = "huntingknife"
 	icon_state = "huntingknife"
 	icon = 'icons/obj/knives.dmi'
-	force = 12
 
 /obj/item/knife/venom
 	name = "venom knife"
@@ -189,7 +187,9 @@
 	righthand_file = 'icons/mob/inhands/weapons/swords_righthand.dmi'
 	desc = "A sharpened bone. The bare minimum in survival."
 	embedding = list("pain_mult" = 4, "embed_chance" = 35, "fall_chance" = 10, "armour_block" = 40)
+	obj_flags = parent_type::obj_flags & ~CONDUCTS_ELECTRICITY
 	force = 15
+	armour_penetration = 50
 	throwforce = 15
 	custom_materials = null
 
@@ -202,6 +202,7 @@
 /obj/item/knife/shiv
 	name = "glass shiv"
 	desc = "A crude knife fashioned by wrapping some cable around a glass shard. It looks like it could be thrown with some force.. and stick. Good to throw at someone chasing you"
+	obj_flags = parent_type::obj_flags & ~CONDUCTS_ELECTRICITY
 	icon = 'icons/obj/knives.dmi'
 	icon_state = "shank"
 	inhand_icon_state = "shank"
@@ -227,7 +228,7 @@
 	lefthand_file = 'icons/mob/inhands/weapons/swords_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/weapons/swords_righthand.dmi'
 	desc = "Unlike other carrots, you should probably keep this far away from your eyes."
-	force = 8
+	force = 12
 	throwforce = 12//fuck git
 	custom_materials = list()
 	attack_verb_continuous = list("shanks", "shivs")

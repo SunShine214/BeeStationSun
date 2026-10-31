@@ -105,7 +105,7 @@
 		return FALSE
 
 /// Checks to see if we've been hit with a red xenobio potion to make us faster. This is only registered if we're a vehicle
-/datum/element/ridable/proc/check_potion(atom/movable/ridable_atom, obj/item/slimepotion/speed/speed_potion, mob/living/user, params)
+/datum/element/ridable/proc/check_potion(atom/movable/ridable_atom, obj/item/slimepotion/speed/speed_potion, mob/living/user, list/modifiers)
 	SIGNAL_HANDLER
 
 	if(!istype(speed_potion))
@@ -129,7 +129,7 @@
 	ridable_atom.AddElement(/datum/element/ridable, component_type = riding_component_type, potion_boost = TRUE)
 	to_chat(user, span_notice("You slather the red gunk over [ridable_atom], making it faster."))
 	ridable_atom.remove_atom_colour(WASHABLE_COLOUR_PRIORITY)
-	ridable_atom.add_atom_colour("#FF0000", FIXED_COLOUR_PRIORITY)
+	ridable_atom.add_atom_colour(COLOR_RED, FIXED_COLOUR_PRIORITY)
 	qdel(speed_potion)
 	return COMPONENT_NO_AFTERATTACK
 

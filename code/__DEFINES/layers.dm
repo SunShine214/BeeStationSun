@@ -33,15 +33,18 @@
 #define GAS_FILTER_LAYER 2.48
 #define GAS_PUMP_LAYER 2.49
 #define PRESSURE_PLATE_LAYER 2.49
+#define BOT_PATH_LAYER 2.497
 #define LOW_OBJ_LAYER 2.5
 ///catwalk overlay of /turf/open/floor/plating/catwalk_floor
 #define CATWALK_LAYER 2.51
 #define LOW_SIGIL_LAYER 2.52
-#define SIGIL_LAYER 2.54
-#define HIGH_PIPE_LAYER 2.55
-#define HIGH_SIGIL_LAYER 2.56
+#define SIGIL_LAYER 2.53
+#define HIGH_PIPE_LAYER 2.54
+#define CLEANABLE_OBJECT_LAYER 2.55
 
 #define BELOW_OPEN_DOOR_LAYER 2.6
+///Anything below this layer is to be considered completely (visually) under water by the immerse layer.
+#define WATER_LEVEL_LAYER 2.61
 #define BLASTDOOR_LAYER 2.65
 #define OPEN_DOOR_LAYER 2.7
 #define DOOR_ACCESS_HELPER_LAYER 2.71 //keep this above OPEN_DOOR_LAYER, special layer used for /obj/effect/mapping_helpers/airlock/access
@@ -83,7 +86,24 @@
 //#define FLY_LAYER 5 //For easy recordkeeping; this is a byond define
 #define GASFIRE_LAYER 5.05
 #define MIMICKED_LIGHTING_LAYER 5.06
+///Overlay lights from below, drawn over the z-mimic lighting they share a shadow plane with
+#define MIMICKED_OVERLAY_LIGHTING_LAYER 5.07
 #define RIPPLE_LAYER 5.1
+
+//---------- LIGHTING -------------
+
+// LIGHTING_PLANE layers
+// The layer of turf underlays starts at 0.01 and goes up by 0.01
+// Based off the z level. No I do not remember why, should check that
+/// Typically overlays, that "hide" portions of the turf underlay layer
+/// I'm allotting 100 z levels before this breaks. That'll never happen
+/// --Lemon
+#define LIGHTING_MASK_LAYER 10
+/// Misc things that draw on the turf lighting plane
+/// Space, solar beams, etc
+#define LIGHTING_PRIMARY_LAYER 15
+/// Stuff that needs to draw above everything else on this plane
+#define LIGHTING_ABOVE_ALL 20
 
 #define TEXT_EFFECT_UI_LAYER 5.90 // text effects shouldn't be displayed behind.
 	// maybe it should be custom layer category like 'UI_LAYER 6'
@@ -94,6 +114,11 @@
 #define RADIAL_BACKGROUND_LAYER 0
 #define RADIAL_CONTENT_LAYER 1000
 
+/// Layer for pathfinding arrows
+#define PATH_ARROW_DEBUG_LAYER 7
+/// Layer for pathfinding overlays
+#define PATH_DEBUG_LAYER 8
+
 /**
  * Planes
  */
@@ -102,6 +127,11 @@
 #define LOWEST_EVER_PLANE -200
 
 #define CLICKCATCHER_PLANE -99
+
+///Render plate for everything drawn under the game plate: space and z-mimic. Not lit by the game plate's lighting.
+#define RENDER_PLANE_BELOW_GAME -98
+///Render plate for space, so it is lit without lighting z-mimic as well
+#define RENDER_PLANE_SPACE -97
 
 #define PLANE_SPACE -95
 #define PLANE_SPACE_BACKGROUND -90
@@ -116,6 +146,9 @@
 #define ZMIMIC_MAX_PLANE -70
 /// The maxiumum number of planes deep we'll go before we just dump everything on the same plane.
 #define ZMIMIC_MAX_DEPTH 10
+/// Z-mimic lighting is copied onto a shadow plane this far above the z-mimic plane it darkens, -69 to -59
+#define ZMIMIC_SHADOW_PLANE_OFFSET 11
+#define ZMIMIC_SHADOW_PLANE(mimic_plane) ((mimic_plane) + ZMIMIC_SHADOW_PLANE_OFFSET)
 
 //---------- ABSTRACT LIGHTING -------------
 // Layering order of these is not particularly meaningful.
@@ -136,7 +169,7 @@
 
 #define GAME_PLANE -4
 #define ABOVE_GAME_PLANE -3
-#define GAME_PLANE_RENDER_TARGET "GAME_PLANE_RENDER_TARGET"
+#define GAME_PLANE_RENDER_TARGET "*GAME_PLANE_RENDER_TARGET"
 
 #define BLACKNESS_PLANE 0 //To keep from conflicts with SEE_BLACKNESS internals
 
@@ -156,7 +189,7 @@
 ///Lighting objects that are "free floating"
 #define O_LIGHTING_VISUAL_PLANE 110
 #define O_LIGHTING_VISUAL_LAYER 110
-#define O_LIGHTING_VISUAL_RENDER_TARGET "O_LIGHT_VISUAL_PLANE"
+#define O_LIGHTING_VISUAL_RENDER_TARGET "*O_LIGHT_VISUAL_PLANE"
 
 ///Things that should render ignoring lighting
 #define ABOVE_LIGHTING_PLANE 120
@@ -165,6 +198,9 @@
 #define BYOND_LIGHTING_PLANE 130
 
 ///---------------- MISC -----------------------
+
+///Pipecrawling images
+#define PIPECRAWL_IMAGES_PLANE 180
 
 ///AI Camera Static
 #define CAMERA_STATIC_PLANE 200
@@ -218,6 +254,10 @@
 
 ///Plane of the "splash" icon used that shows on the lobby screen. Nothing should ever be above this.
 #define SPLASHSCREEN_PLANE 9999
+
+///Plane master group keys
+#define PLANE_GROUP_MAIN "main"
+#define PLANE_GROUP_POPUP_WINDOW(screen) "popup-[REF(screen)]"
 
 ///Plane master controller keys
 #define PLANE_MASTERS_GAME "plane_masters_game"

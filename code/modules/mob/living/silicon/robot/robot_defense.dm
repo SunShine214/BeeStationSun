@@ -1,4 +1,4 @@
-/mob/living/silicon/robot/attackby(obj/item/I, mob/living/user, params)
+/mob/living/silicon/robot/attackby(obj/item/I, mob/living/user, list/modifiers)
 	if(I.slot_flags & ITEM_SLOT_HEAD && hat_offset != INFINITY && !user.combat_mode && !is_type_in_typecache(I, blacklisted_hats))
 		to_chat(user, span_notice("You begin to place [I] on [src]'s head..."))
 		to_chat(src, span_notice("[user] is placing [I] on your head..."))
@@ -48,7 +48,6 @@
 		damage *= 1.1
 	damage = round(damage / 2) // borgs receive half damage
 	adjustBruteLoss(damage)
-	updatehealth()
 
 	return
 
@@ -70,7 +69,7 @@
 
 /mob/living/silicon/robot/fire_act()
 	if(!on_fire) //Silicons don't gain stacks from hotspots, but hotspots can ignite them
-		IgniteMob()
+		ignite_mob()
 
 
 /mob/living/silicon/robot/emp_act(severity)
@@ -222,24 +221,3 @@
 	updatehealth()
 	if(prob(75) && Proj.damage > 0)
 		spark_system.start()
-
-/mob/living/silicon/robot/adjustOxyLoss(amount, updating_health = TRUE, forced = FALSE)
-	. = ..()
-	if(isnull(.))
-		return
-	if(. <= (maxHealth * 0.5))
-		if(getOxyLoss() > (maxHealth * 0.5))
-			ADD_TRAIT(src, TRAIT_KNOCKEDOUT, OXYLOSS_TRAIT)
-	else if(getOxyLoss() <= (maxHealth * 0.5))
-		REMOVE_TRAIT(src, TRAIT_KNOCKEDOUT, OXYLOSS_TRAIT)
-
-
-/mob/living/silicon/robot/setOxyLoss(amount, updating_health = TRUE, forced = FALSE)
-	. = ..()
-	if(isnull(.))
-		return
-	if(. <= (maxHealth * 0.5))
-		if(getOxyLoss() > (maxHealth * 0.5))
-			ADD_TRAIT(src, TRAIT_KNOCKEDOUT, OXYLOSS_TRAIT)
-	else if(getOxyLoss() <= (maxHealth * 0.5))
-		REMOVE_TRAIT(src, TRAIT_KNOCKEDOUT, OXYLOSS_TRAIT)

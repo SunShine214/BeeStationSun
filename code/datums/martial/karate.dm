@@ -45,7 +45,7 @@
 							span_userdanger("[A] stomped you in the head!"), null, COMBAT_MESSAGE_RANGE)
 		playsound(get_turf(D), 'sound/weapons/punch1.ogg', 75, 1, -1)
 		A.do_attack_animation(D, ATTACK_EFFECT_KICK)
-		D.apply_damage(20, A.dna.species.attack_type, BODY_ZONE_HEAD, def_check)
+		D.apply_damage(20, A.get_attack_type(), BODY_ZONE_HEAD, def_check)
 		D.apply_damage(10, STAMINA, BODY_ZONE_HEAD, def_check)
 		return 1
 	return FALSE
@@ -92,8 +92,8 @@
 							span_userdanger("[A] karate chopped you in the neck!"), null, COMBAT_MESSAGE_RANGE)
 		playsound(get_turf(A), 'sound/weapons/thudswoosh.ogg', 75, 1, -1)
 		A.do_attack_animation(D, ATTACK_EFFECT_PUNCH)
-		D.blur_eyes(10)
-		D.confused += 2
+		D.set_eye_blur_if_lower(20 SECONDS)
+		D.adjust_confusion(2 SECONDS)
 		D.set_jitter_if_lower(40 SECONDS)
 		return 1
 	return FALSE

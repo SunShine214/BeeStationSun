@@ -10,12 +10,13 @@ RLD
 */
 
 /obj/item/construction
+	abstract_type = /obj/item/construction
 	name = "not for ingame use"
 	desc = "A device used to rapidly build and deconstruct. Reload with iron, plasteel, glass or compressed matter cartridges."
 	opacity = FALSE
 	density = FALSE
 	anchored = FALSE
-	flags_1 = CONDUCT_1
+	obj_flags = CONDUCTS_ELECTRICITY
 	item_flags = NOBLUDGEON
 	force = 0
 	throwforce = 10
@@ -65,7 +66,7 @@ RLD
 	silo_mats = null
 	return ..()
 
-/obj/item/construction/attackby(obj/item/W, mob/user, params)
+/obj/item/construction/attackby(obj/item/W, mob/user, list/modifiers)
 	if(istype(W, /obj/item/rcd_upgrade))
 		install_upgrade(W, user)
 		return TRUE
@@ -174,7 +175,7 @@ RLD
 	if(!. && user)
 		to_chat(user, no_ammo_message)
 		if(has_ammobar)
-			flick("[icon_state]_empty", src)	//somewhat hacky thing to make RCDs with ammo counters actually have a blinking yellow light
+			z_flick("[icon_state]_empty", src)	//somewhat hacky thing to make RCDs with ammo counters actually have a blinking yellow light
 	return .
 
 /obj/item/construction/proc/range_check(atom/A, mob/user)
@@ -195,7 +196,7 @@ RLD
 /obj/item/construction/proc/check_menu(mob/living/user)
 	if(!istype(user))
 		return FALSE
-	if(user.incapacitated() || !user.Adjacent(src))
+	if(user.incapacitated || !user.Adjacent(src))
 		return FALSE
 	return TRUE
 
@@ -260,7 +261,7 @@ GLOBAL_VAR_INIT(icon_holographic_window, init_holographic_window())
 	. = ..()
 	AddElement(/datum/element/openspace_item_click_handler)
 
-/obj/item/construction/rcd/handle_openspace_click(turf/target, mob/user, proximity_flag, click_parameters)
+/obj/item/construction/rcd/handle_openspace_click(turf/target, mob/user, proximity_flag, list/modifiers)
 	if(proximity_flag)
 		mode = RCD_FLOORWALL
 		rcd_create(target, user)
@@ -309,6 +310,7 @@ GLOBAL_VAR_INIT(icon_holographic_window, init_holographic_window())
 
 		var/obj/effect/rcd_hologram/hologram = new(surrounding_turf)
 		hologram.icon = hologram_icon
+		hologram.makeHologram()
 		animate(hologram, alpha = 0, time = fade_time, easing = CIRCULAR_EASING | EASE_IN)
 
 /obj/effect/rcd_hologram
@@ -725,7 +727,7 @@ GLOBAL_VAR_INIT(icon_holographic_window, init_holographic_window())
 	else
 		return FALSE
 
-/obj/item/construction/rcd/pre_attack(atom/A, mob/user, params)
+/obj/item/construction/rcd/pre_attack(atom/A, mob/user, list/modifiers)
 	. = ..()
 	mode = construction_mode
 	if(!A.rcd_vals(user, src))
@@ -733,7 +735,7 @@ GLOBAL_VAR_INIT(icon_holographic_window, init_holographic_window())
 	rcd_create(A, user)
 	return FALSE
 
-/obj/item/construction/rcd/pre_attack_secondary(atom/target, mob/living/user, params)
+/obj/item/construction/rcd/pre_attack_secondary(atom/target, mob/living/user, list/modifiers)
 	. = ..()
 	mode = RCD_DECONSTRUCT
 	if(!target.rcd_vals(user, src))
@@ -753,7 +755,7 @@ GLOBAL_VAR_INIT(icon_holographic_window, init_holographic_window())
 /obj/item/construction/rcd/update_overlays()
 	. = ..()
 	if(has_ammobar)
-		var/ratio = CEILING((matter / max_matter) * ammo_sections, 1)
+		var/ratio = ceil((matter / max_matter) * ammo_sections)
 		. += "[icon_state]_charge[ratio]"
 
 /obj/item/construction/rcd/Initialize(mapload)
@@ -854,7 +856,7 @@ GLOBAL_VAR_INIT(icon_holographic_window, init_holographic_window())
 	if(range_check(A,user))
 		pre_attack(A, user)
 
-/obj/item/construction/rcd/arcd/afterattack_secondary(atom/target, mob/user, proximity_flag, click_parameters)
+/obj/item/construction/rcd/arcd/afterattack_secondary(atom/target, mob/user, proximity_flag, list/modifiers)
 	if(range_check(target,user))
 		pre_attack_secondary(target, user)
 	return SECONDARY_ATTACK_CANCEL_ATTACK_CHAIN
@@ -865,7 +867,7 @@ GLOBAL_VAR_INIT(icon_holographic_window, init_holographic_window())
 	if(.)
 		user.Beam(A,icon_state="rped_upgrade", time = delay_mod * 5 SECONDS) //5 SECONDS * 0.6 = 3 seconds
 
-/obj/item/construction/rcd/arcd/handle_openspace_click(turf/target, mob/user, proximity_flag, click_parameters)
+/obj/item/construction/rcd/arcd/handle_openspace_click(turf/target, mob/user, proximity_flag, list/modifiers)
 	if(ranged && range_check(target, user))
 		mode = RCD_FLOORWALL
 		rcd_create(target, user)
@@ -1024,7 +1026,7 @@ GLOBAL_VAR_INIT(icon_holographic_window, init_holographic_window())
 				G.color = color_choice
 				G.light_color = G.color
 				G.throw_at(A, 9, 3, user)
-				G.on = TRUE
+				G.light_on = TRUE
 				G.update_brightness()
 				return TRUE
 			return FALSE
@@ -1046,7 +1048,7 @@ GLOBAL_VAR_INIT(icon_holographic_window, init_holographic_window())
 	var/list/choices = list()
 	///index, used in the attack self to get the type. stored here since it doesnt change
 	///This list that holds all the plumbing design types the plumberer can construct. Its purpose is to make it easy to make new plumberer subtypes with a different selection of machines.
-	var/list/static/plumbing_design_types
+	var/static/list/plumbing_design_types
 
 	var/list/name_to_type = list()
 	///

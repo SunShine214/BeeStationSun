@@ -15,6 +15,7 @@
 	melee_damage = 5
 	attack_verb_continuous = "bites"
 	attack_verb_simple = "bite"
+	attack_vis_effect = ATTACK_EFFECT_BITE
 	response_help_continuous = "pets"
 	response_help_simple = "pet"
 	response_disarm_continuous = "pokes"
@@ -22,7 +23,6 @@
 	response_harm_continuous = "splats"
 	response_harm_simple = "splat"
 	density = FALSE
-	ventcrawler = VENTCRAWLER_ALWAYS
 	faction = list(FACTION_HOSTILE)
 	attack_sound = 'sound/effects/reee.ogg'
 	butcher_results = list(/obj/item/food/nugget = 1)
@@ -33,6 +33,9 @@
 
 /mob/living/simple_animal/hostile/retaliate/frog/Initialize(mapload)
 	. = ..()
+
+	ADD_TRAIT(src, TRAIT_VENTCRAWLER_ALWAYS, INNATE_TRAIT)
+
 	if(prob(1))
 		name = "rare frog"
 		desc = "It seems a little smug."

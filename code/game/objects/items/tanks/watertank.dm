@@ -33,6 +33,7 @@
 	. = ..()
 	create_reagents(volume, OPENCONTAINER)
 	noz = make_noz()
+	AddElement(/datum/element/drag_pickup)
 	update_icon()
 
 /obj/item/watertank/ui_action_click(mob/user)
@@ -68,7 +69,7 @@
 	. += filling
 
 /obj/item/watertank/worn_overlays(mutable_appearance/standing, isinhands = FALSE, icon_file, item_layer, atom/origin)
-	. = list()
+	. = ..()
 	if(!isinhands)
 		if(reagents.total_volume < 1)
 			return
@@ -94,7 +95,7 @@
 	if(user.get_item_by_slot(user.getBackSlot()) != src)
 		to_chat(user, span_warning("The watertank must be worn properly to use!"))
 		return
-	if(user.incapacitated())
+	if(user.incapacitated)
 		return
 
 	if(QDELETED(noz))
@@ -149,15 +150,7 @@
 	else
 		return ..()
 
-/obj/item/watertank/MouseDrop(obj/over_object)
-	var/mob/M = loc
-	if(istype(M) && istype(over_object, /atom/movable/screen/inventory/hand))
-		var/atom/movable/screen/inventory/hand/H = over_object
-		M.putItemFromInventoryInHandIfPossible(src, H.held_index)
-		update_icon()
-	return ..()
-
-/obj/item/watertank/attackby(obj/item/attacking_item, mob/user, params)
+/obj/item/watertank/attackby(obj/item/attacking_item, mob/user, list/modifiers)
 	if(attacking_item == noz)
 		remove_noz()
 		return TRUE
@@ -254,7 +247,7 @@
 	reagents.add_reagent(/datum/reagent/water, 200)
 	update_icon()
 
-/obj/item/watertank/atmos/attackby(obj/item/W, mob/user, params)
+/obj/item/watertank/atmos/attackby(obj/item/W, mob/user, list/modifiers)
 	if(istype(W, /obj/item/atmostank_upgrade))
 		if (QDELETED(noz))
 			noz = make_noz()
@@ -297,7 +290,7 @@
 	if(user.get_item_by_slot(user.getBackSlot()) != src)
 		to_chat(user, span_warning("The watertank must be worn properly to use!"))
 		return
-	if(user.incapacitated())
+	if(user.incapacitated)
 		return
 
 	if(QDELETED(noz))
@@ -540,9 +533,9 @@
 				balloon_alert(user, "Recharging")
 				return
 
-/obj/item/extinguisher/mini/nozzle/proc/resin_stop_check(datum/move_loop/source, succeeded)
+/obj/item/extinguisher/mini/nozzle/proc/resin_stop_check(datum/move_loop/source, result)
 	SIGNAL_HANDLER
-	if(succeeded)
+	if(result == MOVELOOP_SUCCESS)
 		return
 	resin_landed(source)
 	qdel(source)
@@ -619,8 +612,7 @@
 	/// How much to inject per second
 	var/injection_amount = 0.5
 	amount_per_transfer_from_this = 5
-	reagent_flags = OPENCONTAINER
-	spillable = FALSE
+	initial_reagent_flags = TRANSPARENT
 	possible_transfer_amounts = list(5,10,15)
 	fill_icon_thresholds = list(0, 15, 60)
 	fill_icon_state = "backpack"
@@ -646,7 +638,7 @@
 
 //Todo : cache these.
 /obj/item/reagent_containers/chemtank/worn_overlays(mutable_appearance/standing, isinhands = FALSE, icon_file, item_layer, atom/origin) //apply chemcolor and level
-	. = list()
+	. = ..()
 	//inhands + reagent_filling
 	if(!isinhands && reagents.total_volume)
 		var/mutable_appearance/filling = mutable_appearance('icons/obj/reagentfillings.dmi', "backpackmob-10", item_layer)

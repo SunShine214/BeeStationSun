@@ -129,10 +129,10 @@
 	var/door_hack_counter = 0
 
 /obj/item/mod/module/hacker/on_part_activation()
-	RegisterSignal(mod.wearer, COMSIG_HUMAN_EARLY_UNARMED_ATTACK,  PROC_REF(hack))
+	RegisterSignal(mod.wearer, COMSIG_LIVING_UNARMED_ATTACK, PROC_REF(hack))
 
 /obj/item/mod/module/hacker/on_part_deactivation(deleting = FALSE)
-	UnregisterSignal(mod.wearer, COMSIG_HUMAN_EARLY_UNARMED_ATTACK)
+	UnregisterSignal(mod.wearer, COMSIG_LIVING_UNARMED_ATTACK)
 
 /obj/item/mod/module/hacker/proc/hack(mob/living/carbon/human/source, atom/target, proximity, modifiers)
 	SIGNAL_HANDLER
@@ -424,7 +424,7 @@
 	to_chat(mod.wearer, span_notice("You have used the adrenaline boost."))
 	mod.wearer.SetAllImmobility(0)
 	mod.wearer.adjustStaminaLoss(-200)
-	mod.wearer.stuttering = 0
+	mod.wearer.remove_status_effect(/datum/status_effect/speech/stutter)
 	//Speed
 	mod.wearer.reagents.add_reagent(/datum/reagent/medicine/amphetamine, 5)
 	//"Oh fuck I ran out of oxygen and couldnt get into the station in time"
@@ -441,7 +441,7 @@
 /obj/item/mod/module/adrenaline_boost/on_uninstall(deleting)
 	UnregisterSignal(mod, COMSIG_ATOM_ATTACKBY)
 
-/obj/item/mod/module/adrenaline_boost/attackby(obj/item/attacking_item, mob/user, params)
+/obj/item/mod/module/adrenaline_boost/attackby(obj/item/attacking_item, mob/user, list/modifiers)
 	if(charge_boost(attacking_item, user))
 		return TRUE
 	return ..()

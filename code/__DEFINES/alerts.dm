@@ -27,5 +27,11 @@
 #define ALERT_SHOES_KNOT "shoealert"
 #define ALERT_RADIOACTIVE_AREA "radioactive_area"
 
+//ethereal alerts
+#define ALERT_ETHEREAL_CHARGE "ethereal_charge"
+#define ALERT_ETHEREAL_OVERCHARGE "ethereal_overcharge"
+
 /** Environment related */
 #define ALERT_GRAVITY "gravity"
+#define ALERT_FIRE "fire"
+#define ALERT_TEMPERATURE "temp"

@@ -38,7 +38,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/item/stack/medical)
 		reagents.add_reagent_list(reagent)
 
 /obj/item/stack/medical/attack(mob/living/M, mob/user)
-	if(!M || !user || (isliving(M) && !M.try_inject(user, injection_flags = INJECT_TRY_SHOW_ERROR_MESSAGE))) //If no mob, user and if we can't inject the mob just return
+	if(!M || !user) //If no mob, user and if we can't inject the mob just return
 		return
 
 	if(M.stat == DEAD && !stop_bleeding)
@@ -73,6 +73,8 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/item/stack/medical)
 
 /obj/item/stack/medical/proc/do_application(mob/living/M, mob/user, zone_selected)
 	if (!zone_selected)
+		return
+	if (isliving(M) && !M.try_inject(user, zone_selected, injection_flags = INJECT_TRY_SHOW_ERROR_MESSAGE))
 		return
 	if (!user.can_interact_with(M, TRUE))
 		to_chat(user, span_danger("You cannot reach [M]!"))
@@ -202,15 +204,23 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/item/stack/medical)
 	max_amount = 12
 	merge_type = /obj/item/stack/medical/gauze
 
-/obj/item/stack/medical/gauze/attackby(obj/item/I, mob/user, params)
-	if(I.tool_behaviour == TOOL_WIRECUTTER || I.is_sharp())
+/obj/item/stack/medical/gauze/attackby(obj/item/I, mob/user, list/modifiers)
+	if(I.tool_behaviour == TOOL_WIRECUTTER || I.get_sharpness())
 		if(get_amount() < 2)
 			to_chat(user, span_warning("You need at least two gauzes to do this!"))
 			return
 		new /obj/item/stack/sheet/cotton/cloth(user.drop_location())
-		user.visible_message("[user] cuts [src] into pieces of cloth with [I].", \
-					span_notice("You cut [src] into pieces of cloth with [I]."), \
-					span_italics("You hear cutting."))
+		if(IsReachableBy(user))
+			user.visible_message(
+				span_notice("[user] cuts [src] into pieces of cloth with [I]."),
+				span_notice("You cut [src] into pieces of cloth with [I]."),
+				span_hear("You hear cutting.")
+			)
+		else //telekinesis
+			visible_message(
+				span_notice("[I] cuts [src] into pieces of cloth."),
+				blind_message = span_hear("You hear cutting.")
+			)
 		use(2)
 	else
 		return ..()

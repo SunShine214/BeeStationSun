@@ -5,7 +5,7 @@
 	icon_state = "fire_extinguisher0"
 	inhand_icon_state = "fire_extinguisher"
 	hitsound = 'sound/weapons/smash.ogg'
-	flags_1 = CONDUCT_1
+	obj_flags = CONDUCTS_ELECTRICITY
 	throwforce = 10
 	w_class = WEIGHT_CLASS_LARGE
 	throw_speed = 2
@@ -34,7 +34,7 @@
 	icon_state = "miniFE0"
 	inhand_icon_state = "miniFE"
 	hitsound = null	//it is much lighter, after all.
-	flags_1 = null //doesn't CONDUCT_1
+	obj_flags = NONE //doesn't conduct electricity
 	throwforce = 2
 	w_class = WEIGHT_CLASS_SMALL
 	force = 3
@@ -88,7 +88,7 @@
 	else
 		return ..()
 
-/obj/item/extinguisher/attack_atom(obj/O, mob/living/user, params)
+/obj/item/extinguisher/attack_atom(obj/O, mob/living/user, list/modifiers)
 	if(AttemptRefill(O, user))
 		refilling = TRUE
 		return FALSE
@@ -188,7 +188,7 @@
 /obj/item/extinguisher/proc/move_particles(list/particles)
 	var/delay = 2
 	for(var/obj/effect/particle_effect/water/extinguisher/water as anything in particles)
-		SSmove_manager.move_towards_legacy(water, particles[water], delay, timeout = delay * power, flags = MOVEMENT_LOOP_START_FAST, priority = MOVEMENT_ABOVE_SPACE_PRIORITY)
+		water.move_at(particles[water], delay, power)
 
 //Chair movement loop
 /obj/item/extinguisher/proc/move_chair(obj/buckled_object, movementdirection)
@@ -232,7 +232,7 @@
 		user.visible_message("[user] empties out \the [src] onto the floor using the release valve.", span_info("You quietly empty out \the [src] using its release valve."))
 
 //firebot assembly
-/obj/item/extinguisher/attackby(obj/O, mob/user, params)
+/obj/item/extinguisher/attackby(obj/O, mob/user, list/modifiers)
 	if(istype(O, /obj/item/bodypart/arm/left/robot) || istype(O, /obj/item/bodypart/arm/right/robot))
 		to_chat(user, span_notice("You add [O] to [src]."))
 		qdel(O)

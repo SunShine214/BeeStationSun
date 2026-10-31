@@ -1,7 +1,7 @@
 SUBSYSTEM_DEF(orbital_reentry_erosion)
 	name = "Orbital Reentry Erosion"
 
-	flags = SS_NO_FIRE //TODO REMOVE
+	ss_flags = SS_NO_FIRE //TODO REMOVE
 
 	wait = 1 SECONDS
 	dependencies = list(

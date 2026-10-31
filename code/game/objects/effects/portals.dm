@@ -59,7 +59,7 @@
 			return FALSE
 	return ..()
 
-/obj/effect/portal/attackby(obj/item/W, mob/user, params)
+/obj/effect/portal/attackby(obj/item/W, mob/user, list/modifiers)
 	if(user && Adjacent(user))
 		teleport(user)
 		return TRUE
@@ -104,7 +104,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/effect/portal)
 	if(isturf(hard_target_override))
 		hard_target = hard_target_override
 
-/obj/effect/portal/singularity_pull()
+/obj/effect/portal/singularity_pull(obj/anomaly/singularity/singularity, current_size)
 	return
 
 /obj/effect/portal/singularity_act()

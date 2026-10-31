@@ -9,9 +9,7 @@
 /area/template_noop)
 "b" = (
 /obj/structure/table,
-/obj/structure/mirror{
-	pixel_y = 28
-	},
+/obj/structure/mirror/directional/north,
 /obj/item/razor{
 	pixel_x = -5
 	},
@@ -71,7 +69,7 @@
 /obj/item/tank/internals/anesthetic,
 /obj/structure/closet/cardboard,
 /obj/item/cautery,
-/obj/effect/spawner/lootdrop/teratoma/major,
+/obj/effect/spawner/random/medical/teratoma/major,
 /obj/item/surgical_drapes,
 /obj/item/storage/firstaid,
 /obj/item/storage/firstaid/toxin,
@@ -182,9 +180,9 @@
 /obj/structure/closet/crate/freezer{
 	name = "refreshment cooler"
 	},
-/obj/effect/spawner/lootdrop/teratoma/minor,
-/obj/effect/spawner/lootdrop/teratoma/minor,
-/obj/effect/spawner/lootdrop/teratoma/minor,
+/obj/effect/spawner/random/medical/teratoma/minor,
+/obj/effect/spawner/random/medical/teratoma/minor,
+/obj/effect/spawner/random/medical/teratoma/minor,
 /obj/item/reagent_containers/cup/glass/bottle/beer/light,
 /obj/item/reagent_containers/cup/soda_cans/sodawater,
 /obj/item/reagent_containers/cup/soda_cans/shamblers,

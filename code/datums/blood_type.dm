@@ -1,8 +1,9 @@
 /datum/blood_type
+	abstract_type = /datum/blood_type
 	/// Displayed name of the blood type.
 	var/name = "?"
 	/// Shown color of the blood type.
-	var/blood_color = COLOR_BLOOD
+	var/blood_color = BLOOD_COLOR_RED
 	/// Blood types that are safe to use with people that have this blood type.
 	var/compatible_types = list()
 	///Do we glow or not?
@@ -86,15 +87,16 @@
 	compatible_types = list(
 		/datum/blood_type/animal
 	)
+
 /datum/blood_type/lizard
 	name = "L"
-	blood_color = "#009696"
+	blood_color = BLOOD_COLOR_LIZARD
 	compatible_types = list(
 		/datum/blood_type/lizard
 	)
 /datum/blood_type/ethereal
-	name = "E"
-	blood_color = "#7fff7f"
+	name = "LE"
+	blood_color = BLOOD_COLOR_ETHEREAL
 	compatible_types = list(
 		/datum/blood_type/ethereal
 	)
@@ -102,7 +104,7 @@
 
 /datum/blood_type/synthetic //Blood for synthetic/robotic species
 	name = "Coolant"
-	blood_color = "#dddeff"
+	blood_color = BLOOD_COLOR_SYNTHETIC
 	compatible_types = list(
 		/datum/blood_type/synthetic
 	)

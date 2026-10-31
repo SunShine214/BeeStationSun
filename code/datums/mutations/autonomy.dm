@@ -3,7 +3,6 @@
 	name = "Autotomy"
 	desc = "Allows a creature to voluntary discard a random appendage."
 	quality = POSITIVE
-	text_gain_indication = ("<span class='notice'>Your joints feel loose.</span>")
 	instability = 30
 	power_path = /datum/action/spell/self_amputation
 
@@ -28,10 +27,10 @@
 		return
 
 	var/list/parts = list()
-	for(var/obj/item/bodypart/to_remove as anything in user.bodyparts)
+	for(var/obj/item/bodypart/to_remove as anything in user.get_bodyparts())
 		if(to_remove.body_zone == BODY_ZONE_HEAD || to_remove.body_zone == BODY_ZONE_CHEST)
 			continue
-		if(!to_remove.dismemberable)
+		if(to_remove.bodypart_flags & BODYPART_UNREMOVABLE)
 			continue
 		parts += to_remove
 

@@ -24,7 +24,8 @@
 	robust_searching = TRUE
 	stat_attack = HARD_CRIT
 	attack_sound = 'sound/weapons/rapierhit.ogg'
-	deathsound = 'sound/voice/mook_death.ogg'
+	attack_vis_effect = ATTACK_EFFECT_SLASH
+	death_sound = 'sound/voice/mook_death.ogg'
 	aggro_vision_range = 15 //A little more aggressive once in combat to balance out their really low HP
 	var/attack_state = MOOK_ATTACK_NEUTRAL
 	var/struck_target_leap = FALSE
@@ -46,7 +47,7 @@
 	if(isliving(target))
 		if(ranged_cooldown <= world.time && attack_state == MOOK_ATTACK_NEUTRAL)
 			var/mob/living/L = target
-			if(L.incapacitated())
+			if(L.incapacitated)
 				WarmupAttack(forced_slash_combo = TRUE)
 				return
 			WarmupAttack()
@@ -128,7 +129,7 @@
 			if(target)
 				if(isliving(target))
 					var/mob/living/L = target
-					if(L.incapacitated() && L.stat != DEAD)
+					if(L.incapacitated && L.stat != DEAD)
 						addtimer(CALLBACK(src, PROC_REF(WarmupAttack), TRUE), ATTACK_INTERMISSION_TIME)
 						return
 			addtimer(CALLBACK(src, PROC_REF(WarmupAttack)), ATTACK_INTERMISSION_TIME)
@@ -184,7 +185,7 @@
 /mob/living/simple_animal/hostile/jungle/mook/OpenFire()
 	if(isliving(target))
 		var/mob/living/L = target
-		if(L.incapacitated())
+		if(L.incapacitated)
 			return
 	WarmupAttack()
 

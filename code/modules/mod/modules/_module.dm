@@ -216,7 +216,7 @@
 
 /// Called when an activated module without a device is used
 /obj/item/mod/module/proc/on_select_use(atom/target)
-	if(mod.wearer.incapacitated(IGNORE_GRAB))
+	if(INCAPACITATED_IGNORING(mod.wearer, INCAPABLE_GRAB))
 		return FALSE
 	mod.wearer.face_atom(target)
 	if(!used())
@@ -226,7 +226,7 @@
 /// Called when an activated module without a device is active and the user alt/middle-clicks
 /obj/item/mod/module/proc/on_special_click(mob/source, atom/target)
 	SIGNAL_HANDLER
-	on_select_use(target)
+	INVOKE_ASYNC(src, PROC_REF(on_select_use), target)
 	return COMSIG_MOB_CANCEL_CLICKON
 
 /// Called on the MODsuit's process
@@ -348,6 +348,7 @@
 		module_icon.appearance_flags |= RESET_COLOR
 
 	. += module_icon
+	SEND_SIGNAL(src, COMSIG_MODULE_GENERATE_WORN_OVERLAY, ., standing)
 
 /obj/item/mod/module/proc/get_current_overlay_state()
 	if(overlay_state_use && !COOLDOWN_FINISHED(src, cooldown_timer))
@@ -388,12 +389,12 @@
 	if(module_type == MODULE_PASSIVE)
 		return
 
-	var/datum/action/item_action/mod/pinned_module/existing_action = pinned_to[REF(user)]
+	var/datum/action/item_action/mod/pinnable/module/existing_action = pinned_to[REF(user)]
 	if(existing_action)
 		mod.remove_item_action(existing_action)
 		return
 
-	var/datum/action/item_action/mod/pinned_module/new_action = new(mod, src, user)
+	var/datum/action/item_action/mod/pinnable/module/new_action = new(mod, user, src)
 	mod.add_item_action(new_action)
 
 /// On drop key, concels a device item.
@@ -443,10 +444,9 @@
 		. += span_notice("You need to insert \a [english_list(core_list, and_text = " or ")] for this module to function.")
 
 /obj/item/mod/module/anomaly_locked/on_select()
-	if(!core)
-		balloon_alert(mod.wearer, "no core!")
-		return
-	return ..()
+	if(core)
+		return ..()
+	balloon_alert(mod.wearer, "no core!")
 
 /obj/item/mod/module/anomaly_locked/on_process(delta_time)
 	. = ..()
@@ -454,11 +454,9 @@
 		return FALSE
 
 /obj/item/mod/module/anomaly_locked/on_active_process(delta_time)
-	if(!core)
-		return FALSE
-	return TRUE
+	return !!core
 
-/obj/item/mod/module/anomaly_locked/attackby(obj/item/item, mob/living/user, params)
+/obj/item/mod/module/anomaly_locked/attackby(obj/item/item, mob/living/user, list/modifiers)
 	if(item.type in accepted_anomalies)
 		if(core)
 			balloon_alert(user, "core already in!")

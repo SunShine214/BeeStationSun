@@ -114,7 +114,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/structure/closet/supplypod)
 /obj/structure/closet/supplypod/Initialize(mapload, customStyle = FALSE)
 	. = ..()
 	if (!loc)
-		var/shippingLane = GLOB.areas_by_type[/area/centcom/supplypod/supplypod_temp_holding] //temporary holder for supplypods mid-transit
+		var/shippingLane = GLOB.areas_by_type[/area/centcom/central_command_areas/supplypod/supplypod_temp_holding] //temporary holder for supplypods mid-transit
 		forceMove(shippingLane)
 	if (customStyle)
 		style = customStyle
@@ -184,7 +184,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/structure/closet/supplypod)
 		var/icon/door_masker = new(icon, door) //The door shape we want to 'cut out' of the decal
 		door_masker.MapColors(0,0,0,1, 0,0,0,1, 0,0,0,1, 1,1,1,0, 0,0,0,1)
 		door_masker.SwapColor("#ffffffff", null)
-		door_masker.Blend("#000000", ICON_SUBTRACT)
+		door_masker.Blend(COLOR_BLACK, ICON_SUBTRACT)
 		masked_decal.Blend(door_masker, ICON_ADD)
 		. += masked_decal
 		return
@@ -200,7 +200,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/structure/closet/supplypod)
 		var/icon/fin_masker = new(icon, "mask_[fin_mask]") //The fin shape we want to 'cut out' of the door
 		fin_masker.MapColors(0,0,0,1, 0,0,0,1, 0,0,0,1, 1,1,1,0, 0,0,0,1)
 		fin_masker.SwapColor("#ffffffff", null)
-		fin_masker.Blend("#000000", ICON_SUBTRACT)
+		fin_masker.Blend(COLOR_BLACK, ICON_SUBTRACT)
 		masked_door.Blend(fin_masker, ICON_ADD)
 		. += masked_door
 	if(decal)
@@ -222,7 +222,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/structure/closet/supplypod)
 /obj/structure/closet/supplypod/toggle(mob/living/user) //Supplypods shouldn't be able to be manually opened under any circumstances, as the open() proc generates supply order datums
 	return
 
-/obj/structure/closet/supplypod/open(mob/living/user, force = TRUE)
+/obj/structure/closet/supplypod/open(mob/living/user, force = FALSE, special_effects = TRUE)
 	return
 
 /obj/structure/closet/supplypod/proc/handleReturnAfterDeparting(atom/movable/holder = src)
@@ -234,7 +234,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/structure/closet/supplypod)
 	stay_after_drop = FALSE
 	holder.pixel_z = initial(holder.pixel_z)
 	holder.alpha = initial(holder.alpha)
-	var/shippingLane = GLOB.areas_by_type[/area/centcom/supplypod/supplypod_temp_holding]
+	var/shippingLane = GLOB.areas_by_type[/area/centcom/central_command_areas/supplypod/supplypod_temp_holding]
 	forceMove(shippingLane) //Move to the centcom-z-level until the pod_landingzone says we can drop back down again
 	if (!reverse_dropoff_coords) //If we're centcom-launched, the reverse dropoff turf will be a centcom loading bay. If we're an extraction pod, it should be the ninja jail. Thus, this shouldn't ever really happen.
 		var/obj/error_landmark = locate(/obj/effect/landmark/error) in GLOB.landmarks_list
@@ -250,14 +250,16 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/structure/closet/supplypod)
 	var/turf/turf_underneath = get_turf(src)
 	var/list/B = explosionSize //Mostly because B is more readable than explosionSize :p
 	set_density(TRUE) //Density is originally false so the pod doesn't block anything while it's still falling through the air
+	if(effectShrapnel)
+		AddComponent(/datum/component/pellet_cloud, projectile_type=shrapnel_type, magnitude=shrapnel_magnitude)
 	for (var/mob/living/target_living in turf_underneath)
 		if (iscarbon(target_living)) //If effectLimb is true (which means we pop limbs off when we hit people):
 			if (effectLimb)
 				var/mob/living/carbon/carbon_target_mob = target_living
-				for (var/bp in carbon_target_mob.bodyparts) //Look at the bodyparts in our poor mob beneath our pod as it lands
+				for (var/bp in carbon_target_mob.get_bodyparts()) //Look at the bodyparts in our poor mob beneath our pod as it lands
 					var/obj/item/bodypart/bodypart = bp
 					if(bodypart.body_part != HEAD && bodypart.body_part != CHEST)//we dont want to kill him, just teach em a lesson!
-						if (bodypart.dismemberable)
+						if (!(bodypart.bodypart_flags & BODYPART_UNREMOVABLE))
 							bodypart.dismember() //Using the power of flextape i've sawed this man's limb in half!
 							break
 			if (effectOrgans) //effectOrgans means remove every organ in our mob
@@ -268,10 +270,10 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/structure/closet/supplypod)
 					organ_to_yeet.forceMove(turf_underneath) //Move the organ outta the body
 					organ_to_yeet.throw_at(destination, 2, 3) //Thow the organ at a random tile 3 spots away
 					sleep(1)
-				for (var/bp in carbon_target_mob.bodyparts) //Look at the bodyparts in our poor mob beneath our pod as it lands
+				for (var/bp in carbon_target_mob.get_bodyparts()) //Look at the bodyparts in our poor mob beneath our pod as it lands
 					var/obj/item/bodypart/bodypart = bp
 					var/destination = get_edge_target_turf(turf_underneath, pick(GLOB.alldirs))
-					if (bodypart.dismemberable)
+					if (!(bodypart.bodypart_flags & BODYPART_UNREMOVABLE))
 						bodypart.dismember() //Using the power of flextape i've sawed this man's bodypart in half!
 						bodypart.throw_at(destination, 2, 3)
 						sleep(1)
@@ -318,7 +320,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/structure/closet/supplypod)
 	if (openingSound)
 		playsound(get_turf(holder), openingSound, soundVolume, FALSE, FALSE) //Special admin sound to play
 	for (var/turf_type in turfs_in_cargo)
-		turf_underneath.PlaceOnTop(turf_type)
+		turf_underneath.place_on_top(turf_type)
 	for (var/cargo in contents)
 		var/atom/movable/movable_cargo = cargo
 		movable_cargo.forceMove(turf_underneath)
@@ -461,7 +463,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/structure/closet/supplypod)
 	rubble.setStyle(rubble_type, src)
 	update_appearance()
 
-/obj/structure/closet/supplypod/Moved()
+/obj/structure/closet/supplypod/Moved(atom/old_loc, movement_dir, forced, list/old_locs, momentum_change = TRUE)
 	deleteRubble()
 	return ..()
 
@@ -611,7 +613,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/effect/pod_landingzone)
 			var/atom/movable/O = single_order
 			O.forceMove(pod)
 	for (var/mob/living/mob_in_pod in pod) //If there are any mobs in the supplypod, we want to set their view to the pod_landingzone. This is so that they can see where they are about to land
-		mob_in_pod.reset_perspective(src)
+		mob_in_pod.set_mob_eye_to(src)
 	if(pod.effectStun) //If effectStun is true, stun any mobs caught on this pod_landingzone until the pod gets a chance to hit them
 		for (var/mob/living/target_living in get_turf(src))
 			target_living.Stun(pod.delays[POD_TRANSIT]+10, ignore_canstun = TRUE)//you ain't goin nowhere, kid.
@@ -635,7 +637,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/effect/pod_landingzone)
 		pod.add_filter("motionblur",1,list("type"="motion_blur", "x"=0, "y"=3))
 	pod.forceMove(drop_location())
 	for (var/mob/living/M in pod) //Remember earlier (initialization) when we moved mobs into the pod_landingzone so they wouldnt get lost in nullspace? Time to get them out
-		M.reset_perspective(null)
+		M.set_mob_eye_to(MOB_EYE_SELF)
 	var/angle = effectCircle ? rand(0,360) : rand(70,110) //The angle that we can come in from
 	pod.pixel_x = cos(angle)*32*length(smoke_effects) //Use some ADVANCED MATHEMATICS to set the animated pod's position to somewhere on the edge of a circle with the center being the target
 	pod.pixel_z = sin(angle)*32*length(smoke_effects)

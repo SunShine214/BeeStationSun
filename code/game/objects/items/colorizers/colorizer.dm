@@ -30,11 +30,11 @@
 	. = ..()
 
 /obj/item/colorizer/proc/can_use(atom/target, mob/user)
-	if(!user || !ismob(user) || user.incapacitated() || !user.Adjacent(target))
+	if(!user || !ismob(user) || user.incapacitated || !user.Adjacent(target))
 		return FALSE
 	return TRUE
 
-/obj/item/colorizer/pre_attack(atom/target, mob/living/user, params)
+/obj/item/colorizer/pre_attack(atom/target, mob/living/user, list/modifiers)
 	if(can_use(target, user))
 		do_colorize(target, user)
 	. = ..()

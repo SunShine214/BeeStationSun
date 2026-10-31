@@ -54,7 +54,7 @@
 		else
 			to_chat(user, span_warning("You need a tighter grip!"))
 
-	else if(cistern && !open && user.CanReach(src))
+	else if(cistern && !open && IsReachableBy(user))
 		if(!contents.len)
 			to_chat(user, span_notice("The cistern is empty."))
 		else
@@ -74,7 +74,7 @@
 	icon_state = "toilet[open][cistern]"
 
 
-/obj/structure/toilet/attackby(obj/item/I, mob/living/user, params)
+/obj/structure/toilet/attackby(obj/item/I, mob/living/user, list/modifiers)
 	if(I.tool_behaviour == TOOL_CROWBAR)
 		to_chat(user, span_notice("You start to [cistern ? "replace the lid on the cistern" : "lift the lid off the cistern"]..."))
 		playsound(loc, 'sound/effects/stonedoor_openclose.ogg', 50, 1)
@@ -158,7 +158,7 @@ MAPPING_DIRECTIONAL_HELPERS(/obj/structure/urinal, 32)
 	else
 		..()
 
-/obj/structure/urinal/attackby(obj/item/I, mob/living/user, params)
+/obj/structure/urinal/attackby(obj/item/I, mob/living/user, list/modifiers)
 	if(exposed)
 		if (hiddenitem)
 			to_chat(user, span_warning("There is already something in the drain enclosure."))
@@ -212,13 +212,15 @@ MAPPING_DIRECTIONAL_HELPERS(/obj/structure/urinal, 32)
 
 /obj/structure/sink
 	name = "sink"
+	desc = "A sink used for washing one's hands and face."
 	icon = 'icons/obj/watercloset.dmi'
 	icon_state = "sink"
-	desc = "A sink used for washing one's hands and face."
+	layer = SIGN_LAYER
 	anchored = TRUE
 	var/busy = FALSE 	//Something's being washed at the moment
 	var/dispensedreagent = /datum/reagent/water // for whenever plumbing happens
 
+MAPPING_DIRECTIONAL_HELPERS(/obj/structure/sink, (-14))
 
 /obj/structure/sinkframe
 	name = "sink frame"
@@ -229,9 +231,9 @@ MAPPING_DIRECTIONAL_HELPERS(/obj/structure/urinal, 32)
 
 /obj/structure/sinkframe/Initialize(mapload)
 	. = ..()
-	AddComponent(/datum/component/simple_rotation)
+	AddElement(/datum/element/simple_rotation)
 
-/obj/structure/sinkframe/attackby(obj/item/I, mob/living/user, params)
+/obj/structure/sinkframe/attackby(obj/item/I, mob/living/user, list/modifiers)
 	if(istype(I, /obj/item/stack/sheet/plastic))
 		balloon_alert(user, "You start constructing a sink...")
 		if(do_after(user, 4 SECONDS, target = src))
@@ -245,7 +247,7 @@ MAPPING_DIRECTIONAL_HELPERS(/obj/structure/urinal, 32)
 
 /obj/structure/sinkframe/Initialize(mapload)
 	. = ..()
-	AddComponent(/datum/component/simple_rotation)
+	AddElement(/datum/element/simple_rotation)
 
 /obj/structure/sink/attack_hand(mob/living/user)
 	. = ..()
@@ -274,7 +276,6 @@ MAPPING_DIRECTIONAL_HELPERS(/obj/structure/urinal, 32)
 
 	if(washing_face)
 		SEND_SIGNAL(user, COMSIG_COMPONENT_CLEAN_FACE_ACT, CLEAN_WASH)
-		user.drowsyness = max(user.drowsyness - rand(2,3), 0) //Washing your face wakes you up if you're falling asleep
 	else if(ishuman(user))
 		var/mob/living/carbon/human/human_user = user
 		if(!human_user.wash_hands(CLEAN_WASH))
@@ -286,7 +287,7 @@ MAPPING_DIRECTIONAL_HELPERS(/obj/structure/urinal, 32)
 	user.visible_message(span_notice("[user] washes [user.p_their()] [washing_face ? "face" : "hands"] using [src]."), \
 						span_notice("You wash your [washing_face ? "face" : "hands"] using [src]."))
 
-/obj/structure/sink/attackby(obj/item/O, mob/living/user, params)
+/obj/structure/sink/attackby(obj/item/O, mob/living/user, list/modifiers)
 	if(busy)
 		to_chat(user, span_warning("Someone's already washing here!"))
 		return
@@ -301,15 +302,16 @@ MAPPING_DIRECTIONAL_HELPERS(/obj/structure/urinal, 32)
 			to_chat(user, span_notice("\The [RG] is full."))
 			return FALSE
 
-	if(istype(O, /obj/item/melee/baton))
-		var/obj/item/melee/baton/batong = O
-		if(batong.cell?.charge && batong.damtype == STAMINA)
-			flick("baton_active", src)
-			user.Paralyze(batong.active_force)
-			batong.cell.use(batong.cell.charge)
-			user.visible_message(span_warning("[user] shocks [user.p_them()]self while attempting to wash the active [batong.name]!"), \
-								span_userdanger("You unwisely attempt to wash [batong] while it's still on."))
-			playsound(src, batong.active_hitsound, 50, TRUE)
+	if(istype(O, /obj/item/melee/baton/security))
+		var/obj/item/melee/baton/security/baton = O
+		if(baton.cell?.charge && baton.active)
+			z_flick("baton_active", src)
+			user.Paralyze(baton.knockdown_time)
+			user.set_stutter(baton.knockdown_time)
+			baton.cell.use(baton.cell_hit_cost)
+			user.visible_message(span_warning("[user] shocks [user.p_them()]self while attempting to wash the active [baton.name]!"), \
+								span_userdanger("You unwisely attempt to wash [baton] while it's still on."))
+			playsound(src, baton.on_stun_sound, 50, TRUE)
 			return
 
 	if(istype(O, /obj/item/mop))
@@ -320,7 +322,7 @@ MAPPING_DIRECTIONAL_HELPERS(/obj/structure/urinal, 32)
 
 	if(istype(O, /obj/item/stack/medical/gauze))
 		var/obj/item/stack/medical/gauze/G = O
-		new /obj/item/reagent_containers/cup/rag(src.loc)
+		new /obj/item/rag(src.loc)
 		to_chat(user, span_notice("You tear off a strip of gauze and make a rag."))
 		G.use(1)
 		return
@@ -357,6 +359,7 @@ MAPPING_DIRECTIONAL_HELPERS(/obj/structure/urinal, 32)
 	name = "kitchen sink"
 	icon_state = "sink_alt"
 
+MAPPING_DIRECTIONAL_HELPERS(/obj/structure/sink/kitchen, (-16))
 
 /obj/structure/sink/puddle	//splishy splashy ^_^
 	name = "puddle"
@@ -370,7 +373,7 @@ MAPPING_DIRECTIONAL_HELPERS(/obj/structure/urinal, 32)
 	. = ..()
 	icon_state = "puddle"
 
-/obj/structure/sink/puddle/attackby(obj/item/O, mob/user, params)
+/obj/structure/sink/puddle/attackby(obj/item/O, mob/user, list/modifiers)
 	icon_state = "puddle-splash"
 	. = ..()
 	icon_state = "puddle"

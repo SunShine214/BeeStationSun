@@ -12,7 +12,7 @@
 	disease_flags = CAN_CARRY|CAN_RESIST
 	spread_flags = DISEASE_SPREAD_NON_CONTAGIOUS
 	visibility_flags = HIDDEN_PANDEMIC
-	required_organs = list(/obj/item/organ/heart)
+	required_organ = ORGAN_SLOT_HEART
 	bypasses_immunity = TRUE // Immunity is based on not having an appendix; this isn't a virus
 	var/sound = FALSE
 
@@ -36,8 +36,8 @@
 			if(DT_PROB(1, delta_time))
 				to_chat(affected_mob, "<span class='warning'>You feel [pick("discomfort", "pressure", "a burning sensation", "pain")] in your chest.</span>")
 			if(DT_PROB(1, delta_time))
-				to_chat(affected_mob, "<span class='warning'>You feel dizzy.</span>")
-				affected_mob.confused += 6
+				to_chat(affected_mob, span_warning("You feel dizzy."))
+				affected_mob.adjust_confusion(6 SECONDS)
 			if(DT_PROB(1.5, delta_time))
 				to_chat(affected_mob, "<span class='warning'>You feel [pick("full", "nauseated", "sweaty", "weak", "tired", "short on breath", "uneasy")].</span>")
 		if(3 to 4)
@@ -47,13 +47,13 @@
 			if(DT_PROB(1.5, delta_time))
 				to_chat(affected_mob, "<span class='danger'>You feel a sharp pain in your chest!</span>")
 				if(prob(25))
-					affected_mob.vomit(95)
+					affected_mob.vomit(VOMIT_CATEGORY_DEFAULT, lost_nutrition = 95)
 				affected_mob.emote("cough")
 				affected_mob.Paralyze(40)
 				affected_mob.losebreath += 4
 			if(DT_PROB(1.5, delta_time))
-				to_chat(affected_mob, "<span class='danger'>You feel very weak and dizzy...</span>")
-				affected_mob.confused += 8
+				to_chat(affected_mob, span_danger("You feel very weak and dizzy..."))
+				affected_mob.adjust_confusion(8 SECONDS)
 				affected_mob.adjustStaminaLoss(40, FALSE)
 				affected_mob.emote("cough")
 		if(5)

@@ -5,7 +5,7 @@
 /**
  * Handles brute damage for the holoparasite, transferring it to the summoner.
  */
-/mob/living/simple_animal/hostile/holoparasite/adjustBruteLoss(amount, updating_health, forced)
+/mob/living/simple_animal/hostile/holoparasite/adjustBruteLoss(amount, updating_health, forced, required_bodytype)
 	// No, you can't heal the holopara.
 	if(!forced && amount <= 0)
 		return
@@ -18,7 +18,7 @@
 		var/holoparasite_visible = isturf(summoner.current.loc) && isturf(loc) && (src in viewers(world.view, summoner.current))
 		if(iscarbon(summoner.current))
 			var/mob/living/carbon/carbon_summoner = summoner.current
-			carbon_summoner.vomit(lost_nutrition = 0, blood = TRUE, stun = FALSE, distance = HOLOPARA_CALC_BLOOD_RECOIL_DISTANCE(amount), message = FALSE)
+			carbon_summoner.vomit(MOB_VOMIT_BLOOD | MOB_VOMIT_HARM, lost_nutrition = 0, distance = HOLOPARA_CALC_BLOOD_RECOIL_DISTANCE(amount))
 		else
 			summoner.current.add_splatter_floor()
 		recoil_scream()
@@ -30,7 +30,7 @@
 /**
  * Handles burn damage for the holoparasite, transferring it to the summoner.
  */
-/mob/living/simple_animal/hostile/holoparasite/adjustFireLoss(amount, updating_health, forced)
+/mob/living/simple_animal/hostile/holoparasite/adjustFireLoss(amount, updating_health, forced, required_bodytype)
 	// No, you can't heal the holopara.
 	if(!forced && amount <= 0)
 		return
@@ -49,25 +49,25 @@
 /**
  * Negates oxygen damage for the holoparasite - it's a bluespace crystallization, it does not breathe.
  */
-/mob/living/simple_animal/hostile/holoparasite/adjustOxyLoss(amount, updating_health, forced)
+/mob/living/simple_animal/hostile/holoparasite/adjustOxyLoss(amount, updating_health = TRUE, forced = FALSE, required_biotype)
 	return FALSE
 
 /**
  * Negates toxin damage for the holoparasite - it's a bluespace crystallization, it can't be poisoned.
  */
-/mob/living/simple_animal/hostile/holoparasite/adjustToxLoss(amount, updating_health, forced)
+/mob/living/simple_animal/hostile/holoparasite/adjustToxLoss(amount, updating_health = TRUE, forced = FALSE, required_biotype)
 	return FALSE
 
 /**
  * Negates stamina damage for the holoparasite - it's a bluespace crystallization, it has no stamina.
  */
-/mob/living/simple_animal/hostile/holoparasite/adjustStaminaLoss(amount, updating_health, forced)
+/mob/living/simple_animal/hostile/holoparasite/adjustStaminaLoss(amount, updating_stamina = TRUE, forced = FALSE, required_biotype)
 	return FALSE
 
 /**
  * Negates cellular damage for the holoparasite - it's a bluespace crystallization, it has no cells.
  */
-/mob/living/simple_animal/hostile/holoparasite/adjustCloneLoss(amount, updating_health, forced)
+/mob/living/simple_animal/hostile/holoparasite/adjustCloneLoss(amount, updating_health = TRUE, forced = FALSE, required_biotype)
 	return FALSE
 
 /**
@@ -149,7 +149,7 @@
 				// With max defense, you can BARELY survive this around full health, but it will hurt HORRIBLY.
 				if(iscarbon(summoner.current))
 					var/mob/living/carbon/carbon_summoner = summoner.current
-					carbon_summoner.vomit(lost_nutrition = 0, blood = TRUE, stun = FALSE, distance = 5, message = FALSE)
+					carbon_summoner.vomit(MOB_VOMIT_BLOOD | MOB_VOMIT_HARM, lost_nutrition = 0, distance = 5)
 					carbon_summoner.take_overall_damage(brute = carbon_summoner.maxHealth * 1.1, stamina = summoner.current.maxHealth * 1.5)
 				else
 					summoner.current.add_splatter_floor()
@@ -169,7 +169,7 @@
 						summoner.current.add_splatter_floor(pick(possible_splatter_tiles))
 					if(iscarbon(summoner.current))
 						var/mob/living/carbon/carbon_summoner = summoner.current
-						carbon_summoner.vomit(lost_nutrition = 0, blood = TRUE, stun = FALSE, distance = 5, message = FALSE)
+						carbon_summoner.vomit(MOB_VOMIT_BLOOD | MOB_VOMIT_HARM, lost_nutrition = 0, distance = 5)
 				summoner.current.visible_message(span_danger("[summoner.current] violently coughs up an incredible amount of blood, collapsing to the ground, seemingly dead."))
 				SSblackbox.record_feedback("tally", "holoparasite_exploded", 1, "devastate (gibbed)")
 				gib()

@@ -27,6 +27,7 @@
 	pass_flags_self = PASSTABLE | LETPASSTHROW
 	layer = TABLE_LAYER
 	obj_flags = CAN_BE_HIT | IGNORE_DENSITY
+	var/static/list/turf_traits = list(TRAIT_TURF_IGNORE_SLOWDOWN, TRAIT_TURF_IGNORE_SLIPPERY, TRAIT_IMMERSE_STOPPED)
 	var/frame = /obj/structure/table_frame
 	var/framestack = /obj/item/stack/rods
 	var/glass_shard_type = /obj/item/shard
@@ -49,13 +50,15 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/structure/table)
 		buildstack = _buildstack
 	if(can_climb)
 		AddElement(/datum/element/climbable)
+	ADD_TRAIT(src, TRAIT_COMBAT_MODE_SKIP_INTERACTION, INNATE_TRAIT)
+	AddElement(/datum/element/give_turf_traits, string_list(turf_traits))
 
 /obj/structure/table/Bumped(mob/living/carbon/human/H)
 	. = ..()
 	if(!istype(H))
 		return
 	var/feetCover = (H.wear_suit && (H.wear_suit.body_parts_covered & FEET)) || (H.w_uniform && (H.w_uniform.body_parts_covered & FEET))
-	if(!HAS_TRAIT(H, TRAIT_ALWAYS_STUBS) && (H.shoes || feetCover || H.body_position == LYING_DOWN || HAS_TRAIT(H, TRAIT_PIERCEIMMUNE) || H.m_intent == MOVE_INTENT_WALK || H.dna?.species.bodytype & BODYTYPE_DIGITIGRADE))
+	if(!HAS_TRAIT(H, TRAIT_ALWAYS_STUBS) && (H.shoes || feetCover || H.body_position == LYING_DOWN || HAS_TRAIT(H, TRAIT_PIERCEIMMUNE) || H.move_intent == MOVE_INTENT_WALK || H.bodytype & BODYTYPE_DIGITIGRADE))
 		return
 	if(HAS_TRAIT(H, TRAIT_ALWAYS_STUBS) || ((world.time >= last_bump + 100) && prob(5)))
 		to_chat(H, span_warning("You stub your toe on the [name]!"))
@@ -132,10 +135,13 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/structure/table)
 	if(locate(/obj/structure/table) in get_turf(mover))
 		return TRUE
 
-/obj/structure/table/CanAStarPass(obj/item/card/id/ID, to_dir, atom/movable/passing_atom)
-	. = !density
-	if(istype(passing_atom))
-		. = . || (passing_atom.pass_flags & PASSTABLE)
+
+/obj/structure/table/CanAStarPass(to_dir, datum/can_pass_info/pass_info)
+	if(!density)
+		return TRUE
+	if(pass_info.pass_flags & PASSTABLE)
+		return TRUE
+	return FALSE
 
 /obj/structure/table/proc/tableplace(mob/living/user, mob/living/pushed_mob)
 	pushed_mob.forceMove(loc)
@@ -189,18 +195,17 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/structure/table)
 	log_combat(user, pushed_mob, "head slammed", null, "against [src]")
 	SEND_SIGNAL(pushed_mob, COMSIG_ADD_MOOD_EVENT, "table", /datum/mood_event/table_headsmash)
 
-/obj/structure/table/attackby(obj/item/I, mob/living/user, params)
-	var/list/modifiers = params2list(params)
+/obj/structure/table/attackby(obj/item/I, mob/living/user, list/modifiers)
 	if(!(flags_1 & NODECONSTRUCT_1) && LAZYACCESS(modifiers, RIGHT_CLICK))
 		if(I.tool_behaviour == TOOL_SCREWDRIVER && deconstruction_ready)
-			to_chat(user, "<span class='notice'>You start disassembling [src]...</span>")
-			if(I.use_tool(src, user, 20, volume=50))
+			to_chat(user, span_notice("You start disassembling [src]..."))
+			if(I.use_tool(src, user, 2 SECONDS, volume=50))
 				deconstruct(TRUE)
 			return
 
 		if(I.tool_behaviour == TOOL_WRENCH && deconstruction_ready)
-			to_chat(user, "<span class='notice'>You start deconstructing [src]...</span>")
-			if(I.use_tool(src, user, 40, volume=50))
+			to_chat(user, span_notice("You start deconstructing [src]..."))
+			if(I.use_tool(src, user, 4 SECONDS, volume=50))
 				playsound(src.loc, 'sound/items/deconstruct.ogg', 50, 1)
 				deconstruct(TRUE, 1)
 			return
@@ -243,8 +248,8 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/structure/table)
 			if(!LAZYACCESS(modifiers, ICON_X) || !LAZYACCESS(modifiers, ICON_Y))
 				return
 			//Clamp it so that the icon never moves more than 16 pixels in either direction (thus leaving the table turf)
-			I.pixel_x = clamp(text2num(LAZYACCESS(modifiers, ICON_X)) - 16, -(world.icon_size/2), world.icon_size/2)
-			I.pixel_y = clamp(text2num(LAZYACCESS(modifiers, ICON_Y)) - 16, -(world.icon_size/2), world.icon_size/2)
+			I.pixel_x = clamp(text2num(LAZYACCESS(modifiers, ICON_X)) - 16, -(ICON_SIZE_X/2), ICON_SIZE_X/2)
+			I.pixel_y = clamp(text2num(LAZYACCESS(modifiers, ICON_Y)) - 16, -(ICON_SIZE_Y/2), ICON_SIZE_Y/2)
 			return TRUE
 	else
 		return ..()
@@ -258,7 +263,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/structure/table)
 		else
 			for(var/i in custom_materials)
 				var/datum/material/M = i
-				new M.sheet_type(T, FLOOR(custom_materials[M] / MINERAL_MATERIAL_AMOUNT, 1))
+				new M.sheet_type(T, floor(custom_materials[M] / MINERAL_MATERIAL_AMOUNT))
 		if(!wrench_disassembly)
 			new frame(T)
 		else
@@ -517,7 +522,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/structure/table)
 	else
 		return span_notice("The top cover is firmly <b>welded</b> on.")
 
-/obj/structure/table/reinforced/attackby_secondary(obj/item/weapon, mob/user, params)
+/obj/structure/table/reinforced/attackby_secondary(obj/item/weapon, mob/user, list/modifiers)
 	if(weapon.tool_behaviour == TOOL_WELDER)
 		if(weapon.tool_start_check(user, amount = 0))
 			if(deconstruction_ready)
@@ -586,7 +591,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/structure/table)
 /obj/structure/table/optable
 	name = "operating table"
 	desc = "Used for advanced medical procedures."
-	icon = 'icons/obj/surgery.dmi'
+	icon = 'icons/obj/medical/surgery.dmi'
 	icon_state = "optable"
 	buildstack = /obj/item/stack/sheet/mineral/silver
 	smoothing_flags = NONE
@@ -689,68 +694,79 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/structure/table)
 	pass_flags_self = LETPASSTHROW //You can throw objects over this, despite it's density.
 	max_integrity = 20
 
+/obj/structure/rack/Initialize(mapload)
+	. = ..()
+	ADD_TRAIT(src, TRAIT_COMBAT_MODE_SKIP_INTERACTION, INNATE_TRAIT)
+
 /obj/structure/rack/examine(mob/user)
 	. = ..()
 	. += span_notice("It's held together by a couple of <b>bolts</b>.")
 
+/obj/effect/client_image_holder/bluespace_stream/add_context_self(datum/screentip_context/context, mob/user, obj/item/item)
+	context.use_cache()
+	context.add_right_click_tool_action("Deconstruct", TOOL_WRENCH)
+
 /obj/structure/rack/CanAllowThrough(atom/movable/mover, border_dir)
 	. = ..()
-	if(src.density == 0) //Because broken racks -Agouri |TODO: SPRITE!|
+	if(.)
 		return TRUE
 	if(istype(mover) && (mover.pass_flags & PASSTABLE))
 		return TRUE
-	return FALSE
 
-/obj/structure/rack/MouseDrop_T(obj/O, mob/user)
+/obj/structure/rack/MouseDrop_T(atom/dropping, mob/user, params)
 	. = ..()
-	if ((!( istype(O, /obj/item) ) || user.get_active_held_item() != O))
+	if(!isitem(dropping) || user.get_active_held_item() != dropping)
 		return
-	if(!user.dropItemToGround(O))
+	if(!user.dropItemToGround(dropping))
 		return
-	if(O.loc != src.loc)
-		step(O, get_dir(O, src))
+	if(dropping.loc != src.loc)
+		step(dropping, get_dir(dropping, src))
 
-/obj/structure/rack/attackby(obj/item/W, mob/living/user, params)
-	var/list/modifiers = params2list(params)
-	if (W.tool_behaviour == TOOL_WRENCH && !(flags_1 & NODECONSTRUCT_1) && LAZYACCESS(modifiers, RIGHT_CLICK))
-		W.play_tool_sound(src)
-		deconstruct(TRUE)
-		return
-	if(user.combat_mode)
-		return ..()
-	if(user.transferItemToLoc(W, drop_location()))
-		return 1
+/obj/structure/rack/base_item_interaction(mob/living/user, obj/item/tool, list/modifiers)
+	. = ..()
+	if(.)
+		return .
+	if((tool.item_flags & ABSTRACT) || (user.combat_mode && !(tool.item_flags & NOBLUDGEON)))
+		return NONE
+	if(user.transferItemToLoc(tool, get_turf(src), silent = FALSE))
+		return ITEM_INTERACT_SUCCESS
+	return ITEM_INTERACT_BLOCKING
 
-/obj/structure/rack/attack_paw(mob/living/user)
-	attack_hand(user)
+/obj/structure/rack/wrench_act_secondary(mob/living/user, obj/item/tool)
+	tool.play_tool_sound(src)
+	deconstruct(TRUE)
+	return ITEM_INTERACT_SUCCESS
 
-/obj/structure/rack/attack_hand(mob/living/user)
+/obj/structure/rack/attack_paw(mob/living/user, list/modifiers)
+	attack_hand(user, modifiers)
+
+/obj/structure/rack/attack_hand(mob/living/user, list/modifiers)
 	. = ..()
 	if(.)
 		return
-	if(user.body_position == LYING_DOWN || user.usable_legs < 2)
+	if(!user.combat_mode || user.body_position == LYING_DOWN || user.usable_legs < 2)
 		return
 	user.changeNext_move(CLICK_CD_MELEE)
 	user.do_attack_animation(src, ATTACK_EFFECT_KICK)
-	user.visible_message(span_danger("[user] kicks [src]."), null, null, COMBAT_MESSAGE_RANGE)
-	take_damage(rand(4,8), BRUTE, MELEE, 1)
+	user.visible_message(span_danger("[user] kicks [src]."), vision_distance = COMBAT_MESSAGE_RANGE)
+	take_damage(rand(4,8), BRUTE, MELEE, TRUE)
 
 /obj/structure/rack/play_attack_sound(damage_amount, damage_type = BRUTE, damage_flag = 0)
 	switch(damage_type)
 		if(BRUTE)
 			if(damage_amount)
-				playsound(loc, 'sound/items/dodgeball.ogg', 80, 1)
+				playsound(loc, 'sound/items/dodgeball.ogg', 80, TRUE)
 			else
-				playsound(loc, 'sound/weapons/tap.ogg', 50, 1)
+				playsound(loc, 'sound/weapons/tap.ogg', 50, TRUE)
 		if(BURN)
-			playsound(loc, 'sound/items/welder.ogg', 40, 1)
+			playsound(loc, 'sound/items/welder.ogg', 40, TRUE)
 
 /*
  * Rack destruction
  */
 
 /obj/structure/rack/deconstruct(disassembled = TRUE)
-	if(!(flags_1&NODECONSTRUCT_1))
+	if(!(flags_1 & NODECONSTRUCT_1))
 		set_density(FALSE)
 		var/obj/item/rack_parts/newparts = new(loc)
 		transfer_fingerprints_to(newparts)
@@ -766,12 +782,12 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/structure/table)
 	desc = "Parts of a rack."
 	icon = 'icons/obj/items_and_weapons.dmi'
 	icon_state = "rack_parts"
-	flags_1 = CONDUCT_1
+	obj_flags = CONDUCTS_ELECTRICITY
 	custom_materials = list(/datum/material/iron=2000)
 	var/building = FALSE
 	var/obj/construction_type = /obj/structure/rack
 
-/obj/item/rack_parts/attackby(obj/item/W, mob/user, params)
+/obj/item/rack_parts/attackby(obj/item/W, mob/user, list/modifiers)
 	if (W.tool_behaviour == TOOL_WRENCH)
 		new /obj/item/stack/sheet/iron(user.loc)
 		qdel(src)

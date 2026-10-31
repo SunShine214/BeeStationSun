@@ -212,7 +212,7 @@
 	if(istype(taser, /obj/item/mecha_parts/mecha_equipment))
 		var/obj/item/mecha_parts/mecha_equipment/taser_equipment = taser
 		if(!taser_equipment.chassis \
-			|| !taser_equipment.activated \
+			|| !taser_equipment.active \
 			|| taser_equipment.get_integrity() <= 1 \
 			|| taser_equipment.chassis.is_currently_ejecting \
 			|| taser_equipment.chassis.equipment_disabled \
@@ -294,8 +294,8 @@
 	tase_target(seconds_between_ticks)
 
 /datum/status_effect/tased/proc/tase_target(seconds_between_ticks)
-	owner.stuttering = max(min(owner.stuttering + 5, 30), owner.stuttering)
-	owner.adjust_jitter_up_to(40 SECONDS, 60 SECONDS)
+	owner.adjust_stutter_up_to(3, 8 SECONDS)
+	owner.adjust_jitter_up_to(25 SECONDS, 40 SECONDS)
 
 	// Use on incapacitated targets is real bad for them
 	var/mob/living/carbon/human/human = owner
@@ -308,7 +308,7 @@
 
 	// If you are covered in oil, then this provides the spark needed to ignite it
 	if(owner.fire_stacks < 0)
-		owner.IgniteMob()
+		owner.ignite_mob()
 
 	// clumsy people might hit their head while being tased
 	if(HAS_TRAIT(owner, TRAIT_CLUMSY) && owner.body_position == LYING_DOWN && DT_PROB(20, seconds_between_ticks))
@@ -436,17 +436,28 @@
 		return
 	if(!istype(taser, /obj/item))
 		return
+	// Cyborgs can't have their guns thrown away, so just end the tase,
+	// though im not sure how we would reach this? Better safe than sorry.
+	if(iscyborg(source))
+		owner.visible_message(span_warning("[attacker] disarms [source], disrupting the taser connection!"))
+		end_tase()
+		return
 	var/obj/item/taser_object = taser
 	taser_object.forceMove(get_turf(taser_object))
 	taser_object.throw_at(get_edge_target_turf(source, get_dir(attacker.loc, source.loc)), 2, 1, spin = TRUE)
 	owner.visible_message("[attacker] disarms [source]'s [taser], knocking it out of their hands!")
 
-/datum/status_effect/tased/proc/on_firer_attacked(mob/living/source, obj/item/weapon, mob/living/attacker, params)
+/datum/status_effect/tased/proc/on_firer_attacked(mob/living/source, obj/item/weapon, mob/living/attacker, list/modifiers)
 	if (attacker != owner)
 		return
 	if(!istype(taser, /obj/item))
 		return
 	if (!weapon.force)
+		return
+	// Cyborgs can't have their guns thrown away, so just end the tase
+	if(iscyborg(source))
+		owner.visible_message(span_warning("[attacker] smashes the [weapon] into [source], disrupting the taser connection!"))
+		end_tase()
 		return
 	var/obj/item/taser_object = taser
 	taser_object.forceMove(get_turf(taser_object))

@@ -26,6 +26,7 @@
 	attack_verb_continuous = "kicks"
 	attack_verb_simple = "kick"
 	attack_sound = 'sound/weapons/punch1.ogg'
+	attack_vis_effect = ATTACK_EFFECT_KICK
 	health = 40
 	maxHealth = 40
 	minbodytemp = 180
@@ -132,9 +133,9 @@
 	response_harm_simple = "kick"
 	attack_verb_continuous = "kicks"
 	attack_verb_simple = "kick"
+	attack_vis_effect = ATTACK_EFFECT_KICK
 	health = 3
 	maxHealth = 3
-	ventcrawler = VENTCRAWLER_ALWAYS
 	var/can_grow = TRUE
 	var/amount_grown = 0
 	pass_flags = PASSTABLE | PASSMOB
@@ -149,6 +150,7 @@
 	pixel_x = base_pixel_x + rand(-6, 6)
 	pixel_y = base_pixel_y + rand(0, 10)
 	GLOB.total_chickens++
+	ADD_TRAIT(src, TRAIT_VENTCRAWLER_ALWAYS, INNATE_TRAIT)
 
 /mob/living/simple_animal/chick/Life(delta_time = SSMOBS_DT, times_fired)
 	. =..()
@@ -204,9 +206,9 @@
 	response_harm_simple = "kick"
 	attack_verb_continuous = "kicks"
 	attack_verb_simple = "kick"
+	attack_vis_effect = ATTACK_EFFECT_KICK
 	health = 15
 	maxHealth = 15
-	ventcrawler = VENTCRAWLER_ALWAYS
 	can_be_held = TRUE
 	worn_slot_flags = ITEM_SLOT_HEAD
 	pass_flags = PASSTABLE | PASSMOB
@@ -235,6 +237,7 @@
 		max_eggs_held = 8,\
 		egg_laid_callback = CALLBACK(src, PROC_REF(egg_laid))\
 	)
+	ADD_TRAIT(src, TRAIT_VENTCRAWLER_ALWAYS, INNATE_TRAIT)
 
 /mob/living/simple_animal/chicken/death(gibbed)
 	GLOB.total_chickens--
@@ -262,7 +265,7 @@
 	else
 		STOP_PROCESSING(SSobj, src)
 
-/mob/living/simple_animal/chicken/turkey
+/mob/living/simple_animal/turkey
 	name = "\improper turkey"
 	desc = "it's that time again."
 	icon_state = "turkey_plain"
@@ -279,6 +282,5 @@
 	attack_verb_continuous = "pecks"
 	attack_verb_simple = "peck"
 	attack_sound = 'sound/creatures/turkey.ogg'
-	ventcrawler = VENTCRAWLER_ALWAYS
 	gold_core_spawnable = FRIENDLY_SPAWN
 	chat_color = "#FFDC9B"

@@ -19,7 +19,6 @@
 	var/affected_area = 3
 	var/ignition_temp = 10 // The amount of heat added to the reagents when this grenade goes off.
 	var/threatscale = 1 // Used by advanced grenades to make them slightly more worthy.
-	var/no_splash = FALSE //If the grenade deletes even if it has no reagents to splash with. Used for slime core reactions.
 	var/casedesc = "This basic model accepts both beakers and bottles. It heats contents by 10 K upon ignition." // Appears when examining empty casings.
 	var/obj/item/assembly/prox_sensor/landminemode = null
 
@@ -58,23 +57,33 @@
 				. += span_notice("You see a [G.name] inside the grenade.")
 
 /obj/item/grenade/chem_grenade/attack_self(mob/user)
-	if(stage == GRENADE_READY && !active)
+	if (active)
+		return
+	if (stage == GRENADE_READY)
 		..()
-	if(stage == GRENADE_WIRED)
+	else
 		wires.interact(user)
 
-/obj/item/grenade/chem_grenade/attackby(obj/item/I, mob/user, params)
-	if (stage == GRENADE_DETONATED)
+/obj/item/grenade/chem_grenade/attackby(obj/item/I, mob/user, list/modifiers)
+	if (active)
 		return ..()
-	if(istype(I,/obj/item/assembly) && stage == GRENADE_WIRED)
-		wires.interact(user)
-	if(I.tool_behaviour == TOOL_SCREWDRIVER)
-		if(dud_flags & GRENADE_USED)
+	if(dud_flags & GRENADE_USED)
+		if (I.tool_behaviour == TOOL_SCREWDRIVER)
 			to_chat(user, span_notice("You started to reset the trigger."))
 			if (do_after(user, 2 SECONDS, src))
 				to_chat(user, span_notice("You reset the trigger."))
 				dud_flags &= ~GRENADE_USED
+				update_appearance()
+		return
+	if(istype(I, /obj/item/slime_extract) && stage == GRENADE_WIRED)
+		if(!user.transferItemToLoc(I, src))
 			return
+		to_chat(user, span_notice("You add [I] to the [initial(name)] assembly."))
+		beakers += I
+		return
+	if(istype(I,/obj/item/assembly))
+		wires.interact(user)
+	if(I.tool_behaviour == TOOL_SCREWDRIVER)
 		if(stage == GRENADE_WIRED)
 			if(beakers.len)
 				stage_change(GRENADE_READY)
@@ -124,8 +133,10 @@
 		stage_change(GRENADE_WIRED)
 		to_chat(user, span_notice("You unlock the [initial(name)] assembly."))
 
-	else if(stage == GRENADE_WIRED && I.tool_behaviour == TOOL_WRENCH)
+	else if(I.tool_behaviour == TOOL_WRENCH)
 		if(beakers.len)
+			// Clear reagents out to prevent exploiting by filling up with reagents and then re-detonating
+			reagents.clear_reagents()
 			for(var/obj/O in beakers)
 				O.forceMove(drop_location())
 				if(!O.reagents)
@@ -142,25 +153,76 @@
 	else
 		return ..()
 
+/obj/item/grenade/chem_grenade/add_context_interaction(datum/screentip_context/context, mob/user, atom/target)
+	if (active)
+		context.add_attack_self_action("Accept your fate")
+		return
+	if(dud_flags & GRENADE_USED)
+		return
+	if (stage == GRENADE_READY)
+		context.add_attack_self_action("Pull pin")
+	else
+		context.add_attack_self_action("Inspect Wires")
+
+/obj/item/grenade/chem_grenade/add_context_self(datum/screentip_context/context, mob/user)
+	if (active)
+		return
+	if(dud_flags & GRENADE_USED)
+		context.add_left_click_tool_action("Reset trigger", TOOL_SCREWDRIVER)
+		return
+	context.add_left_click_item_action("Inspect Wires", /obj/item/assembly)
+	if (stage == GRENADE_WIRED)
+		context.add_left_click_tool_action("Complete", TOOL_SCREWDRIVER)
+	else if (stage == GRENADE_READY)
+		context.add_left_click_tool_action("Adjust Timer", TOOL_SCREWDRIVER)
+	if (stage == GRENADE_WIRED && is_type_in_list(context.held_item, allowed_containers) && beakers.len < 2)
+		context.add_left_click_action("Insert")
+	if (stage == GRENADE_EMPTY)
+		context.add_left_click_item_action("Wire", /obj/item/stack/cable_coil)
+	if (stage == GRENADE_READY)
+		context.add_left_click_tool_action("Deconstruct", TOOL_WIRECUTTER)
+	if (stage == GRENADE_WIRED)
+		context.add_left_click_item_action("Insert", /obj/item/slime_extract)
+	context.add_left_click_tool_action("Empty", TOOL_WRENCH)
+
 /obj/item/grenade/chem_grenade/proc/stage_change(N)
 	if(N)
 		stage = N
-	if(stage == GRENADE_EMPTY)
+	update_appearance()
+	refresh_screentips()
+
+/obj/item/grenade/chem_grenade/update_name(updates)
+	. = ..()
+	if (dud_flags & GRENADE_USED)
+		name = "expended [initial(name)]"
+	else if(stage == GRENADE_EMPTY)
 		name = "[initial(name)] casing"
-		desc = "A do it yourself [initial(name)]! [initial(casedesc)]"
-		icon_state = initial(icon_state)
 	else if(stage == GRENADE_WIRED)
 		name = "unsecured [initial(name)]"
-		desc = "An unsecured [initial(name)] assembly."
-		icon_state = "[initial(icon_state)]_ass"
 	else if(stage == GRENADE_READY)
 		name = initial(name)
-		desc = initial(desc)
-		icon_state = "[initial(icon_state)]_locked"
-	else if (stage == GRENADE_DETONATED)
-		name = "expended [initial(name)]"
+
+/obj/item/grenade/chem_grenade/update_desc(updates)
+	. = ..()
+	if (dud_flags & GRENADE_USED)
 		desc = "A detonated [initial(desc)]"
+	else if(stage == GRENADE_EMPTY)
+		desc = "A do it yourself [initial(name)]! [initial(casedesc)]"
+	else if(stage == GRENADE_WIRED)
+		desc = "An unsecured [initial(name)] assembly."
+	else if(stage == GRENADE_READY)
+		desc = initial(desc)
+
+/obj/item/grenade/chem_grenade/update_icon_state()
+	. = ..()
+	if (dud_flags & GRENADE_USED)
 		icon_state = "[initial(icon_state)]_ass"
+	else if(stage == GRENADE_EMPTY)
+		icon_state = initial(icon_state)
+	else if(stage == GRENADE_WIRED)
+		icon_state = "[initial(icon_state)]_ass"
+	else if(stage == GRENADE_READY)
+		icon_state = "[initial(icon_state)]_locked"
 
 /obj/item/grenade/chem_grenade/on_found(mob/finder)
 	var/obj/item/assembly/A = wires.get_attached(wires.get_wire(1))
@@ -199,6 +261,7 @@
 	active = TRUE
 	det_time *= (0.1 * (rand(6, 14))) //between 60% and 140% of set time
 	addtimer(CALLBACK(src, PROC_REF(prime)), isnull(delayoverride)? det_time : delayoverride)
+	refresh_screentips()
 
 /obj/item/grenade/chem_grenade/prime(mob/living/lanced_by)
 	if(stage != GRENADE_READY)
@@ -208,12 +271,11 @@
 	if(!.)
 		return
 
-	stage_change(GRENADE_DETONATED)
 	max_integrity = 1
 	atom_integrity = 1
 
 	for(var/obj/item/slime_extract/S in beakers)
-		if(S.Uses)
+		if(S.extract_uses)
 			for(var/obj/item/reagent_containers/cup/G in beakers)
 				G.reagents.trans_to(src, G.reagents.total_volume)
 
@@ -227,7 +289,6 @@
 						S.reagents.trans_to(G, S.reagents.total_volume)
 				else
 					S.forceMove(get_turf(src))
-					no_splash = TRUE
 
 	reagents.flags |= NO_REACT
 
@@ -245,22 +306,10 @@
 	update_mob()
 
 /obj/item/grenade/chem_grenade/ex_act(severity, target)
-	if (stage == GRENADE_DETONATED)
+	if (dud_flags & GRENADE_USED)
 		qdel(src)
 		return
 	return ..()
-
-	//I tried to just put it in the allowed_containers list but
-	//if you do that it must have reagents.  If you're going to
-	//make a special case you might as well do it explicitly. -Sayu
-/obj/item/grenade/chem_grenade/attackby(obj/item/I, mob/user, params)
-	if(istype(I, /obj/item/slime_extract) && stage == GRENADE_WIRED)
-		if(!user.transferItemToLoc(I, src))
-			return
-		to_chat(user, span_notice("You add [I] to the [initial(name)] assembly."))
-		beakers += I
-	else
-		return ..()
 
 /obj/item/grenade/chem_grenade/cryo // Intended for rare cryogenic mixes. Cools the area moderately upon detonation.
 	name = "cryo grenade"
@@ -284,7 +333,7 @@
 	icon_state = "timeg"
 	var/unit_spread = 10 // Amount of units per repeat. Can be altered with a multitool.
 
-/obj/item/grenade/chem_grenade/adv_release/attackby(obj/item/I, mob/user, params)
+/obj/item/grenade/chem_grenade/adv_release/attackby(obj/item/I, mob/user, list/modifiers)
 	if(I.tool_behaviour == TOOL_MULTITOOL)
 		switch(unit_spread)
 			if(0 to 24)
@@ -300,12 +349,11 @@
 /obj/item/grenade/chem_grenade/adv_release/prime(mob/living/lanced_by)
 	if(stage != GRENADE_READY || dud_flags)
 		active = FALSE
-		update_icon()
+		update_appearance()
 		return
 
 	max_integrity = 1
 	atom_integrity = 1
-	stage_change(GRENADE_DETONATED)
 
 	var/total_volume = 0
 	for(var/obj/item/reagent_containers/RC in beakers)

@@ -1,23 +1,26 @@
-/*
-	The relay idles until it receives information. It then passes on that information
-	depending on where it came from.
-
-	The relay is needed in order to send information pass Z levels. It must be linked
-	with a HUB, the only other machine that can send/receive pass Z levels.
-*/
-
+/**
+ * The relay idles until it receives information. It then passes on that information
+ * depending on where it came from.
+ *
+ * The relay is needed in order to send information to different Z levels. It
+ * must be linked with a hub, the only other machine that can send to/receive
+ * from other Z levels.
+ */
 /obj/machinery/telecomms/relay
 	name = "telecommunication relay"
 	icon_state = "relay"
+	base_icon_state = "relay"
 	desc = "A mighty piece of hardware used to send massive amounts of data far away."
 	telecomms_type = /obj/machinery/telecomms/relay
 	density = TRUE
-	use_power = NO_POWER_USE // made only so they don't overheat in whatever places they usually are in (exploration shuttle, small rooms in multi-z maps etc.)
+	idle_power_usage = BASE_MACHINE_IDLE_CONSUMPTION * 0.01
 	netspeed = 5
-	long_range_link = 1
+	long_range_link = TRUE
 	circuit = /obj/item/circuitboard/machine/telecomms/relay
-	var/broadcasting = 1
-	var/receiving = 1
+	/// Can this relay broadcast signals to other Z levels?
+	var/broadcasting = TRUE
+	/// Can this relay receive signals from other Z levels?
+	var/receiving = TRUE
 
 /obj/machinery/telecomms/relay/receive_information(datum/signal/subspace/signal, obj/machinery/telecomms/machine_from)
 	// Add our level and send it back
@@ -25,27 +28,44 @@
 	if(can_send(signal) && T)
 		signal.levels |= T.get_virtual_z_level()
 
-// Checks to see if it can send/receive.
+	use_power(idle_power_usage)
 
-/obj/machinery/telecomms/relay/proc/can(datum/signal/signal)
+/**
+ * Checks to see if the relay can send/receive the signal, by checking if it's
+ * on, and if it's listening to the frequency of the signal.
+ *
+ * Returns `TRUE` if it can listen to the signal, `FALSE` if not.
+ */
+/obj/machinery/telecomms/relay/proc/can_listen_to_signal(datum/signal/signal)
 	if(!on)
 		return FALSE
 	if(!is_freq_listening(signal))
 		return FALSE
 	return TRUE
 
+/**
+ * Checks to see if the relay can send this signal, which requires it to have
+ * `broadcasting` set to `TRUE`.
+ *
+ * Returns `TRUE` if it can send the signal, `FALSE` if not.
+ */
 /obj/machinery/telecomms/relay/proc/can_send(datum/signal/signal)
-	if(!can(signal))
+	if(!can_listen_to_signal(signal))
 		return FALSE
 	return broadcasting
 
+/**
+ * Checks to see if the relay can receive this signal, which requires it to have
+ * `receiving` set to `TRUE`.
+ *
+ * Returns `TRUE` if it can receive the signal, `FALSE` if not.
+ */
 /obj/machinery/telecomms/relay/proc/can_receive(datum/signal/signal)
-	if(!can(signal))
+	if(!can_listen_to_signal(signal))
 		return FALSE
 	return receiving
 
-//Preset Relay
-
+// Preset Relays
 /obj/machinery/telecomms/relay/preset
 	network = "tcommsat"
 
@@ -80,17 +100,17 @@
 	icon_state = "relay"
 	broadcasting = FALSE	//It only receives
 
-/obj/machinery/telecomms/relay/preset/reebe/attackby(obj/item/P, mob/user, params)
+/obj/machinery/telecomms/relay/preset/reebe/attackby(obj/item/P, mob/user, list/modifiers)
 	if(istype(P, /obj/item/encryptionkey) || P.tool_behaviour == TOOL_SCREWDRIVER)
 		if(GLOB.clockcult_eminence)
 			var/mob/living/simple_animal/eminence/eminence = GLOB.clockcult_eminence
 			var/obj/item/encryptionkey/E
 			for(var/i in E.channels)
 				E.channels[i] = 1
-			eminence.internal_radio.attackby(E, user, params)
-	. = ..()
+			eminence.internal_radio.attackby(E, user, modifiers)
+	return ..()
 
-//Generic preset relay
+// Generic preset relay
 /obj/machinery/telecomms/relay/preset/auto
 	hide = TRUE
 	autolinkers = list("autorelay")

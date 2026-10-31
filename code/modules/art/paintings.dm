@@ -14,7 +14,7 @@
 	var/obj/item/canvas/painting = null
 
 //Adding canvases
-/obj/structure/easel/attackby(obj/item/I, mob/user, params)
+/obj/structure/easel/attackby(obj/item/I, mob/user, list/modifiers)
 	if(istype(I, /obj/item/canvas))
 		var/obj/item/canvas/canvas = I
 		user.dropItemToGround(canvas)
@@ -50,7 +50,7 @@
 	var/height = 11
 	var/list/grid
 	/// empty canvas color
-	var/canvas_color = "#ffffff"
+	var/canvas_color = COLOR_WHITE
 	/// Is it clean canvas or was there something painted on it at some point, used to decide when to show wip splotch overlay
 	var/used = FALSE
 	var/finalized = FALSE //Blocks edits
@@ -102,7 +102,7 @@
 		ui = new(user, src, "Canvas", name)
 		ui.open()
 
-/obj/item/canvas/attackby(obj/item/I, mob/living/user, params)
+/obj/item/canvas/attackby(obj/item/I, mob/living/user, list/modifiers)
 	if(!user.combat_mode)
 		ui_interact(user)
 	else
@@ -282,13 +282,13 @@
 		var/obj/item/pen/P = painting_implement
 		switch(P.colour)
 			if("black")
-				return "#000000"
+				return COLOR_BLACK
 			if("blue")
-				return "#0000ff"
+				return COLOR_BLUE
 			if("red")
-				return "#ff0000"
+				return COLOR_RED
 		return P.colour
-	else if(istype(painting_implement, /obj/item/soap) || istype(painting_implement, /obj/item/reagent_containers/cup/rag))
+	else if(istype(painting_implement, /obj/item/soap) || istype(painting_implement, /obj/item/rag))
 		return canvas_color
 
 /// Generates medium description
@@ -303,7 +303,7 @@
 		return "Crayon on canvas"
 	else if(istype(painting_implement, /obj/item/pen))
 		return "Ink on canvas"
-	else if(istype(painting_implement, /obj/item/soap) || istype(painting_implement, /obj/item/reagent_containers/cup/rag))
+	else if(istype(painting_implement, /obj/item/soap) || istype(painting_implement, /obj/item/rag))
 		return //These are just for cleaning, ignore them
 	else
 		return "Unknown medium"
@@ -398,7 +398,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/structure/sign/painting)
 	. = ..()
 	SSpersistent_paintings.painting_frames -= src
 
-/obj/structure/sign/painting/attackby(obj/item/I, mob/user, params)
+/obj/structure/sign/painting/attackby(obj/item/I, mob/user, list/modifiers)
 	if(!current_canvas && istype(I, /obj/item/canvas))
 		frame_canvas(user,I)
 	else if(current_canvas && current_canvas.painting_metadata.title == initial(current_canvas.painting_metadata.title) && istype(I,/obj/item/pen))
@@ -413,6 +413,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/structure/sign/painting)
 	if(current_canvas)
 		current_canvas.ui_interact(user)
 		. += span_notice("Use wirecutters to remove the painting.")
+		SEND_SIGNAL(user, COMSIG_LIVING_APPRAISE_ART, src)
 
 /obj/structure/sign/painting/wirecutter_act(mob/living/user, obj/item/I)
 	. = ..()
@@ -559,7 +560,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/structure/sign/painting)
 	w_class = WEIGHT_CLASS_TINY
 	custom_price = 15
 	///Chosen paint color
-	var/current_color = "#000000"
+	var/current_color = COLOR_BLACK
 
 /obj/item/paint_palette/Initialize(mapload)
 	. = ..()

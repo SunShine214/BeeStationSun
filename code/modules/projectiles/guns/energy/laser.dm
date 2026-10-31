@@ -54,14 +54,14 @@
 			if(do_after(user, 1 SECONDS) && !fire_interrupted)
 				playsound(src, 'sound/weapons/autoguninsert.ogg', 30)
 				cell.give(500 WATT)
-				flick("repeater", src)
+				z_flick("repeater", src)
 				update_icon()
 			else
 				break
 	cranking = FALSE
 	fire_interrupted = FALSE
 
-/obj/item/gun/energy/laser/repeater/fire_shot_at(mob/living/user, atom/target, message, params, zone_override, aimed)
+/obj/item/gun/energy/laser/repeater/fire_shot_at(mob/living/user, atom/target, message, list/modifiers, zone_override, aimed)
 	if(cranking)
 		fire_interrupted = TRUE //no more cranking when you shoot.
 	return ..()
@@ -85,9 +85,13 @@
 	weapon_weight = WEAPON_LIGHT
 	investigate_flags = ADMIN_INVESTIGATE_TARGET
 
+/obj/item/gun/energy/laser/captain/Initialize(mapload)
+	. = ..()
+	AddElement(/datum/element/trackable)
+
 /obj/item/gun/energy/laser/captain/contents_explosion(severity, target)
 	if (!ammo_type || !cell)
-		name = "\improper broken antique laser gun"
+		name = "broken antique laser gun"
 		desc = "This is an antique laser gun. All craftsmanship is of the highest quality. It was decorated with leather and chrome. Seems too be damaged to the point of not functioning, but still valuable."
 		icon_state = "caplaser_broken"
 		update_icon()
@@ -115,8 +119,9 @@
 	use_cyborg_cell = TRUE
 	requires_wielding = FALSE
 
-/obj/item/gun/energy/laser/cyborg/emp_act()
-	return
+/obj/item/gun/energy/laser/cyborg/Initialize(mapload)
+	. = ..()
+	AddElement(/datum/element/empprotection, EMP_PROTECT_ALL)
 
 /obj/item/gun/energy/laser/scatter
 	name = "scatter laser gun"
@@ -144,7 +149,7 @@
 	worn_icon_state = null
 	w_class = WEIGHT_CLASS_BULKY
 	force = 10
-	flags_1 =  CONDUCT_1
+	obj_flags =  CONDUCTS_ELECTRICITY
 	slot_flags = ITEM_SLOT_BACK
 	ammo_type = list(/obj/item/ammo_casing/energy/laser/accelerator)
 	pin = null

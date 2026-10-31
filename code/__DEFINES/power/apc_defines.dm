@@ -19,6 +19,12 @@
 #define APC_PIXEL_OFFSET 25
 
 // APC charging status:
+/// Ticks of sustained surplus required before an APC commits to a charge cycle.
+#define APC_CHARGE_CONFIRM_TICKS 10
+/// Bounds on the load buffer
+#define APC_LONGTERM_POWER_MAX 10
+#define APC_LONGTERM_POWER_MIN -10
+
 /// The APC is not charging.
 #define APC_NOT_CHARGING 0
 /// The APC is charging.
@@ -81,11 +87,9 @@
 #define UPSTATE_BROKE (1<<3)
 /// The APC is undergoing maintenance.
 #define UPSTATE_MAINT (1<<4)
-/// The APC is emagged or malfed.
-#define UPSTATE_BLUESCREEN (1<<5)
 /// The APCs wires are exposed.
-#define UPSTATE_WIREEXP (1<<6)
-#define UPSTATE_ALLGOOD	(1<<7)
+#define UPSTATE_WIREEXP (1<<5)
+#define UPSTATE_ALLGOOD	(1<<6)
 
 // update_overlay
 // Bitflags:

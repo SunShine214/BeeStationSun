@@ -52,7 +52,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/item/photo)
 /obj/item/photo/attack_self(mob/user)
 	user.examinate(src)
 
-/obj/item/photo/attackby(obj/item/P, mob/user, params)
+/obj/item/photo/attackby(obj/item/P, mob/user, list/modifiers)
 	if(burn_paper_product_attackby_check(P, user))
 		return
 	if(istype(P, /obj/item/pen) || istype(P, /obj/item/toy/crayon))
@@ -94,6 +94,6 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/item/photo)
 
 	var/n_name = stripped_input(usr, "What would you like to label the photo?", "Photo Labelling", max_length=MAX_NAME_LEN)
 	//loc.loc check is for making possible renaming photos in clipboards
-	if(n_name && (loc == usr || loc.loc && loc.loc == usr) && usr.stat == CONSCIOUS && !usr.incapacitated())
+	if(n_name && (loc == usr || loc.loc && loc.loc == usr) && usr.stat == CONSCIOUS && !usr.incapacitated)
 		name = "photo[(n_name ? "- '[n_name]'" : null)]"
 	add_fingerprint(usr)

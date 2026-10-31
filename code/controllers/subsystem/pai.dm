@@ -1,7 +1,7 @@
 SUBSYSTEM_DEF(pai)
 	name = "pAI"
 
-	flags = SS_NO_INIT|SS_NO_FIRE
+	ss_flags = SS_NO_INIT|SS_NO_FIRE
 
 	/// List of pAI candidates, including those not submitted.
 	var/list/candidates = list()
@@ -20,7 +20,7 @@ SUBSYSTEM_DEF(pai)
  * @pai - The card requesting assistance
  * @user - The player requesting a pAI
 */
-/datum/controller/subsystem/pai/proc/findPAI(obj/item/paicard/pai, mob/user)
+/datum/controller/subsystem/pai/proc/find_pai(obj/item/pai_card/pai, mob/user)
 	if(!(GLOB.ghost_role_flags & GHOSTROLE_SILICONS))
 		to_chat(user, span_warning("Due to growing incidents of SELF corrupted independent artificial intelligences, freeform personality devices have been temporarily banned in this sector."))
 		return
@@ -31,7 +31,14 @@ SUBSYSTEM_DEF(pai)
 	playsound(src, 'sound/machines/ping.ogg', 20, TRUE)
 	to_chat(user, span_notice("You have requested pAI assistance."))
 	var/mutable_appearance/alert_overlay = mutable_appearance('icons/obj/aicards.dmi', "pai")
-	notify_ghosts("[user] is requesting a pAI personality! Use the pAI button to submit yourself as one.", source=user, alert_overlay = alert_overlay, action=NOTIFY_ORBIT, header="pAI Request!", ignore_key = POLL_IGNORE_PAI)
+	notify_ghosts(
+		"[user] is requesting a pAI companion! Use the pAI button to submit yourself as one.",
+		source = user,
+		header = "pAI Request!",
+		alert_overlay = alert_overlay,
+		notify_flags = NOTIFY_CATEGORY_NOFLASH,
+		ignore_key = POLL_IGNORE_PAI,
+	)
 	addtimer(VARSET_LIST_CALLBACK(request_spam, user.ckey, FALSE), 10 SECONDS)
 	return TRUE
 
@@ -132,7 +139,7 @@ SUBSYSTEM_DEF(pai)
 		to_chat(usr, span_warning("Your candidacy has been submitted, but pAI cards have been alerted too recently."))
 		return FALSE
 	submit_spam[usr.ckey] = TRUE
-	for(var/obj/item/paicard/paicard in pai_card_list)
+	for(var/obj/item/pai_card/paicard in pai_card_list)
 		if(!paicard.pai)
 			paicard.alertUpdate()
 	to_chat(usr, span_notice("Your pAI candidacy has been submitted!"))

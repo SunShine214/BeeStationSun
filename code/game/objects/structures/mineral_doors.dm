@@ -99,7 +99,7 @@
 	isSwitchingStates = TRUE
 	playsound(src, openSound, 100, TRUE)
 	set_opacity(FALSE)
-	flick("[initial(icon_state)]opening",src)
+	z_flick("[initial(icon_state)]opening",src)
 	sleep(1 SECONDS)
 	set_density(FALSE)
 	z_flags &= ~(Z_BLOCK_IN_DOWN | Z_BLOCK_IN_UP)
@@ -119,7 +119,7 @@
 		return
 	isSwitchingStates = TRUE
 	playsound(src, closeSound, 100, TRUE)
-	flick("[initial(icon_state)]closing",src)
+	z_flick("[initial(icon_state)]closing",src)
 	sleep(1 SECONDS)
 	set_density(TRUE)
 	z_flags |= (Z_BLOCK_IN_DOWN | Z_BLOCK_IN_UP)
@@ -263,8 +263,8 @@
 /obj/structure/mineral_door/transparent/plasma/welder_act(mob/living/user, obj/item/I)
 	return
 
-/obj/structure/mineral_door/transparent/plasma/attackby(obj/item/W, mob/user, params)
-	if(W.is_hot() > 300)
+/obj/structure/mineral_door/transparent/plasma/attackby(obj/item/W, mob/user, list/modifiers)
+	if(W.get_temperature() > 300)
 		plasma_ignition(6, user)
 	else
 		return ..()
@@ -307,8 +307,8 @@
 	return crowbar_door(user, I)
 
 /obj/structure/mineral_door/wood/attackby(obj/item/I, mob/living/user)
-	if(I.is_hot())
-		fire_act(I.is_hot())
+	if(I.get_temperature())
+		fire_act(I.get_temperature())
 		return
 
 	return ..()
@@ -342,8 +342,8 @@
 	return crowbar_door(user, I)
 
 /obj/structure/mineral_door/paperframe/attackby(obj/item/I, mob/living/user)
-	if(I.is_hot()) //BURN IT ALL DOWN JIM
-		fire_act(I.is_hot())
+	if(I.get_temperature()) //BURN IT ALL DOWN JIM
+		fire_act(I.get_temperature())
 		return
 
 	if((!user.combat_mode) && istype(I, /obj/item/paper) && (atom_integrity < max_integrity))

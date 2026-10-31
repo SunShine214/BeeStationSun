@@ -65,7 +65,7 @@
 		return TRUE
 	return pry_tile(I, user) ? TRUE : FALSE
 
-/turf/open/floor/wood/try_replace_tile(obj/item/stack/tile/T, mob/user, params)
+/turf/open/floor/wood/try_replace_tile(obj/item/stack/tile/T, mob/user, list/modifiers)
 	if(T.turf_type == type)
 		return
 	var/obj/item/tool = user.is_holding_tool_quality(TOOL_SCREWDRIVER)
@@ -76,7 +76,7 @@
 	var/turf/open/floor/plating/P = pry_tile(tool, user, TRUE)
 	if(!istype(P))
 		return
-	P.attackby(T, user, params)
+	P.attackby(T, user, modifiers)
 
 /turf/open/floor/wood/pry_tile(obj/item/C, mob/user, silent = FALSE)
 	C.play_tool_sound(src, 80)
@@ -139,8 +139,8 @@
 	. = ..()
 	update_icon()
 
-/turf/open/floor/grass/attackby(obj/item/C, mob/user, params)
-	if((C.tool_behaviour == TOOL_SHOVEL) && params)
+/turf/open/floor/grass/attackby(obj/item/C, mob/user, list/modifiers)
+	if(C.tool_behaviour == TOOL_SHOVEL)
 		new ore_type(src, 2)
 		user.visible_message("[user] digs up [src].", span_notice("You [turfverb] [src]."))
 		playsound(src, 'sound/effects/shovel_dig.ogg', 50, 1)
@@ -153,8 +153,7 @@
 		canSmoothWith = list()
 		transform = null
 		playsound(src, 'sound/items/wirecutter.ogg')
-	if(..())
-		return
+	return ..()
 
 /turf/open/floor/grass/fairy //like grass but fae-er
 	name = "fairygrass patch"
@@ -164,20 +163,20 @@
 	floor_tile = /obj/item/stack/tile/fairygrass
 	light_range = 2
 	light_power = 0.80
-	light_color = "#33CCFF"
-	color = "#33CCFF"
+	light_color = COLOR_BLUE_LIGHT
+	color = COLOR_BLUE_LIGHT
 
 /turf/open/floor/grass/fairy/white
 	name = "white fairygrass patch"
 	floor_tile = /obj/item/stack/tile/fairygrass/white
-	light_color = "#FFFFFF"
-	color = "#FFFFFF"
+	light_color = COLOR_WHITE
+	color = COLOR_WHITE
 
 /turf/open/floor/grass/fairy/red
 	name = "red fairygrass patch"
 	floor_tile = /obj/item/stack/tile/fairygrass/red
-	light_color = "#FF3333"
-	color = "#FF3333"
+	light_color = COLOR_RED_LIGHT
+	color = COLOR_RED_LIGHT
 
 /turf/open/floor/grass/fairy/orange
 	name = "orange fairygrass patch"
@@ -244,7 +243,7 @@
 	smoothing_flags = NONE
 	transform = null
 
-/turf/open/floor/grass/snow/try_replace_tile(obj/item/stack/tile/T, mob/user, params)
+/turf/open/floor/grass/snow/try_replace_tile(obj/item/stack/tile/T, mob/user, list/modifiers)
 	return
 
 /turf/open/floor/grass/snow/crowbar_act(mob/living/user, obj/item/I)
@@ -278,6 +277,7 @@
 	desc = "Safely recreated turf for your hellplanet-scaping."
 	icon = 'icons/turf/floors.dmi'
 	icon_state = "basalt"
+	base_icon_state = "basalt"
 	floor_tile = /obj/item/stack/tile/basalt
 	ore_type = /obj/item/stack/ore/glass/basalt
 	turfverb = "dig up"
@@ -397,6 +397,14 @@
 	smoothing_groups = list(SMOOTH_GROUP_TURF_OPEN, SMOOTH_GROUP_CARPET_RED)
 	canSmoothWith = list(SMOOTH_GROUP_CARPET_RED)
 	floor_tile = /obj/item/stack/tile/carpet/red
+
+/turf/open/floor/carpet/olive
+	icon = 'icons/turf/floors/carpet_olive.dmi'
+	icon_state = "carpet_olive-255"
+	base_icon_state = "carpet_olive"
+	smoothing_groups = list(SMOOTH_GROUP_TURF_OPEN, SMOOTH_GROUP_CARPET_OLIVE)
+	canSmoothWith = list(SMOOTH_GROUP_CARPET_OLIVE)
+	floor_tile = /obj/item/stack/tile/carpet/olive
 
 /turf/open/floor/carpet/royalblack
 	icon = 'icons/turf/floors/carpet_royalblack.dmi'

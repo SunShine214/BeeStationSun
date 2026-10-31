@@ -10,7 +10,7 @@
 	icon = 'icons/obj/economy.dmi'
 	name = "coin"
 	icon_state = "coin"
-	flags_1 = CONDUCT_1
+	obj_flags = CONDUCTS_ELECTRICITY
 	force = 1
 	throwforce = 2
 	w_class = WEIGHT_CLASS_TINY
@@ -62,7 +62,7 @@
 	. = ..()
 	. += span_info("It's worth [value] credit\s.")
 
-/obj/item/coin/attackby(obj/item/W, mob/user, params)
+/obj/item/coin/attackby(obj/item/W, mob/user, list/modifiers)
 	if(istype(W, /obj/item/stack/cable_coil))
 		var/obj/item/stack/cable_coil/CC = W
 		if(string_attached)
@@ -95,13 +95,13 @@
 			to_chat(user, span_warning("The coin won't flip very well with something attached!") )
 			return FALSE//do not flip the coin
 		cooldown = world.time + 15
-		flick("coin_[coinflip]_flip", src)
+		z_flick("coin_[coinflip]_flip", src)
 		coinflip = pick(sideslist)
 		icon_state = "coin_[coinflip]"
 		playsound(user.loc, 'sound/items/coinflip.ogg', 50, 1)
 		var/oldloc = loc
 		sleep(15)
-		if(loc == oldloc && user && !user.incapacitated())
+		if(loc == oldloc && user && !user.incapacitated)
 			user.visible_message("[user] has flipped [src]. It lands on [coinflip].", \
 							span_notice("You flip [src]. It lands on [coinflip]."), \
 							span_italics("You hear the clattering of loose change."))
@@ -131,8 +131,8 @@
 		plasma_ignition(0, Proj?.firer)
 	. = ..()
 
-/obj/item/coin/plasma/attackby(obj/item/W, mob/user, params)
-	if(W.is_hot() > 300)//If the temperature of the object is over 300, then ignite
+/obj/item/coin/plasma/attackby(obj/item/W, mob/user, list/modifiers)
+	if(W.get_temperature() > 300)//If the temperature of the object is over 300, then ignite
 		plasma_ignition(0, user)
 	else
 		return ..()

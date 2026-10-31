@@ -67,13 +67,13 @@
 				if(dnacounter >= 5)
 					if(!tail)
 						var/obj/item/organ/tail/cat/cattail = new()
-						cattail.Insert(M, drop_if_replaced = FALSE)
+						cattail.Insert(M, movement_flags = DELETE_IF_REPLACED)
 						M.visible_message(span_warning("With the sound of grinding flesh and rearranging bone, a grotesque tail springs forth from [M]'s flesh."), span_hypnophrase("A tail spontaneously sprouts from your pelvis! It's so cute!"))
 						playsound(M, 'sound/magic/demon_consume.ogg', 50, 1)
 						M.add_splatter_floor(get_turf(M))
 					else
 						var/obj/item/organ/ears/cat/catears = new()
-						catears.Insert(M, drop_if_replaced = FALSE)
+						catears.Insert(M, movement_flags = DELETE_IF_REPLACED)
 						M.visible_message( span_warning("[M]'s ears recede into their skull momentarily before their flesh contorts, and a pair of sickening cat ears erupts from their head."), span_hypnophrase("Your ears reshape themselves into an <b>ADORABLE</b> pair of cat ears!"))
 						playsound(M, 'sound/magic/demon_consume.ogg', 50, 1)
 						M.add_splatter_floor(get_turf(M))
@@ -89,7 +89,7 @@
 			SEND_SIGNAL(M, COMSIG_ADD_MOOD_EVENT, "toxoplasmosis", /datum/mood_event/toxoplasmosis)
 
 /datum/symptom/toxoplasmosis/proc/Pounce(mob/living/cat, mob/living/carbon/human/H)
-	if(istype(cat, /mob/living/simple_animal/pet/cat))
+	if(iscat(cat))
 		H.throw_at(cat, get_dist(cat, H), 2)
 		if(get_dist(cat, H) > 1)
 			return
@@ -154,7 +154,7 @@
 	for(var/mob/living/L in oviewers(7, M))
 		if(L.stat)
 			continue
-		if(istype(L, /mob/living/simple_animal/pet/cat))
+		if(iscat(L))
 			return L
 		if(ishuman(L))
 			var/mob/living/carbon/human/H = L

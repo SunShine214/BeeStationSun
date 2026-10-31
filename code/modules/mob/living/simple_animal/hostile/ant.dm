@@ -24,7 +24,7 @@
 	attack_verb_continuous = "bites"
 	attack_verb_simple = "bite"
 	attack_sound = 'sound/weapons/bite.ogg'
-	//attack_vis_effect = ATTACK_EFFECT_BITE
+	attack_vis_effect = ATTACK_EFFECT_BITE
 	butcher_results = list(/obj/effect/decal/cleanable/ants = 3) //It's just a bunch of ants glued together into a larger ant
 	response_help_continuous = "pets"
 	response_help_simple = "pet"
@@ -40,11 +40,8 @@
 	maxHealth = 100
 	light_range = 1.5 // Bioluminescence!
 	light_color = "#d43229" // The ants that comprise the giant ant still glow red despite the sludge.
-	ventcrawler = VENTCRAWLER_ALWAYS
 
-/*
 /mob/living/simple_animal/hostile/ant/Initialize(mapload)
 	. = ..()
-	//ADD_TRAIT(src, TRAIT_VENTCRAWLER_ALWAYS, INNATE_TRAIT)
-	//AddElement(/datum/element/pet_bonus, "clacks happily!")
-*/
+	ADD_TRAIT(src, TRAIT_VENTCRAWLER_ALWAYS, INNATE_TRAIT)
+	AddElement(/datum/element/pet_bonus, "clacks happily!")

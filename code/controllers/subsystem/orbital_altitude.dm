@@ -2,7 +2,7 @@ SUBSYSTEM_DEF(orbital_altitude)
 	name = "Orbital Altitude"
 	can_fire = TRUE
 	wait = 0.25 SECONDS //TODO - PUT THIS BACK RAAAAAA (maybe not...?)
-	flags = SS_NO_INIT | SS_KEEP_TIMING
+	ss_flags = SS_NO_INIT | SS_KEEP_TIMING
 
 	/// Current orbital altitude in meters
 	var/orbital_altitude = ORBITAL_ALTITUDE_DEFAULT

@@ -19,6 +19,7 @@
 	response_harm_continuous = "kicks"
 	response_harm_simple = "kick"
 	mob_biotypes = MOB_ORGANIC | MOB_BEAST
+	mobility_flags = MOBILITY_FLAGS_REST_CAPABLE_DEFAULT
 	gold_core_spawnable = NO_SPAWN
 	melee_damage = 0.5
 	health = 2500
@@ -54,7 +55,7 @@
 			return
 
 //Mobs with objects
-/mob/living/simple_animal/turtle/attackby(obj/item/O, mob/living/user, params)
+/mob/living/simple_animal/turtle/attackby(obj/item/O, mob/living/user, list/modifiers)
 	if(!stat && !client && !istype(O, /obj/item/stack/medical))
 		if(O.force)
 			if(icon_state == icon_hiding)

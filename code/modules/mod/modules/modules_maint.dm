@@ -28,9 +28,9 @@
 ///Signal fired when wearer is exposed to reagents
 /obj/item/mod/module/springlock/proc/on_wearer_exposed(atom/source, list/reagents, datum/reagents/source_reagents, methods, volume_modifier, show_message)
 	SIGNAL_HANDLER
-	if(!(methods & (VAPOR|PATCH|TOUCH)) || set_off || mod.wearer.stat == DEAD)
+	if(!(methods in list(VAPOR, PATCH, TOUCH)) || set_off || mod.wearer.stat == DEAD)
 		return //remove non-touch reagent exposure
-	to_chat(mod.wearer, "<span_class='danger'>[src] makes an ominous click sound...</span>")
+	to_chat(mod.wearer, span_danger("[src] makes an ominous click sound..."))
 	playsound(src, 'sound/items/modsuit/springlock.ogg', 75, TRUE)
 	addtimer(CALLBACK(src,  PROC_REF(snap_shut)), rand(3 SECONDS, 5 SECONDS))
 	RegisterSignal(mod, COMSIG_MOD_ACTIVATE,  PROC_REF(on_activate_spring_block))
@@ -54,7 +54,7 @@
 	mod.wearer.apply_damage(500, BRUTE, forced = TRUE) //boggers, bogchamp, etc
 	if(!HAS_TRAIT(mod.wearer, TRAIT_NODEATH))
 		mod.wearer.death() //just in case, for some reason, they're still alive
-	flash_color(mod.wearer, flash_color = "#FF0000", flash_time = 10 SECONDS)
+	flash_color(mod.wearer, flash_color = COLOR_RED, flash_time = 10 SECONDS)
 	set_off = FALSE
 
 ///Rave Visor - Gives you a rainbow visor and plays jukebox music to you.
@@ -116,7 +116,7 @@
 		visor_overlay.color = rainbow_order[rave_number]
 	. += visor_overlay
 
-/obj/item/mod/module/visor/rave/on_active_process(seconds_per_tick)
+/obj/item/mod/module/visor/rave/on_active_process(delta_time)
 	rave_number++
 	if(rave_number > length(rainbow_order))
 		rave_number = 1
@@ -275,7 +275,7 @@
 	mod.wearer.AddElement(/datum/element/forced_gravity, NEGATIVE_GRAVITY)
 	RegisterSignal(mod.wearer, COMSIG_MOVABLE_MOVED,  PROC_REF(check_upstairs))
 	mod.wearer.update_gravity(mod.wearer.has_gravity())
-	//ADD_TRAIT(mod.wearer, TRAIT_SILENT_FOOTSTEPS, REF(src))
+	ADD_TRAIT(mod.wearer, TRAIT_SILENT_FOOTSTEPS, REF(src))
 	check_upstairs() //todo at some point flip your screen around
 
 /obj/item/mod/module/atrocinator/deactivate(display_message = TRUE, deleting = FALSE)
@@ -291,7 +291,7 @@
 	UnregisterSignal(mod.wearer, COMSIG_MOVABLE_MOVED)
 	step_count = 0
 	mod.wearer.update_gravity(mod.wearer.has_gravity())
-	//REMOVE_TRAIT(mod.wearer, TRAIT_SILENT_FOOTSTEPS, REF(src))
+	REMOVE_TRAIT(mod.wearer, TRAIT_SILENT_FOOTSTEPS, REF(src))
 	var/turf/open/openspace/current_turf = get_turf(mod.wearer)
 	if(istype(current_turf))
 		current_turf.zFall(mod.wearer)

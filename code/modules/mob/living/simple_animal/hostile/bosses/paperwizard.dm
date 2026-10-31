@@ -2,7 +2,7 @@
 /mob/living/simple_animal/hostile/boss/paper_wizard
 	name = "Mjor the Creative"
 	desc = "A wizard with a taste for the arts."
-	mob_biotypes = MOB_INORGANIC | MOB_HUMANOID
+	mob_biotypes = MOB_ORGANIC|MOB_HUMANOID
 	boss_abilities = list(/datum/action/boss/wizard_summon_minions, /datum/action/boss/wizard_mimic)
 	faction = list(FACTION_HOSTILE,FACTION_STICKMAN)
 	del_on_death = TRUE
@@ -101,7 +101,7 @@
 	var/mob/living/simple_animal/hostile/boss/paper_wizard/original
 
 //Hit a fake? eat pain!
-/mob/living/simple_animal/hostile/boss/paper_wizard/copy/adjustHealth(amount, updating_health = TRUE, forced = FALSE)
+/mob/living/simple_animal/hostile/boss/paper_wizard/copy/adjustHealth(amount, updating_health = TRUE, forced = FALSE, required_bodytype)
 	if(amount > 0) //damage
 		if(original)
 			original.minimum_distance = 3
@@ -118,7 +118,7 @@
 		. = ..()
 
 //Hit the real guy? copies go bai-bai
-/mob/living/simple_animal/hostile/boss/paper_wizard/adjustHealth(amount, updating_health = TRUE, forced = FALSE)
+/mob/living/simple_animal/hostile/boss/paper_wizard/adjustHealth(amount, updating_health = TRUE, forced = FALSE, required_bodytype)
 	. = ..()
 	if(. > 0)//damage
 		minimum_distance = 3

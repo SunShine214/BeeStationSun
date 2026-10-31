@@ -5,9 +5,8 @@
 	icon_state = "meter"
 	layer = HIGH_PIPE_LAYER
 	power_channel = AREA_USAGE_ENVIRON
-	use_power = IDLE_POWER_USE
-	idle_power_usage = 25 WATT
-	active_power_usage = 50 WATT
+	idle_power_usage = BASE_MACHINE_IDLE_CONSUMPTION * 0.05
+	active_power_usage = BASE_MACHINE_ACTIVE_CONSUMPTION * 0.03
 	max_integrity = 150
 	armor_type = /datum/armor/machinery_meter
 	greyscale_config = /datum/greyscale_config/meter
@@ -152,7 +151,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/machinery/meter)
 	else
 		to_chat(user, status())
 
-/obj/machinery/meter/singularity_pull(S, current_size)
+/obj/machinery/meter/singularity_pull(obj/anomaly/singularity/singularity, current_size)
 	..()
 	if(current_size >= STAGE_FIVE)
 		deconstruct()

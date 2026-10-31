@@ -68,7 +68,7 @@
 /datum/heretic_knowledge/ashen_grasp/proc/on_mansus_grasp(mob/living/source, mob/living/target)
 	SIGNAL_HANDLER
 
-	if(HAS_TRAIT(target, TRAIT_BLIND))
+	if(target.is_blind())
 		return
 
 	if(!target.get_organ_slot(ORGAN_SLOT_EYES))
@@ -76,7 +76,7 @@
 
 	to_chat(target, span_danger("A bright green light burns your eyes horrifically!"))
 	target.adjustOrganLoss(ORGAN_SLOT_EYES, 15)
-	target.blur_eyes(10)
+	target.set_eye_blur_if_lower(20 SECONDS)
 
 /datum/heretic_knowledge/spell/ash_passage
 	name = "Ashen Passage"
@@ -196,7 +196,7 @@
 		return
 
 	target.adjust_fire_stacks(1)
-	target.IgniteMob()
+	target.ignite_mob()
 
 /datum/heretic_knowledge/spell/flame_birth
 	name = "Nightwatcher's Rebirth"
@@ -227,7 +227,7 @@
 		WITNESS MY ASCENSION, THE ASHY LANTERN BLAZES ONCE MORE!"
 	route = HERETIC_PATH_ASH
 	announcement_text = "Fear the blaze, for the Ashlord, %USER% has ascended! The flames shall consume all!"
-	announcement_sound = 'sound/ambience/antag/heretic/ascend_ash.ogg'
+	announcement_sound = 'sound/effects/antag/heretic/ascend_ash.ogg'
 	/// A static list of all traits we apply on ascension.
 	var/static/list/traits_to_apply = list(
 		TRAIT_RESISTHEAT,

@@ -57,7 +57,7 @@
 		to_chat(loc, span_warning("You lose control of the beam!"))
 	LoseTarget()
 
-/obj/item/gun/medbeam/fire_shot_at(mob/living/user, atom/target, message, params, zone_override, aimed)
+/obj/item/gun/medbeam/fire_shot_at(mob/living/user, atom/target, message, list/modifiers, zone_override, aimed)
 	if(isliving(user))
 		add_fingerprint(user)
 
@@ -138,10 +138,13 @@
 /obj/item/gun/medbeam/proc/on_beam_tick(mob/living/target)
 	if(target.health != target.maxHealth)
 		new /obj/effect/temp_visual/heal(get_turf(target), "#80F5FF")
-	target.adjustBruteLoss(-4)
-	target.adjustFireLoss(-4)
-	target.adjustToxLoss(-1, FALSE, TRUE)
-	target.adjustOxyLoss(-1)
+	var/need_mob_update
+	need_mob_update = target.adjustBruteLoss(-4, updating_health = FALSE, forced = TRUE)
+	need_mob_update += target.adjustFireLoss(-4, updating_health = FALSE, forced = TRUE)
+	need_mob_update += target.adjustToxLoss(-1, updating_health = FALSE, forced = TRUE)
+	need_mob_update += target.adjustOxyLoss(-1, updating_health = FALSE, forced = TRUE)
+	if(need_mob_update)
+		target.updatehealth()
 	return
 
 /obj/item/gun/medbeam/proc/on_beam_release(mob/living/target)
@@ -157,3 +160,11 @@
 /obj/item/gun/medbeam/mech/Initialize(mapload)
 	. = ..()
 	STOP_PROCESSING(SSobj, src) //Mech mediguns do not process until installed, and are controlled by the holder obj
+
+//////////////////////////////Low-power Version///////////////////////////////
+/obj/item/gun/medbeam/weak
+	name = "low-power medical beamgun"
+
+/obj/item/gun/medbeam/weak/on_beam_tick(mob/living/target)
+	if(target.health < 20)
+		..()

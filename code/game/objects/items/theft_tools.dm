@@ -20,6 +20,7 @@
 /obj/item/nuke_core/Initialize(mapload)
 	. = ..()
 	START_PROCESSING(SSobj, src)
+	AddElement(/datum/element/trackable)
 
 /obj/item/nuke_core/Destroy()
 	STOP_PROCESSING(SSobj, src)
@@ -36,7 +37,7 @@
 	if(COOLDOWN_FINISHED(src, pulse_cooldown))
 		COOLDOWN_START(src, pulse_cooldown, 6 SECONDS)
 
-		flick("[base_icon_state]_pulse", src)
+		z_flick("[base_icon_state]_pulse", src)
 		radiation_pulse(src, max_range = 2, threshold = RAD_EXTREME_INSULATION, intensity = 10)
 
 /obj/item/nuke_core/suicide_act(mob/living/user)
@@ -130,13 +131,17 @@
 	base_icon_state = "supermatter_sliver"
 	inhand_icon_state = "supermattersliver"
 
+/obj/item/nuke_core/supermatter_sliver/Initialize(mapload)
+	. = ..()
+	AddElement(/datum/element/trackable)
+
 /obj/item/nuke_core/supermatter_sliver/attack_tk(mob/user) // no TK dusting memes
 	return
 
 /obj/item/nuke_core/supermatter_sliver/can_be_pulled(user) // no drag memes
 	return FALSE
 
-/obj/item/nuke_core/supermatter_sliver/attackby(obj/item/attacking_item, mob/living/user, params)
+/obj/item/nuke_core/supermatter_sliver/attackby(obj/item/attacking_item, mob/living/user, list/modifiers)
 	if(istype(attacking_item, /obj/item/hemostat/supermatter))
 		var/obj/item/hemostat/supermatter/tongs = attacking_item
 		if (tongs.sliver)
@@ -159,7 +164,7 @@
 	..()
 	if(!iscarbon(user))
 		return FALSE
-	var/mob/victim = user
+	var/mob/living/victim = user
 	user.visible_message(span_danger("[victim] reaches out and tries to pick up [src]. [victim.p_their()] body starts to glow and bursts into flames before flashing into dust!"),\
 			span_userdanger("You reach for [src] with your hands. That was dumb."),\
 			span_italics("Everything suddenly goes silent."))
@@ -251,9 +256,9 @@
 		update_icon()
 	..()
 
-/obj/item/hemostat/supermatter/proc/Consume(atom/movable/AM, mob/user)
-	if(ismob(AM))
-		var/mob/victim = AM
+/obj/item/hemostat/supermatter/proc/Consume(atom/movable/AM, mob/living/user)
+	if(isliving(AM))
+		var/mob/living/victim = AM
 		victim.investigate_log("has been dusted by [src].", INVESTIGATE_DEATHS)
 		victim.dust()
 		message_admins("[src] has consumed [key_name_admin(victim)] [ADMIN_JMP(src)].")

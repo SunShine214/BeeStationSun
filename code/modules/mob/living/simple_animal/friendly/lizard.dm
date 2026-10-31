@@ -10,6 +10,7 @@
 	faction = list(FACTION_NEUTRAL)
 	attack_verb_continuous = "bites"
 	attack_verb_simple = "bite"
+	attack_vis_effect = ATTACK_EFFECT_BITE
 	melee_damage = 1
 	response_help_continuous = "pets"
 	response_help_simple = "pet"
@@ -17,7 +18,6 @@
 	response_disarm_simple = "shoo"
 	response_harm_continuous = "stomps on"
 	response_harm_simple = "stomp on"
-	ventcrawler = VENTCRAWLER_ALWAYS
 	density = FALSE
 	pass_flags = PASSTABLE | PASSMOB
 	mob_size = MOB_SIZE_SMALL
@@ -30,6 +30,10 @@
 		/mob/living/basic/cockroach,
 	)) //list of atoms, however turfs won't affect AI, but will affect consumption.
 	chat_color = "#64F88A"
+
+/mob/living/simple_animal/hostile/lizard/Initialize(mapload)
+	. = ..()
+	ADD_TRAIT(src, TRAIT_VENTCRAWLER_ALWAYS, INNATE_TRAIT)
 
 /mob/living/simple_animal/hostile/lizard/CanAttack(atom/the_target)//Can we actually attack a possible target?
 	if(see_invisible < the_target.invisibility)//Target's invisible to us, forget it

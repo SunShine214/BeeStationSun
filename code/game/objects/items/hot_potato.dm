@@ -46,7 +46,7 @@
 	color_val = !color_val
 	if(istype(target))
 		current = WEAKREF(target)
-		target.add_atom_colour(color_val? "#ffff00" : "#00ffff", FIXED_COLOUR_PRIORITY)
+		target.add_atom_colour(color_val ? COLOR_YELLOW : COLOR_CYAN, FIXED_COLOUR_PRIORITY)
 
 /obj/item/hot_potato/proc/detonate()
 	var/atom/location = loc
@@ -92,7 +92,7 @@
 	if(active)
 		to_chat(user, span_userdanger("You have a really bad feeling about [src]!"))
 
-/obj/item/hot_potato/afterattack(atom/target, mob/user, adjacent, params)
+/obj/item/hot_potato/afterattack(atom/target, mob/user, adjacent, list/modifiers)
 	. = ..()
 	if(!adjacent || !ismob(target))
 		return
@@ -146,6 +146,12 @@
 	else
 		log_bomber(null, null, src, "was primed for detonation (Timer:[delay],Explosive:[detonate_explosion],Range:[detonate_dev_range]/[detonate_heavy_range]/[detonate_light_range]/[detonate_fire_range])")
 	active = TRUE
+	if(detonate_explosion) //doesn't send a notification unless it's a genuine, exploding hot potato.
+		notify_ghosts(
+			"[user] has primed a Hot Potato!",
+			source = src,
+			header = "Hot Hot Hot!",
+		)
 
 /obj/item/hot_potato/proc/deactivate()
 	update_icon()

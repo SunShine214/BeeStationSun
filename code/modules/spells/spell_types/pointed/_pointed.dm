@@ -8,6 +8,7 @@
  * The cast_on atom is the person who was clicked on.
  */
 /datum/action/spell/pointed
+	abstract_type = /datum/action/spell/pointed
 	requires_target = TRUE
 
 	/// The base icon state of the spell's button icon, used for editing the icon "on" and "off"
@@ -70,17 +71,17 @@
 		update_buttons()
 	return TRUE
 
-/datum/action/spell/pointed/InterceptClickOn(mob/living/clicker, params, atom/click_target)
+/datum/action/spell/pointed/InterceptClickOn(mob/living/clicker, params, atom/target)
 
 	var/atom/aim_assist_target
-	if(aim_assist && isturf(click_target))
+	if(aim_assist && isturf(target))
 		// Find any human in the list. We aren't picky, it's aim assist after all
-		aim_assist_target = locate(/mob/living/carbon/human) in click_target
+		aim_assist_target = locate(/mob/living/carbon/human) in target
 		if(!aim_assist_target)
 			// If we didn't find a human, we settle for any living at all
-			aim_assist_target = locate(/mob/living) in click_target
+			aim_assist_target = locate(/mob/living) in target
 
-	return ..(clicker, params, aim_assist_target || click_target)
+	return ..(clicker, params, aim_assist_target || target)
 
 /datum/action/spell/pointed/is_valid_spell(mob/user, atom/target)
 	if(target == owner)
@@ -105,6 +106,7 @@
  * will instead fire a projectile pointed at the target's direction.
  */
 /datum/action/spell/pointed/projectile
+	abstract_type = /datum/action/spell/pointed/projectile
 	/// What projectile we create when we shoot our spell.
 	var/obj/projectile/magic/projectile_type = /obj/projectile/magic/teleport
 	/// How many projectiles we can fire per cast. Not all at once, per click, kinda like charges

@@ -177,10 +177,13 @@
 	alert_type = /atom/movable/screen/alert/status_effect/clone_decay
 
 /datum/status_effect/slime_clone_decay/tick(seconds_between_ticks)
-	owner.adjustToxLoss(1, 0)
-	owner.adjustOxyLoss(1, 0)
-	owner.adjustBruteLoss(1, 0)
-	owner.adjustFireLoss(1, 0)
+	var/need_mob_update
+	need_mob_update = owner.adjustToxLoss(1, updating_health = FALSE)
+	need_mob_update += owner.adjustOxyLoss(1, updating_health = FALSE)
+	need_mob_update += owner.adjustBruteLoss(1, updating_health = FALSE)
+	need_mob_update += owner.adjustFireLoss(1, updating_health = FALSE)
+	if(need_mob_update)
+		owner.updatehealth()
 	owner.color = "#007BA7"
 
 /atom/movable/screen/alert/status_effect/bloodchill
@@ -254,12 +257,12 @@
 	duration = 100
 
 /datum/status_effect/firecookie/on_apply()
-	ADD_TRAIT(owner, TRAIT_RESISTCOLD,"firecookie")
+	ADD_TRAIT(owner, TRAIT_RESISTCOLD, TRAIT_STATUS_EFFECT(id))
 	owner.adjust_bodytemperature(110)
 	return ..()
 
 /datum/status_effect/firecookie/on_remove()
-	REMOVE_TRAIT(owner, TRAIT_RESISTCOLD,"firecookie")
+	REMOVE_TRAIT(owner, TRAIT_RESISTCOLD, TRAIT_STATUS_EFFECT(id))
 
 /datum/status_effect/watercookie
 	id = "watercookie"
@@ -268,7 +271,7 @@
 	duration = 100
 
 /datum/status_effect/watercookie/on_apply()
-	ADD_TRAIT(owner, TRAIT_NOSLIPWATER,"watercookie")
+	ADD_TRAIT(owner, TRAIT_NOSLIPWATER, TRAIT_STATUS_EFFECT(id))
 	return ..()
 
 /datum/status_effect/watercookie/tick(seconds_between_ticks)
@@ -276,7 +279,7 @@
 		T.MakeSlippery(TURF_WET_WATER, min_wet_time = 10, wet_time_to_add = 5)
 
 /datum/status_effect/watercookie/on_remove()
-	REMOVE_TRAIT(owner, TRAIT_NOSLIPWATER,"watercookie")
+	REMOVE_TRAIT(owner, TRAIT_NOSLIPWATER, TRAIT_STATUS_EFFECT(id))
 
 /datum/status_effect/metalcookie
 	id = "metalcookie"
@@ -443,49 +446,34 @@
 //////////////////STABILIZED EXTRACTS//////////////////
 ///////////////////////////////////////////////////////
 
-/atom/movable/screen/alert/status_effect/stabilized
-	name = "Stabilized"
-	icon_state = "template"
-
 /datum/status_effect/stabilized //The base stabilized extract effect, has no effect of its' own.
 	id = "stabilizedbase"
 	duration = STATUS_EFFECT_PERMANENT
-	alert_type = /atom/movable/screen/alert/status_effect/stabilized
-	status_type = STATUS_EFFECT_REPLACE
+	alert_type = null
 	/// Item which provides this buff
 	var/obj/item/slimecross/stabilized/linked_extract
 	/// Colour of the extract providing the buff
 	var/colour = "null"
 
-/datum/status_effect/stabilized/proc/link_extract(obj/item/slimecross/stabilized/linked_extract)
-	src.linked_extract = linked_extract
-	if (linked_extract && linked_alert)
-		linked_alert.name = linked_extract.name
-		linked_alert.desc = linked_extract.desc
-		linked_alert.add_overlay(linked_extract)
-
 /datum/status_effect/stabilized/on_creation(mob/living/new_owner, obj/item/slimecross/stabilized/linked_extract)
-	src.link_extract(linked_extract)
+	src.linked_extract = linked_extract
 	return ..()
 
-/datum/status_effect/stabilized/tick(seconds_between_ticks)
-	if (duration != -1)
-		return ..()
+/datum/status_effect/stabilized/tick()
 	if(isnull(linked_extract))
-		duration = world.time + 15 SECONDS
-		START_PROCESSING(SSfastprocess, src)
-		return ..()
+		qdel(src)
+		return
 	if(linked_extract.get_held_mob() == owner)
 		return
 	owner.balloon_alert(owner, "[colour] extract faded!")
 	if(!QDELETED(linked_extract))
 		linked_extract.linked_effect = null
 		START_PROCESSING(SSobj,linked_extract)
-	duration = world.time + 15 SECONDS
-	START_PROCESSING(SSfastprocess, src)
+	qdel(src)
 
 /datum/status_effect/stabilized/null //This shouldn't ever happen, but just in case.
 	id = "stabilizednull"
+
 
 //Stabilized effects start below.
 /datum/status_effect/stabilized/grey
@@ -519,23 +507,27 @@
 
 /datum/status_effect/stabilized/purple/tick(seconds_between_ticks)
 	healed_last_tick = FALSE
+	var/need_mob_update = FALSE
 
 	if(owner.getBruteLoss() > 0)
-		owner.adjustBruteLoss(-0.2)
+		need_mob_update += owner.adjustBruteLoss(-0.2, updating_health = FALSE)
 		healed_last_tick = TRUE
 
 	if(owner.getFireLoss() > 0)
-		owner.adjustFireLoss(-0.2)
+		need_mob_update += owner.adjustFireLoss(-0.2, updating_health = FALSE)
 		healed_last_tick = TRUE
 
 	if(owner.getToxLoss() > 0)
 		// Forced, so slimepeople are healed as well.
-		owner.adjustToxLoss(-0.2, forced = TRUE)
+		need_mob_update += owner.adjustToxLoss(-0.2, updating_health = FALSE, forced = TRUE)
 		healed_last_tick = TRUE
+
+	if(need_mob_update)
+		owner.updatehealth()
 
 	// Technically, "healed this tick" by now.
 	if(healed_last_tick)
-		new /obj/effect/temp_visual/heal(get_turf(owner), "#FF0000")
+		new /obj/effect/temp_visual/heal(get_turf(owner), COLOR_RED)
 
 	return ..()
 
@@ -607,7 +599,7 @@
 	name = "burning fingertips"
 	desc = "You shouldn't see this."
 
-/obj/item/hothands/is_hot()
+/obj/item/hothands/get_temperature()
 	return 290 //Below what's required to ignite plasma.
 
 /datum/status_effect/stabilized/darkpurple
@@ -642,7 +634,7 @@
 
 /datum/status_effect/stabilized/darkblue/tick(seconds_between_ticks)
 	if(owner.fire_stacks > 0 && prob(80))
-		owner.fire_stacks--
+		owner.adjust_fire_stacks(-1)
 		if(owner.fire_stacks <= 0)
 			to_chat(owner, span_notice("[linked_extract] coats you in a watery goo, extinguishing the flames."))
 	var/obj/O = owner.get_active_held_item()
@@ -818,7 +810,7 @@
 		var/mob/living/carbon/human/H = owner
 		originalDNA = new H.dna.type
 		originalname = H.real_name
-		H.dna.copy_dna(originalDNA)
+		H.dna.copy_dna_to(originalDNA)
 		randomize_human(H, TRUE)
 	return ..()
 
@@ -1004,7 +996,7 @@
 		healing_types += CLONE
 
 	if(length(healing_types))
-		owner.apply_damage_type(-heal_amount, damagetype = pick(healing_types))
+		owner.heal_damage_type(heal_amount, damagetype = pick(healing_types))
 
 	owner.adjust_nutrition(3)
 	drained.adjustCloneLoss(heal_amount * DRAIN_DAMAGE_MULTIPLIER)
@@ -1018,7 +1010,7 @@
 
 /datum/status_effect/stabilized/lightpink/on_apply()
 	owner.add_movespeed_modifier(/datum/movespeed_modifier/status_effect/lightpink)
-	ADD_TRAIT(owner, TRAIT_PACIFISM, LIGHTPINK_TRAIT)
+	ADD_TRAIT(owner, TRAIT_PACIFISM, STABILIZED_LIGHT_PINK_EXTRACT_TRAIT)
 	return ..()
 
 /datum/status_effect/stabilized/lightpink/tick(seconds_between_ticks)
@@ -1030,7 +1022,7 @@
 
 /datum/status_effect/stabilized/lightpink/on_remove()
 	owner.remove_movespeed_modifier(/datum/movespeed_modifier/status_effect/lightpink)
-	REMOVE_TRAIT(owner, TRAIT_PACIFISM, LIGHTPINK_TRAIT)
+	REMOVE_TRAIT(owner, TRAIT_PACIFISM, STABILIZED_LIGHT_PINK_EXTRACT_TRAIT)
 
 /datum/status_effect/stabilized/adamantine
 	id = "stabilizedadamantine"

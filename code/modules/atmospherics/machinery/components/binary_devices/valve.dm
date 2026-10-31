@@ -23,11 +23,9 @@ It's like a regular ol' straight pipe, but you can turn it on and off.
 /obj/machinery/atmospherics/components/binary/valve/update_icon_nopipes(animation = FALSE)
 	normalize_cardinal_directions()
 	if(animation)
-		flick("[valve_type]valve_[on][!on]-[set_overlay_offset(piping_layer)]", src)
+		z_flick("[valve_type]valve_[on][!on]-[set_overlay_offset(piping_layer)]", src)
+		playsound(src, 'sound/effects/valve_opening.ogg', 50)
 	icon_state = "[valve_type]valve_[on ? "on" : "off"]-[set_overlay_offset(piping_layer)]"
-
-/obj/machinery/atmospherics/components/binary/valve/can_crawl_through()
-	return !(machine_stat & BROKEN) && on // valves should block whatever is trying to go through them, regardless of power
 
 /**
  * Called by finish_interact(), switch between open and closed, reconcile the air between two pipenets

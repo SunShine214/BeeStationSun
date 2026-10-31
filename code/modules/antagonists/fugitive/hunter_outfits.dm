@@ -26,7 +26,7 @@
 	shoes = /obj/item/clothing/shoes/jackboots
 	mask = /obj/item/clothing/mask/gas/sechailer/swat/spacepol
 	glasses = /obj/item/clothing/glasses/hud/security/sunglasses
-	l_pocket = /obj/item/melee/classic_baton/police/telescopic
+	l_pocket = /obj/item/melee/baton/telescopic
 
 /datum/outfit/spacepol/officer
 	name = "Spacepol Officer"
@@ -137,7 +137,7 @@
 /datum/outfit/bounty/gunner
 	name = "Bounty Hunter - Heavy Weapons Synth"
 
-	mask = /obj/item/clothing/mask/cigarette/cigar/cohiba
+	mask = /obj/item/cigarette/cigar/cohiba
 	uniform = /obj/item/clothing/under/color/white
 	belt = /obj/item/storage/belt/military
 	suit = /obj/item/clothing/suit/armor/riot
@@ -153,7 +153,7 @@
 	if(visuals_only)
 		return
 	var/obj/item/organ/eyes/robotic/glow/eyes = new()
-	eyes.Insert(H, drop_if_replaced = FALSE)
+	eyes.Insert(H, movement_flags = DELETE_IF_REPLACED)
 
 // TECHNICIAN. MISTER GNEEP GNARP HERE LIKES TECH AND GOT A VOICEBOX IMPLANT SO HE CAN TALK. WANTED IN ALL ALIEN STATES.
 /datum/outfit/bounty/technician
@@ -179,4 +179,4 @@
 	H.set_species(/datum/species/abductor, icon_update=0)
 
 	var/obj/item/organ/tongue/robot/tongue = new()
-	tongue.Insert(H, drop_if_replaced = FALSE)
+	tongue.Insert(H, movement_flags = DELETE_IF_REPLACED)

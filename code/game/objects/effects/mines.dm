@@ -111,7 +111,7 @@
 	)
 	AddElement(/datum/element/connect_loc, loc_connections)
 
-/obj/effect/mine/attackby(obj/I, mob/user, params)
+/obj/effect/mine/attackby(obj/I, mob/user, list/modifiers)
 	if(istype(I, /obj/item/multitool))
 		to_chat(user, span_notice("You begin to disarm the [src]..."))
 		if(do_after(user, disarm_time, target = src))
@@ -128,7 +128,7 @@
 	if(!isturf(loc) || AM.throwing || (AM.movement_type & MOVETYPES_NOT_TOUCHING_GROUND) || !AM.has_gravity() || triggered)
 		return
 	if(ismob(AM))
-		checksmartmine(AM)
+		INVOKE_ASYNC(src, PROC_REF(checksmartmine), AM)
 	else
 		triggered = TRUE	//ensures multiple explosions aren't queued if/while the mine is delayed
 		INVOKE_ASYNC(src, PROC_REF(triggermine), AM)
@@ -289,7 +289,7 @@
 /obj/effect/mine/sound/mineEffect(mob/victim)
 	playsound(loc, sound, volume, 1)
 
-/obj/effect/mine/sound/attackby(obj/item/soundsynth/J, mob/user, params)
+/obj/effect/mine/sound/attackby(obj/item/soundsynth/J, mob/user, list/modifiers)
 	if(istype(J, /obj/item/soundsynth))
 		to_chat(user, span_notice("You change the sound settings of the [src]."))
 		sound = J.selected_sound
@@ -302,8 +302,8 @@
 /obj/effect/mine/pickup
 	name = "pickup"
 	desc = "pick me up"
-	icon = 'icons/effects/effects.dmi'
-	icon_state = "electricity2"
+	icon = 'icons/effects/anomalies.dmi'
+	icon_state = "flux"
 	density = FALSE
 	var/duration = 0
 
@@ -323,8 +323,8 @@
 /obj/effect/mine/pickup/bloodbath
 	name = "Red Orb"
 	desc = "You feel angry just looking at it."
-	duration = 1200 //2min
-	color = "#FF0000"
+	duration = 2 MINUTES
+	color = COLOR_RED
 	var/mob/living/doomslayer
 	var/obj/item/chainsaw/doomslayer/chainsaw
 
@@ -375,7 +375,7 @@
 /obj/effect/mine/pickup/healing
 	name = "Blue Orb"
 	desc = "You feel better just looking at it."
-	color = "#0000FF"
+	color = COLOR_BLUE
 
 /obj/effect/mine/pickup/healing/mineEffect(mob/living/carbon/victim)
 	if(!victim.client || !istype(victim))
@@ -386,7 +386,7 @@
 /obj/effect/mine/pickup/speed
 	name = "Yellow Orb"
 	desc = "You feel faster just looking at it."
-	color = "#FFFF00"
+	color = COLOR_YELLOW
 	duration = 300
 
 /obj/effect/mine/pickup/speed/mineEffect(mob/living/carbon/victim)

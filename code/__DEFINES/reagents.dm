@@ -2,11 +2,11 @@
 #define LIQUID 2
 #define GAS 3
 
+// Flags to interact with reagents in the holder
 /// Makes it possible to add reagents through droppers and syringes.
 #define INJECTABLE (1<<0)
 /// Makes it possible to remove reagents through syringes.
 #define DRAWABLE (1<<1)
-
 /// Makes it possible to add reagents through any reagent container.
 #define REFILLABLE (1<<2)
 /// Makes it possible to remove reagents through any reagent container.
@@ -14,16 +14,23 @@
 /// Allows items to be dunked into this container for transfering reagents. Used in conjunction with the dunkable component.
 #define DUNKABLE (1<<4)
 
-// Used on containers which you want to be able to see the reagents off.
+// Flags to examine reagents in the container
+/// Used on containers which you want to be able to see the reagents of.
 #define TRANSPARENT (1<<5)
-// For non-transparent containers that still have the general amount of reagents in them visible.
+/// For non-transparent containers that still have the general amount of reagents in them visible.
 #define AMOUNT_VISIBLE (1<<6)
-// Applied to a reagent holder, the contents will not react with each other.
+
+// Reaction flags
+/// Applied to a reagent holder, the contents will not react with each other.
 #define NO_REACT (1<<7)
 
+// Special properties
 /// Used in 'All-In-One Grinder' that it can grind anything if it has this bitflag
 #define ABSOLUTELY_GRINDABLE (1<<8)
-
+/// If the holder is a sealed container - Used if you don't want reagent contents boiling out (plasma, specifically, in which case it only bursts out when at ignition temperatures)
+#define SEALED_CONTAINER (1<<9)
+/// Prevents splashing for open reagent containers
+#define NO_SPLASH (1<<10)
 /// Is an open container for all intents and purposes.
 #define OPENCONTAINER (REFILLABLE | DRAINABLE | TRANSPARENT)
 
@@ -38,6 +45,17 @@
 /// Syringes
 #define INJECT 5
 
+/// Reagent effect multiplier - adjusts all effects according to metabolism rate
+#define REAGENTS_EFFECT_MULTIPLIER (REAGENTS_METABOLISM / 0.4)
+/// Shorthand for the above define for ease of use in equations and the like
+#define REM REAGENTS_EFFECT_MULTIPLIER
+/// How much of a reagent is converted to metabolites if one is defined
+#define METABOLITE_RATE 0.5
+/// The maximum amount of a given metabolite someone can have at a time
+#define MAX_METABOLITES 15
+/// Ranges from 1 to 5 depending on level of metabolites
+#define METABOLITE_PENALTY(path) clamp(affected_mob.reagents.get_reagent_amount(path)/2.5, 1, 5)
+
 /// When returned by on_mob_life(), on_mob_dead(), overdose_start() or overdose_processed(), will cause the mob to updatehealth() afterwards
 #define UPDATE_MOB_HEALTH 1
 
@@ -47,15 +65,55 @@
 #define REM_REAGENT 3 // reagent removed (may still exist)
 #define CLEAR_REAGENTS 4 // all reagents were cleared
 
-#define MIMEDRINK_SILENCE_DURATION 30  //ends up being 60 seconds given 1 tick every 2 seconds
+// How long do mime drinks silence the drinker (if they are a mime)?
+#define MIMEDRINK_SILENCE_DURATION 1 MINUTES
 #define THRESHOLD_UNHUSK 50 //Health treshold for synthflesh and rezadone to unhusk someone
 
+/// Greater numbers mean that less alcohol has greater intoxication potential
+#define ALCOHOL_THRESHOLD_MODIFIER 1
+/// The rate at which alcohol affects you
+#define ALCOHOL_RATE 0.005
+/// The exponent applied to boozepwr to make higher volume alcohol at least a little bit damaging to the liver
+#define ALCOHOL_EXPONENT 1.6
+
+/// Reaction hint for explosions
+#define REACTION_HINT_EXPLOSION_OTHER "explosion"
+/// A radius table showing the radius at 10, 50 and 100, 200 and 500 units of the reaction
+#define REACTION_HINT_RADIUS_TABLE "explosion_radius"
+/// Reaction safety hint
+#define REACTION_HINT_SAFETY "safety"
+
+///Minimum requirement for addiction buzz to be met. Addiction code only checks this once every two seconds, so this should generally be low
+#define MIN_ADDICTION_REAGENT_AMOUNT 1
+///Nicotine requires much less in your system to be happy
+#define MIN_NICOTINE_ADDICTION_REAGENT_AMOUNT 0.01
+#define MAX_ADDICTION_POINTS 1000
+
+///Addiction start/ends
+#define WITHDRAWAL_STAGE1_START_CYCLE 61
+#define WITHDRAWAL_STAGE1_END_CYCLE 120
+#define WITHDRAWAL_STAGE2_START_CYCLE 121
+#define WITHDRAWAL_STAGE2_END_CYCLE 180
+#define WITHDRAWAL_STAGE3_START_CYCLE 181
 
 //Used in holder.dm/equlibrium.dm to set values and volume limits
 ///the minimum volume of reagents than can be operated on.
 #define CHEMICAL_QUANTISATION_LEVEL 0.0001
+///Sanity check limit to clamp chems to sane amounts and prevent rounding errors during transfer.
+#define CHEMICAL_VOLUME_ROUNDING 0.01
 /// the default temperature at which chemicals are added to reagent holders at
 #define DEFAULT_REAGENT_TEMPERATURE 300
+
+//reagent bitflags, used for altering how they works
+///allows on_mob_dead() if present in a dead body
+#define REAGENT_DEAD_PROCESS (1<<0)
+/// If present, when metabolizing out of a mob, we divide by the mob's metabolism rather than multiply.
+/// Without this flag: Higher metabolism means the reagent exits the system faster.
+/// With this flag: Higher metabolism means the reagent exits the system slower.
+#define REAGENT_REVERSE_METABOLISM (1<<10)
+/// If present, this reagent will not be affected by the mob's metabolism at all, meaning it exits at a fixed rate for all mobs.
+/// Supercedes [REAGENT_REVERSE_METABOLISM].
+#define REAGENT_UNAFFECTED_BY_METABOLISM (1<<11)
 
 // synthesizable part - can this reagent be synthesized? (for example: odysseus syringe gun)
 #define CHEMICAL_NOT_DEFINED   (1<<0)  // identical to CHEMICAL_NOT_SYNTH, but it is good to label when you are not sure which flag you should set on it, or something that shouldn't exist in the game. - i.e) medicine parent type
@@ -63,11 +121,19 @@
 
 // RNG part - having this flag will allow the RNG system to put in.
 // if a reagent hasn't a relevant flag, it wouldn't come out from RNG theme - i.e.) maint pill
-#define CHEMICAL_BASIC_ELEMENT (1<<1)  // basic chemicals in chemistry - currently used in botany RNG (not yet - refactored for prepration)
-#define CHEMICAL_BASIC_DRINK (1<<2)  // basic chemicals in bartending - currently used in botany RNG (not yet - refactored for prepration)
-#define CHEMICAL_RNG_GENERAL (1<<3)  // it spawns in general stuff - i.e.) vent, abductor gland
-#define CHEMICAL_RNG_FUN (1<<4)  // it spawns in maint pill or something else nasty. This usually has a dramatically interesting list including admin stuff minus some lame ones.
-#define CHEMICAL_RNG_BOTANY (1<<5)  // it spawns in botany strange seeds
+
+// basic chemicals in chemistry - currently used in botany RNG (not yet - refactored for prepration)
+#define CHEMICAL_BASIC_ELEMENT (1<<1)
+// basic chemicals in bartending - currently used in botany RNG (not yet - refactored for prepration)
+#define CHEMICAL_BASIC_DRINK (1<<2)
+/// it spawns in general stuff - i.e: vent, abductor gland
+#define CHEMICAL_RNG_GENERAL (1<<3)
+/// it spawns in maint pill or something else nasty. This usually has a dramatically interesting list including admin stuff minus some lame ones.
+#define CHEMICAL_RNG_FUN (1<<4)
+/// it spawns in botany strange seeds
+#define CHEMICAL_RNG_BOTANY (1<<5)
+/// Does this reagent clean things?
+#define REAGENT_CLEANS (1<<6)
 
 // crew objective part - having this flag will allow an objective having a reagent
 // Note: to be not disruptive for adding another rng define, goal flags starts at (1<<23) and reversed. (because 23 is max)

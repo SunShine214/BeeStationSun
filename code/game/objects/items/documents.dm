@@ -12,6 +12,10 @@
 	pressure_resistance = 2
 	resistance_flags = INDESTRUCTIBLE | LAVA_PROOF | FIRE_PROOF | ACID_PROOF
 
+/obj/item/documents/Initialize(mapload)
+	. = ..()
+	AddElement(/datum/element/trackable)
+
 /obj/item/documents/nanotrasen
 	desc = "\"Top Secret\" Nanotrasen documents, filled with complex diagrams and lists of names, dates and coordinates."
 	icon_state = "docs_verified"
@@ -47,7 +51,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/item/documents/photocopy)
 			var/obj/item/documents/photocopy/C = copy
 			copy_type = C.copy_type
 
-/obj/item/documents/photocopy/attackby(obj/item/O, mob/user, params)
+/obj/item/documents/photocopy/attackby(obj/item/O, mob/user, list/modifiers)
 	if(istype(O, /obj/item/toy/crayon/red) || istype(O, /obj/item/toy/crayon/blue))
 		if (forgedseal)
 			to_chat(user, span_warning("You have already forged a seal on [src]!"))

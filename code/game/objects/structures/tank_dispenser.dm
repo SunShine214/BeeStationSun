@@ -21,6 +21,8 @@
 	. = ..()
 	//AddElement(/datum/element/contextual_screentip_bare_hands, lmb_text = "Take Plasma Tank", rmb_text = "Take Oxygen Tank") //Uncomment this when we have screentips.
 	update_icon()
+	if (plasmatanks > 0)
+		AddElement(/datum/element/trackable)
 
 /obj/structure/tank_dispenser/update_icon()
 	cut_overlays()
@@ -56,7 +58,7 @@
 	update_appearance()
 	return SECONDARY_ATTACK_CANCEL_ATTACK_CHAIN
 
-/obj/structure/tank_dispenser/attackby(obj/item/I, mob/living/user, params)
+/obj/structure/tank_dispenser/attackby(obj/item/I, mob/living/user, list/modifiers)
 	var/full
 	if(istype(I, /obj/item/tank/internals/plasma))
 		if(plasmatanks < TANK_DISPENSER_CAPACITY)

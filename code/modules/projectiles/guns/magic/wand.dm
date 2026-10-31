@@ -13,7 +13,8 @@
 	. = ..()
 	. += "Has [charges] charge\s remaining."
 
-/obj/item/gun/magic/wand/update_icon()
+/obj/item/gun/magic/wand/update_icon_state()
+	. = ..()
 	icon_state = "[initial(icon_state)][charges ? "" : "-drained"]"
 
 /obj/item/gun/magic/wand/attack(atom/target, mob/living/user)
@@ -21,14 +22,14 @@
 		return
 	..()
 
-/obj/item/gun/magic/wand/pull_trigger(atom/target, mob/living/user, params, aimed)
+/obj/item/gun/magic/wand/pull_trigger(atom/target, mob/living/user, list/modifiers, aimed)
 	if(!charges)
 		shoot_with_empty_chamber(user)
 		return
 
 	if(no_den_usage)
 		var/area/A = get_area(user)
-		if(istype(A, /area/wizard_station))
+		if(istype(A, /area/centcom/wizard_station))
 			to_chat(user, span_warning("You know better than to violate the security of The Den, best wait until you leave to use [src]."))
 			return
 
@@ -70,7 +71,7 @@
 	inhand_icon_state = "drainwand"
 	var/datum/status_effect/life_drain/active_effect
 
-/obj/item/gun/magic/wand/drain/pull_trigger(atom/target, mob/living/user, params, aimed)
+/obj/item/gun/magic/wand/drain/pull_trigger(atom/target, mob/living/user, list/modifiers, aimed)
 	if(charges && active_effect)
 		active_effect.end_drain()
 	return ..()

@@ -18,7 +18,8 @@
 						<b>Transmission 8:</b> Purges alcohol in the bloodstream."
 
 /datum/symptom/mind_restoration/Start(datum/disease/advance/A)
-	if(!..())
+	. = ..()
+	if(!.)
 		return
 	if(A.resistance >= 6) //heal brain damage
 		trauma_heal_mild = TRUE
@@ -28,24 +29,26 @@
 		purge_alcohol = TRUE
 
 /datum/symptom/mind_restoration/Activate(datum/disease/advance/A)
-	if(!..())
+	. = ..()
+	if(!.)
 		return
 	var/mob/living/M = A.affected_mob
 
 
 	if(A.stage >= 3)
-		M.dizziness = max(0, M.dizziness - 2)
-		M.drowsyness = max(0, M.drowsyness - 2)
-		M.slurring = max(0, M.slurring - 2)
-		M.confused = max(0, M.confused - 2)
+		M.adjust_dizzy(-4 SECONDS)
+		M.adjust_drowsiness(-4 SECONDS)
+		// All slurring effects get reduced down a bit
+		for(var/datum/status_effect/speech/slurring/slur in M.status_effects)
+			slur.remove_duration(1 SECONDS)
+
+		M.adjust_confusion(-2 SECONDS)
 		if(purge_alcohol)
 			M.reagents.remove_all_type(/datum/reagent/consumable/ethanol, 3)
-			if(ishuman(M))
-				var/mob/living/carbon/human/H = M
-				H.drunkenness = max(H.drunkenness - 5, 0)
+			M.adjust_drunk_effect(-5)
 
 	if(A.stage >= 4)
-		M.drowsyness = max(0, M.drowsyness - 2)
+		M.adjust_drowsiness(-4 SECONDS)
 		if(M.reagents.has_reagent(/datum/reagent/toxin/mindbreaker))
 			M.reagents.remove_reagent(/datum/reagent/toxin/mindbreaker, 5)
 		if(M.reagents.has_reagent(/datum/reagent/toxin/histamine))
@@ -77,38 +80,37 @@
 	symptom_delay_min = 1
 	symptom_delay_max = 1
 
-/datum/symptom/sensory_restoration/Activate(datum/disease/advance/A)
-	if(!..())
+/datum/symptom/sensory_restoration/Activate(datum/disease/advance/advanced_disease)
+	. = ..()
+	if(!.)
 		return
-	var/mob/living/M = A.affected_mob
-	var/obj/item/organ/eyes/eyes = M.get_organ_slot(ORGAN_SLOT_EYES)
-	if (!eyes)
-		return
-	switch(A.stage)
+	var/mob/living/carbon/infected_mob = advanced_disease.affected_mob
+	switch(advanced_disease.stage)
 		if(4, 5)
-			M.restoreEars()
+			if(advanced_disease.has_required_infectious_organ(infected_mob, ORGAN_SLOT_EARS))
+				var/obj/item/organ/ears/ears = infected_mob.get_organ_slot(ORGAN_SLOT_EARS)
+				ears.adjustEarDamage(-4, -4)
 
-			if(HAS_TRAIT_FROM(M, TRAIT_BLIND, EYE_DAMAGE))
-				if(prob(20))
-					if(M.stat != DEAD)
-						to_chat(M, span_notice("Your vision slowly returns..."))
-					M.cure_blind(EYE_DAMAGE)
-					M.cure_nearsighted(EYE_DAMAGE)
-					M.blur_eyes(35)
-			else if(HAS_TRAIT_FROM(M, TRAIT_NEARSIGHT, EYE_DAMAGE))
-				if(M.stat != DEAD)
-					to_chat(M, span_notice("You can finally focus your eyes on distant objects."))
-				M.cure_nearsighted(EYE_DAMAGE)
-				M.blur_eyes(10)
-			else if(M.is_blind() || M.eye_blurry)
-				M.set_blindness(0)
-				M.set_blurriness(0)
-			else if(eyes.damage > 0)
-				eyes.apply_organ_damage(-1)
+			if(!advanced_disease.has_required_infectious_organ(infected_mob, ORGAN_SLOT_EYES))
+				return
+
+			var/obj/item/organ/eyes/eyes = infected_mob.get_organ_slot(ORGAN_SLOT_EYES)
+			infected_mob.adjust_temp_blindness(-4 SECONDS)
+			infected_mob.adjust_eye_blur(-4 SECONDS)
+
+			eyes.apply_organ_damage(-2)
+			if(prob(20))
+				if(infected_mob.is_blind_from(EYE_DAMAGE))
+					to_chat(infected_mob, span_warning("Your vision slowly returns..."))
+					infected_mob.adjust_eye_blur(20 SECONDS)
+
+				else if(infected_mob.is_nearsighted_from(EYE_DAMAGE))
+					to_chat(infected_mob, span_warning("The blackness in your peripheral vision begins to fade."))
+					infected_mob.adjust_eye_blur(5 SECONDS)
+
 		else
-			if(prob(base_message_chance) && M.stat != DEAD)
-				to_chat(M, span_notice("[pick("Your eyes feel great.","You feel like your eyes can focus more clearly.", "You don't feel the need to blink.","Your ears feel great.","Your healing feels more acute.")]"))
-
+			if(prob(base_message_chance))
+				to_chat(infected_mob, span_notice("[pick("Your eyes feel great.","You feel like your eyes can focus more clearly.", "You don't feel the need to blink.","Your ears feel great.","Your hearing feels more acute.")]"))
 
 /datum/symptom/organ_restoration //heals damage to other internal organs that get damaged far less often
 	name = "Organ Restoration"
@@ -144,17 +146,17 @@
 	if(!..())
 		return
 	var/mob/living/carbon/M = A.affected_mob
-	var/status = ORGAN_ORGANIC
+	var/organtype = ORGAN_ORGANIC
 	if(A.infectable_biotypes & MOB_ROBOTIC)
-		status = null //if the disease is capable of interfacing with robotics, it is allowed to heal mechanical organs
+		organtype = null //if the disease is capable of interfacing with robotics, it is allowed to heal mechanical organs
 	if(A.stage >= 4)
-		M.adjustOrganLoss(ORGAN_SLOT_APPENDIX, -1, required_status = status)
-		M.adjustOrganLoss(ORGAN_SLOT_STOMACH, -1, required_status = status)
-		M.adjustOrganLoss(ORGAN_SLOT_LUNGS, -1, required_status = status)
-		M.adjustOrganLoss(ORGAN_SLOT_HEART, -1, required_status = status)
-		M.adjustOrganLoss(ORGAN_SLOT_LIVER, -1, required_status = status)
-		M.adjustOrganLoss(ORGAN_SLOT_TAIL, -1, required_status = status)
-		M.adjustOrganLoss(ORGAN_SLOT_WINGS, -1, required_status = status)
+		M.adjustOrganLoss(ORGAN_SLOT_APPENDIX, -1, required_organ_flag = organtype)
+		M.adjustOrganLoss(ORGAN_SLOT_STOMACH, -1, required_organ_flag = organtype)
+		M.adjustOrganLoss(ORGAN_SLOT_LUNGS, -1, required_organ_flag = organtype)
+		M.adjustOrganLoss(ORGAN_SLOT_HEART, -1, required_organ_flag = organtype)
+		M.adjustOrganLoss(ORGAN_SLOT_LIVER, -1, required_organ_flag = organtype)
+		M.adjustOrganLoss(ORGAN_SLOT_TAIL, -1, required_organ_flag = organtype)
+		M.adjustOrganLoss(ORGAN_SLOT_WINGS, -1, required_organ_flag = organtype)
 		if(curing)
 			for(var/datum/disease/D in M.diseases)
 				if(istype(D, /datum/disease/appendicitis) || istype(D, /datum/disease/heart_failure))
@@ -165,7 +167,7 @@
 			if(ishuman(M))
 				var/mob/living/carbon/human/H = M
 				var/datum/species/S = H.dna.species
-				if(!M.get_organ_by_type(/obj/item/organ/appendix) && !((TRAIT_NOHUNGER in S.inherent_traits) || (TRAIT_POWERHUNGRY in S.inherent_traits)))
+				if(!M.get_organ_by_type(/obj/item/organ/appendix) && !((TRAIT_NOHUNGER in S.inherent_traits)))
 					var/obj/item/organ/appendix/O = new()
 					O.Insert(M)
 					M.adjustOrganLoss(ORGAN_SLOT_APPENDIX, 99, 99) //don't make it fail, or the host will start taking massive damage
@@ -176,7 +178,7 @@
 						O = new S.mutantstomach()
 					else
 						O = new()
-					O.Insert(M, drop_if_replaced = FALSE)
+					O.Insert(M, movement_flags = DELETE_IF_REPLACED)
 					M.adjustOrganLoss(ORGAN_SLOT_STOMACH, 200)
 					return
 				if(!M.get_organ_by_type(/obj/item/organ/lungs) && !(TRAIT_NOBREATH in S.inherent_traits))
@@ -185,27 +187,27 @@
 						O = new S.mutantlungs()
 					else
 						O = new()
-					O.Insert(M, drop_if_replaced = FALSE)
+					O.Insert(M, movement_flags = DELETE_IF_REPLACED)
 					M.adjustOrganLoss(ORGAN_SLOT_LUNGS, 200)
 					return
 				if(!M.get_organ_by_type(/obj/item/organ/heart) && !HAS_TRAIT(S, TRAIT_NOBLOOD))
 					var/obj/item/organ/heart/O = new()
-					O.Insert(M, drop_if_replaced = FALSE)
+					O.Insert(M, movement_flags = DELETE_IF_REPLACED)
 					M.adjustOrganLoss(ORGAN_SLOT_HEART, 200)
 					return
-				if(!M.get_organ_by_type(/obj/item/organ/liver) && !(TRAIT_NOMETABOLISM in S.inherent_traits))
+				if(!M.get_organ_by_type(/obj/item/organ/liver) && !(TRAIT_LIVERLESS_METABOLISM in S.inherent_traits))
 					var/obj/item/organ/liver/O
 					if(S.mutantliver)
 						O = new S.mutantliver()
 					else
 						O = new()
-					O.Insert(M, drop_if_replaced = FALSE)
+					O.Insert(M, movement_flags = DELETE_IF_REPLACED)
 					M.adjustOrganLoss(ORGAN_SLOT_LIVER, 200)
 					return
 				if(!M.get_organ_by_type(/obj/item/organ/wings))
 					if(S.mutantwings)
 						var/obj/item/organ/wings/O = new S.mutantwings()
-						O.Insert(M, drop_if_replaced = FALSE)
+						O.Insert(M, movement_flags = DELETE_IF_REPLACED)
 						M.adjustOrganLoss(ORGAN_SLOT_WINGS, 200)
 						M.visible_message(span_notice("[M] sprouts a new pair of wings!"), span_userdanger("You sprout a new pair of wings!."))
 						playsound(M, 'sound/magic/demon_consume.ogg', 50, 1)
