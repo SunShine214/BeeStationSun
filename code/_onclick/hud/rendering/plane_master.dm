@@ -230,8 +230,8 @@ INITIALIZE_IMMEDIATE(/atom/movable/screen/plane_master)
 		add_filter("guassian_blur", 1, gauss_blur_filter(1))
 	else
 		add_filter("guassian_blur", 1, gauss_blur_filter(6))
-	// Default the colour to whatever the space background is currently
-	transition_colour(src, GLOB.starlight_colour, 0)
+	// Default the colour to whatever the parallax is currently
+	transition_colour(src, GLOB.starlight_colour, 0, FALSE)
 	// Transition the colour to whatever the global tells us to go to
 	RegisterSignal(SSdcs, COMSIG_GLOB_STARLIGHT_COLOUR_CHANGE, PROC_REF(transition_colour), override = TRUE)
 
@@ -285,16 +285,16 @@ INITIALIZE_IMMEDIATE(/atom/movable/screen/plane_master)
 	appearance_flags = PLANE_MASTER //should use client color
 	blend_mode = BLEND_OVERLAY
 
-///Contains space background
-/atom/movable/screen/plane_master/space_background
-	name = "space background plane master"
-	plane = PLANE_SPACE_BACKGROUND
+///Contains space parallax
+/atom/movable/screen/plane_master/parallax
+	name = "parallax plane master"
+	plane = PLANE_SPACE_PARALLAX
 	blend_mode = BLEND_MULTIPLY
 	mouse_opacity = MOUSE_OPACITY_TRANSPARENT
 	render_relay_planes = list(RENDER_PLANE_SPACE)
 
-/atom/movable/screen/plane_master/space_background_white
-	name = "space background whitifier plane master"
+/atom/movable/screen/plane_master/parallax_white
+	name = "parallax whitifier plane master"
 	plane = PLANE_SPACE
 	render_relay_planes = list(RENDER_PLANE_SPACE)
 

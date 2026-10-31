@@ -19,9 +19,7 @@
 	INVOKE_ASYNC(src, PROC_REF(play_sound_to_all_station_players))
 
 /datum/round_event/aurora_caelus/start()
-	// Enable override to prevent orbital system from changing starlight
-	SSorbital_visuals.enable_starlight_override()
-	set_orbital_starlight_colour(aurora_colors[1], 5 SECONDS)
+	set_starlight_colour(aurora_colors[1], 5 SECONDS)
 
 /datum/round_event/aurora_caelus/tick()
 	if(activeFor % 5 == 0)
@@ -31,8 +29,7 @@
 		set_orbital_starlight_colour(aurora_color, 5 SECONDS)
 
 /datum/round_event/aurora_caelus/end()
-	// Disable override to allow orbital system to control starlight again
-	SSorbital_visuals.disable_starlight_override()
+	set_starlight_colour(color_lightness_max(SSparallax.random_parallax_color, 0.75), 30 SECONDS)
 	priority_announce("The aurora caelus event is now ending. Starlight conditions will slowly return to normal. When this has concluded, please return to your workplace and continue work as normal. Have a pleasant shift, [station_name()], and thank you for watching with us.",
 	sound = 'sound/misc/notice2.ogg',
 	sender_override = "Nanotrasen Meteorology Division")

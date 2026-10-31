@@ -398,6 +398,8 @@
 	#undef IS_ACTING_CAPTAIN
 	#undef IS_FULL_CAPTAIN
 
+		character.update_parallax_teleport()
+
 	SSticker.minds += character.mind
 
 	var/mob/living/carbon/human/humanc

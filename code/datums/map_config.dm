@@ -74,6 +74,9 @@
 	// Performance Settings
 	//======
 
+	/// Disable station level parallax. For levels which have no parallax background
+	var/no_station_parallax = FALSE
+
 /proc/load_map_config(filename = "next_map", foldername = DATA_DIRECTORY, default_to_box, delete_after, error_if_missing = TRUE)
 	if(IsAdminAdvancedProcCall())
 		return

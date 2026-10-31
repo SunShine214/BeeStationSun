@@ -84,7 +84,19 @@
 #define BLOOD_COLOR_ETHEREAL "#7fff7f"
 #define BLOOD_COLOR_SYNTHETIC "#dddeff"
 
-/// Starlight! Granted, auri is a pretty shitty star.
+///Colors for blood greyscale sprites
+#define BLOOD_COLOR_RED "#CC0000"
+#define BLOOD_COLOR_LIZARD "#009696"
+#define BLOOD_COLOR_ETHEREAL "#7fff7f"
+#define BLOOD_COLOR_SYNTHETIC "#dddeff"
+
+///Colors for blood greyscale sprites
+#define BLOOD_COLOR_RED "#CC0000"
+#define BLOOD_COLOR_LIZARD "#009696"
+#define BLOOD_COLOR_ETHEREAL "#7fff7f"
+#define BLOOD_COLOR_SYNTHETIC "#dddeff"
+
+/// Starlight!
 #define COLOR_STARLIGHT "#cb5452"
 
 #define COLOR_PINK "#FFC0CB"
