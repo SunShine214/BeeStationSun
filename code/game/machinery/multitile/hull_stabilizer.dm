@@ -50,6 +50,16 @@
 		ui.open()
 		ui.set_autoupdate(TRUE)
 
+/obj/machinery/multitile/hull_stabilizer/ui_data(mob/user)
+	var/list/data = list()
+
+	var/list/nanite_cans = list()
+	for(var/obj/structure/hull_nanite_canister/can in canisters)
+		nanite_cans += list(list("nanites" = can.nanites))
+	data["nanite_cans"] = nanite_cans
+
+	return data
+
 /// Consume one alloy's worth of materials.
 /obj/machinery/multitile/hull_stabilizer/proc/consume_selected_alloy(amount)
 	var/alloy_total = 0
