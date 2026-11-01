@@ -11,33 +11,28 @@
 	initialize_directions = NORTH
 	pipe_flags = PIPING_ONE_PER_TURF | PIPING_DEFAULT_LAYER_ONLY
 
-	var/throttle = 0 // Between -1 and 1
-	///The thrust of this thruster in Mega Newtons
-	var/thrust_strength = 100 MEGANEWTON
-	var/maximum_thrust = 100 MEGANEWTON //todo fix
+	var/obj/machinery/power/terminal/invisible/power_link
+	var/datum/orbital_thruster/thruster
 
 /obj/machinery/atmospherics/components/unary/orbital_thruster/Initialize(mapload)
 	. = ..()
-	SSorbital_altitude.orbital_thrusters += src
-	new /obj/machinery/orbital_thruster_nozzle(get_step(get_turf(src), dir), src)
+	power_link = new(get_turf(src))
+	power_link.resistance_flags = INDESTRUCTIBLE | LAVA_PROOF | FIRE_PROOF | UNACIDABLE | ACID_PROOF
+	power_link.invisibility = INVISIBILITY_ABSTRACT
+	thruster = new(src)
 
 /obj/machinery/atmospherics/components/unary/orbital_thruster/Destroy()
-	SSorbital_altitude.orbital_thrusters -= src
-	return ..()
+	QDEL_NULL(thruster)
+	QDEL_NULL(power_link)
+	. = ..()
 
 /obj/machinery/atmospherics/components/unary/orbital_thruster/process_atmos()
-	//TODO - add gas effects
-	thrust_strength = maximum_thrust * throttle
-	// Update the pipe network once at the end if we modified anything
+
 	update_parents()
 	update_appearance()
 
 /obj/machinery/atmospherics/components/unary/orbital_thruster/update_overlays()
 	. = ..()
-
-/// Set target throttle level for thruster.
-/obj/machinery/atmospherics/components/unary/orbital_thruster/proc/set_throttle(new_throttle)
-	throttle = clamp(new_throttle, -1, 1)
 
 // Effect Component.
 /obj/machinery/orbital_thruster_nozzle

@@ -1,12 +1,3 @@
-// Orbital altitude thresholds in meters
-#define ORBITAL_ALTITUDE_HIGH_BOUND 140000 // 140km - Cannot go higher than this
-#define ORBITAL_ALTITUDE_HIGH_CRITICAL 130000 // 130km - Upper critical threshold
-#define ORBITAL_ALTITUDE_HIGH 120000 // 120km - Upper normal threshold
-#define ORBITAL_ALTITUDE_DEFAULT 110000 // 110km - Default stable altitude
-#define ORBITAL_ALTITUDE_LOW 95000 // 95km - Lower warning threshold (visual effects start)
-#define ORBITAL_ALTITUDE_LOW_CRITICAL 90000 // 90km - Lower critical threshold (structural damage begins)
-#define ORBITAL_ALTITUDE_LOW_BOUND 80000 // 80km - Cannot go lower than this
-
 SUBSYSTEM_DEF(orbital_altitude)
 	name = "Orbital Altitude"
 	can_fire = TRUE
@@ -188,19 +179,15 @@ SUBSYSTEM_DEF(orbital_altitude)
 
 /datum/controller/subsystem/orbital_altitude/proc/get_maximum_thrust()
 	var/summed_thrust = 0
-	for(var/obj/machinery/atmospherics/components/unary/orbital_thruster/T in orbital_thrusters)
-		if(QDELETED(T))
-			continue
-		summed_thrust += T.maximum_thrust
+	for(var/datum/orbital_thruster/thruster in orbital_thrusters)
+		summed_thrust += thruster.maximum_thrust
 	return summed_thrust
 
 /datum/controller/subsystem/orbital_altitude/proc/update_thrust_from_thrusters()
 	// Calculate total thrust from all thrusters
 	var/summed_thrust = 0
-	for(var/obj/machinery/atmospherics/components/unary/orbital_thruster/T in orbital_thrusters)
-		if(QDELETED(T))
-			continue
-		summed_thrust += T.thrust_strength
+	for(var/datum/orbital_thruster/thruster in orbital_thrusters)
+		summed_thrust += thruster.get_thrust()
 	thrust = summed_thrust
 
 /datum/controller/subsystem/orbital_altitude/proc/set_all_throttle(to_set)
@@ -211,9 +198,8 @@ SUBSYSTEM_DEF(orbital_altitude)
 	set_all_throttle(throttle + amount)
 
 /datum/controller/subsystem/orbital_altitude/proc/sync_all_thrusters()
-	for(var/obj/machinery/atmospherics/components/unary/orbital_thruster/T in SSorbital_altitude.orbital_thrusters)
-		if(!QDELETED(T))
-			T.set_throttle(clamp(throttle, 0, 1))
+	for(var/datum/orbital_thruster/thruster in SSorbital_altitude.orbital_thrusters)
+		thruster.set_throttle(throttle)
 	update_thrust_from_thrusters()
 
 /datum/controller/subsystem/orbital_altitude/proc/orbital_altitude_change()

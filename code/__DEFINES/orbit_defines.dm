@@ -22,6 +22,8 @@
 
 #define ORBITAL_SUPERSTUCTURE_DAM_MAX 100 // how much damage the station superstructure take at ABSOLUTE_MIN (exponential)
 
+#define COMSIG_THRUSTER_ACTIVE_CHANGE "comsig_thruster_active_change"
+
 // Orbital directions
 #define PROGRADE 0
 #define RETROGRADE 180

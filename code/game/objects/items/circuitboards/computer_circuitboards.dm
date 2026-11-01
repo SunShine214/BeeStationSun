@@ -216,8 +216,13 @@
 	icon_state = "engineering"
 	build_path = /obj/machinery/computer/station_alert
 
+/obj/item/circuitboard/computer/superstructure_monitor
+	name = "Superstructure Monitoring Console"
+	icon_state = "engineering"
+	build_path = /obj/machinery/computer/superstructure_monitor
+
 /obj/item/circuitboard/computer/orbital_height_control
-	name = "orbital height control console (Computer Board)"
+	name = "Orbital Height Control Console"
 	icon_state = "engineering"
 	build_path = /obj/machinery/computer/orbital_height_control
 
