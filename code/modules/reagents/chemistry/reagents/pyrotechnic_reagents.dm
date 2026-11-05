@@ -351,3 +351,42 @@
 	. = ..()
 	if(method in list(VAPOR, TOUCH))
 		exposed_mob.extinguish_mob()
+
+/datum/reagent/hydrazine
+	name = "Hydrazine"
+	description = "N2H4. A highly volatile fuel."
+	reagent_state = LIQUID
+	color = "#be5050"
+	chemical_flags = CHEMICAL_RNG_GENERAL | CHEMICAL_RNG_FUN | CHEMICAL_RNG_BOTANY
+	taste_description = "fishy ammonia"
+	process_flags = ORGANIC
+
+/datum/reagent/hydrazine/on_new(data)
+	. = ..()
+	volatile = new(622 KILOWATT, 425, 3, 0)
+
+/datum/reagent/plasmatic_nitrolymine
+	name = "Plasmatic Nitrolymine"
+	description = "Pl6N2H2. Flaming death."
+	reagent_state = SOLID
+	color = "#992d7e"
+	chemical_flags = CHEMICAL_RNG_GENERAL | CHEMICAL_RNG_FUN | CHEMICAL_RNG_BOTANY
+	taste_description = "firey death"
+	process_flags = ORGANIC
+
+/datum/reagent/plasmatic_nitrolymine/on_new(data)
+	. = ..()
+	volatile = new(2420 KILOWATT, 305, 10, 0)
+
+/datum/reagent/ammonium_perchlorate
+	name = "Ammonium Perchlorate"
+	description = "NH4CLO4. Gives the needed oxygen for rocket fuel burning."
+	reagent_state = SOLID
+	color = "#be5050"
+	chemical_flags = CHEMICAL_RNG_GENERAL | CHEMICAL_RNG_FUN | CHEMICAL_RNG_BOTANY
+	taste_description = "burning ammonia"
+	process_flags = ORGANIC
+
+/datum/reagent/ammonium_perchlorate/on_new(data)
+	. = ..()
+	volatile = new(120 KILOWATT, 440, 0, 4)

@@ -848,6 +848,10 @@
 	chemical_flags = CHEMICAL_BASIC_ELEMENT
 	taste_mult = 0 // oderless and tasteless
 
+/datum/reagent/oxygen/on_new(data)
+	. = ..()
+	volatile = new(0, 0, 0, 2)
+
 /datum/reagent/oxygen/expose_obj(obj/exposed_obj, reac_volume)
 	. = ..()
 	if(!exposed_obj || !reac_volume)

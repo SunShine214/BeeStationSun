@@ -87,6 +87,9 @@ GLOBAL_LIST_INIT(name2reagent, build_name2reagent())
 	///The default reagent container for the reagent, used for icon generation
 	var/obj/item/reagent_containers/default_container = /obj/item/reagent_containers/cup/bottle
 
+	/// If present, this reagent can be burned by a fuel_burner datum for various effects.
+	var/datum/volatile/volatile = null
+
 	// Used for restaurants.
 	///The amount a robot will pay for a glass of this (20 units but can be higher if you pour more, be frugal!)
 	var/glass_price

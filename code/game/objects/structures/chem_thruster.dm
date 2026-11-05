@@ -1,5 +1,3 @@
-#define BURN_TO_THRUST 1 MEGANEWTON
-
 /obj/structure/chem_thruster
 	name = "Chemical Thruster Igniter"
 	icon = 'icons/obj/orbital_thruster.dmi'
@@ -26,9 +24,12 @@
 	. = ..()
 
 /obj/structure/chem_thruster/process(delta_time) // TODO - think about "queuing" thrust so missed processing cycles dont affect thrust. Also fix burn(1)
-	thruster.maximum_thrust = rocket.burn(1) * BURN_TO_THRUST
+	thruster.maximum_thrust = rocket.burn(delta_time)
 	nozzle?.thruster_intensity = thruster.maximum_thrust
 	nozzle?.update_appearance()
+
+	if(nozzle)
+		thruster.do_plume(get_turf(nozzle), dir)
 
 /obj/structure/chem_thruster/interact(mob/user)
 	reagents.chem_temp += 50
@@ -47,7 +48,7 @@
 	. += thruster.maximum_thrust
 
 /obj/structure/chem_thruster/proc/refresh_structure()
-	bodies = null
+	bodies = list()
 	nozzle = null
 	find_part(get_turf(src))
 	reagents.maximum_volume = length(bodies) * 200 + 200 + (nozzle ? 200 : 0)
@@ -84,5 +85,3 @@
 	if(thruster_intensity > 0)
 		. += mutable_appearance('icons/obj/orbital_thruster.dmi', "chem_thruster_fire", layer)
 		. += emissive_appearance('icons/obj/orbital_thruster.dmi', "chem_thruster_fire", layer)
-
-#undef BURN_TO_THRUST

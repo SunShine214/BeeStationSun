@@ -1,7 +1,7 @@
 #define TEMPLATE_PART_DUMMY 1
 
 /obj/machinery/multitile
-	//abstract_type = /obj/machinery/multitile TODO - MERGE MASTER YOU FOOL
+	abstract_type = /obj/machinery/multitile
 	density = TRUE
 
 	/// -------------------
