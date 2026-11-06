@@ -22,21 +22,21 @@
 
 	var/total_oxygen = 0
 
+	var/burn_rate = combined.total_volume ? clamp(surface_area / combined.total_volume, 0, 1) : 0
+
 	for(var/datum/reagent/to_check in combined.reagent_list)
 		if(!to_check.volatile)
 			continue
 		if(combined.chem_temp >= to_check.volatile.decomposition_temp)
-			if(to_check.volatile.reaction_energy)
-				burn_candidates += to_check
-				burn_total_volume += to_check.volume
-			total_oxygen += to_check.volatile.oxygen_per_unit * to_check.volume
+			burn_candidates += to_check
+			burn_total_volume += to_check.volume
+			total_oxygen += to_check.volatile.oxygen_per_unit * to_check.volume * burn_rate
 
 	var/reaction_energy = 0
 
 	if(!length(burn_candidates))
 		return reaction_energy
 
-	var/burn_rate = combined.total_volume ? clamp(surface_area / combined.total_volume, 0, 1) : 0
 	var/oxygen_per_reagent = total_oxygen / length(burn_candidates)
 
 	if(!burn_total_volume)

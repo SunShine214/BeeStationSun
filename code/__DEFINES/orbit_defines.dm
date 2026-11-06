@@ -2,7 +2,7 @@
 // Orbital altitude thresholds in meters
 
 #define ORBITAL_DRAG_COEFF 5000 MEGANEWTON // - How much drag the station produces at 1 resistance, in mega neutons. This will counteract thrust.
-#define STATION_MASS 100000 // - According to the interweb, aircraft carriers are 100000 tons, which feels similar to what the station would be.
+#define STATION_MASS 100000000 // - According to the interweb, aircraft carriers are 100000 tons, which feels similar to what the station would be.
 
 #define CINIS_ATMOSPHERE 5e5
 #define CINIS_RADIUS 1.143e6 // - Tiny, since Earth-sized planets take hours to finish an orbit.
@@ -21,6 +21,8 @@
 #define ORBITAL_ALTITUDE_ABSOLUTE_MIN 0.1 * CINIS_ATMOSPHERE + CINIS_RADIUS  // - Cannot go lower, since instantous station destruction (colliding with the planet) would be annoying for players.
 
 #define ORBITAL_SUPERSTUCTURE_DAM_MAX 100 // how much damage the station superstructure take at ABSOLUTE_MIN (exponential)
+
+#define ORBITAL_PID_LENGTH 10 //What length should the Integral accumulation list be? Longer means a higher max accumulation.
 
 // Orbital directions
 #define PROGRADE 0

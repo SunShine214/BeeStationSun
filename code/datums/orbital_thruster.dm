@@ -1,9 +1,10 @@
 #define ORBITAL_THRUSTER_MAX_PLUME 50
 
 /datum/orbital_thruster
-	var/throttle = 0 // Between 0 and 1
-	///The thrust of this thruster in Mega Newtons
-	var/maximum_thrust = 0
+	/// Throttle; not used internally, and is meant only for external thrust management. Between 0 and 1
+	var/throttle = 0
+	/// The thrust of this thruster in Newtons
+	var/thrust = 0
 	var/throttleable = TRUE
 	var/datum/weakref/parent
 
@@ -21,9 +22,7 @@
 	throttle = clamp(to_set, 0, 1)
 
 /datum/orbital_thruster/proc/get_thrust()
-	if(!throttleable)
-		return maximum_thrust
-	return maximum_thrust * throttle
+	return thrust
 
 /datum/orbital_thruster/proc/do_plume(turf/starting, direction)
 	var/thrust = get_thrust()
@@ -72,6 +71,8 @@
 		// Apply damage to turf if not blocked
 		if (!dense)
 			current_turf.take_damage(tile_damage, BURN, FIRE, TRUE, direction)
+		else
+			return
 		current_turf = get_step(current_turf, direction)
 		if(!current_turf)
 			return

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Button, DraggableClickableControl, Knob } from 'tgui/components';
+import { Box, Button, DraggableClickableControl, Knob, NumberInput } from 'tgui/components';
 
 import { useBackend } from '../backend';
 import { Window } from '../layouts';
@@ -22,6 +22,13 @@ type OrbitalData = {
   atmosphere_normal: number;
   atmosphere_low: number;
   atmosphere_destruction: number;
+  gain: number;
+  integral: number;
+  derivitive: number;
+  last_error: number;
+  accumulated_error: number;
+  thrust_level: number;
+  actual_thrust: number;
 };
 
 type OrbitalItem = {
@@ -201,6 +208,13 @@ const OrbitalHeightContent = () => {
     atmosphere_normal,
     atmosphere_low,
     atmosphere_destruction,
+    gain,
+    integral,
+    derivitive,
+    last_error,
+    accumulated_error,
+    thrust_level,
+    actual_thrust,
   } = data;
   const pixel_scale = 1 / 40000;
 
@@ -281,7 +295,71 @@ const OrbitalHeightContent = () => {
         content={'decrease'}
         onClick={() => act('decrease_thrust')}
       />
-      Height {current_altitude / 1000}
+      Height {current_altitude / 1000} KM
+      <br />
+      Throttle {thrust_level}
+      <br />
+      Actual Thrust {actual_thrust / 1000000} MN
+      <br />
+      Gain {gain}
+      <Box m={1}>
+      <NumberInput
+              value={gain}
+              minValue={0}
+              maxValue={100}
+              stepPixelSize={5}
+              width="39px"
+              step={0.1}
+              onDrag={(value) =>
+                act('gain', {
+                  "gain": value,
+                })
+              }
+            />
+      </Box>
+      <br />
+      Integral {integral}
+      <Box m={1}>
+      <NumberInput
+              value={integral}
+              minValue={0}
+              maxValue={100}
+              stepPixelSize={5}
+              width="39px"
+              step={0.1}
+              onDrag={(value) =>
+                act('integral', {
+                  "integral": value,
+                })
+              }
+            />
+      </Box>
+      <br />
+      Derivitive {derivitive}
+      <Box m={1}>
+      <NumberInput
+              value={derivitive}
+              minValue={0}
+              maxValue={100}
+              stepPixelSize={5}
+              width="39px"
+              step={0.1}
+              onDrag={(value) =>
+                act('derivitive', {
+                  "derivitive": value,
+                })
+              }
+            />
+      </Box>
+      <br />
+      Last Error {last_error}
+      <br />
+      Accumulated Error {accumulated_error}
+      <Button
+        mt="-10px"
+        content={'reset accumulator'}
+        onClick={() => act('reset_integral')}
+      />
       <Knob
         size={1.5}
         value={zoom}

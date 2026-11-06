@@ -53,6 +53,12 @@
 	data["atmosphere_low"] = ORBITAL_ALTITUDE_LOW
 	data["atmosphere_destruction"] = ORBITAL_ALTITUDE_ABSOLUTE_MIN
 
+	data["gain"] = SSorbital_altitude.keeping_gain
+	data["derivitive"] = SSorbital_altitude.keeping_derivitive
+	data["integral"] = SSorbital_altitude.keeping_integral
+	data["accumulated_error"] = SSorbital_altitude.keeping_accumulated_error
+	data["last_error"] = SSorbital_altitude.keeping_last_error
+
 	return data
 
 /obj/machinery/computer/orbital_height_control/ui_act(action, list/params)
@@ -60,6 +66,23 @@
 	if(.)
 		return
 	switch(action)
+		if("gain")
+			var/gain = text2num(params["gain"])
+			if(isnull(gain))
+				return FALSE
+			SSorbital_altitude.keeping_gain = gain
+		if("integral")
+			var/integral = text2num(params["integral"])
+			if(isnull(integral))
+				return FALSE
+			SSorbital_altitude.keeping_integral = integral
+		if("derivitive")
+			var/derivitive = text2num(params["derivitive"])
+			if(isnull(derivitive))
+				return FALSE
+			SSorbital_altitude.keeping_derivitive = derivitive
+		if("reset_integral")
+			SSorbital_altitude.keeping_accumulated_error = 0
 		if("increase_thrust")
 			SSorbital_altitude.adjust_all_throttle(0.2)
 		if("decrease_thrust")

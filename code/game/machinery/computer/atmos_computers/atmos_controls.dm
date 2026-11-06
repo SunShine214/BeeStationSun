@@ -63,6 +63,11 @@
 	circuit = /obj/item/circuitboard/computer/atmos_control/water_vapor
 	atmos_chambers = list(ATMOS_GAS_MONITOR_H2O = "Water Vapor Supply")
 
+/obj/machinery/computer/atmos_control/ionic_fuel
+	name = "Ionic Fuel Supply Control"
+	circuit = /obj/item/circuitboard/computer/atmos_control/ionic_fuel
+	atmos_chambers = list(ATMOS_GAS_MONITOR_IONIC = "Ionic Fuel Supply")
+
 /obj/machinery/computer/atmos_control/mix_tank
 	name = "Mix Chamber Control"
 	circuit = /obj/item/circuitboard/computer/atmos_control/mix_tank

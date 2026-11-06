@@ -49,6 +49,9 @@
 /obj/machinery/atmospherics/components/unary/outlet_injector/monitored/water_vapor_input
 	name = "water vapor tank input injector"
 
+/obj/machinery/atmospherics/components/unary/outlet_injector/monitored/ionic_fuel_input
+	name = "ionic fuel tank input injector"
+
 /obj/machinery/atmospherics/components/unary/outlet_injector/monitored/incinerator_input
 	name = "incinerator chamber input injector"
 

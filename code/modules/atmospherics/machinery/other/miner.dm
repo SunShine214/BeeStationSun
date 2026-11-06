@@ -197,6 +197,11 @@
 	overlay_color = "#c5c9b1"
 	spawn_id = /datum/gas/pluoxium
 
+/obj/machinery/atmospherics/miner/ionic
+	name = "\improper Ionic Fuel Gas Miner"
+	overlay_color = "#00ffff"
+	spawn_id = /datum/gas/ionic_fuel
+
 /obj/machinery/atmospherics/miner/station
 	power_draw = GASMINER_POWER_FULLSCALE
 	spawn_mol = MOLES_CELLSTANDARD / 10

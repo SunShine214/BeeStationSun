@@ -27,6 +27,24 @@ SUBSYSTEM_DEF(orbital_altitude)
 	var/orbital_angle = 0
 
 	// ---------------------------------------
+	// ORBIT-KEEPING VARS
+	// ---------------------------------------
+
+	/// Should we counteract atmospheric resistance (only if we are facing prograde) at all times to keep our orbit?
+	var/orbit_keeping = TRUE
+
+	/// The gain of the PID
+	var/keeping_gain = 0.25
+	/// The derivitive time of the PID
+	var/keeping_derivitive = 3
+	/// The integral time of the PID
+	var/keeping_integral = 10
+	/// Last error from the previous cycle of the PID
+	var/keeping_last_error = 0
+	/// Accumulated error of the PID
+	var/keeping_accumulated_error = 0
+
+	// ---------------------------------------
 
 	/// Global throttle
 	var/throttle = 1
@@ -34,10 +52,9 @@ SUBSYSTEM_DEF(orbital_altitude)
 	/// Current thrust applied to the station (from engines)
 	var/thrust = 0
 	/// Atmospheric resistance coefficient
-	var/resistance = 0.1
+	var/resistance = 0
 
-	/// Should we counteract atmospheric resistance (only if we are facing prograde) at all times to keep our orbit?
-	var/orbit_keeping = TRUE
+
 
 	/// List of all orbital thrusters
 	var/list/orbital_thrusters = list()
@@ -177,12 +194,6 @@ SUBSYSTEM_DEF(orbital_altitude)
 
 	orbital_epoch = (mean_anomaly * (PI / 180)) / mean_motion
 
-/datum/controller/subsystem/orbital_altitude/proc/get_maximum_thrust()
-	var/summed_thrust = 0
-	for(var/datum/orbital_thruster/thruster in orbital_thrusters)
-		summed_thrust += thruster.maximum_thrust
-	return summed_thrust
-
 /datum/controller/subsystem/orbital_altitude/proc/update_thrust_from_thrusters()
 	// Calculate total thrust from all thrusters
 	var/summed_thrust = 0
@@ -200,14 +211,13 @@ SUBSYSTEM_DEF(orbital_altitude)
 /datum/controller/subsystem/orbital_altitude/proc/sync_all_thrusters()
 	for(var/datum/orbital_thruster/thruster in SSorbital_altitude.orbital_thrusters)
 		thruster.set_throttle(throttle)
-	update_thrust_from_thrusters()
 
 /datum/controller/subsystem/orbital_altitude/proc/orbital_altitude_change()
 	resistance = NUM_E ** (-orbital_altitude / CINIS_CALCULATED_DRAG_SCALE)
 	manage_orbit_keeping() // Lives here so small mistakes are not made due to out-of-date information
 
-	var/negative_velocity_magnitude = (ORBITAL_DRAG_COEFF * resistance) / (STATION_MASS * 1000)
-	var/magnitude = (thrust) / (STATION_MASS * 1000)
+	var/negative_velocity_magnitude = (ORBITAL_DRAG_COEFF * resistance) / STATION_MASS
+	var/magnitude = thrust / STATION_MASS
 
 	orbital_angle = ATAN2(cached_station_velocity[1], cached_station_velocity[2])
 
@@ -251,12 +261,23 @@ SUBSYSTEM_DEF(orbital_altitude)
 	return ((velo_magnitude_sqrd - (CINIS_MASS * GRAVITATION_CONSTANT) / pos_magnitude) * pos_component - radial_dot * velo_component) / (CINIS_MASS * GRAVITATION_CONSTANT)
 
 /datum/controller/subsystem/orbital_altitude/proc/manage_orbit_keeping()
-	if(abs(actual_angle - PROGRADE) > 1)
-		return
 	if(!orbit_keeping)
 		return
-	var/max_thrust = get_maximum_thrust()
-	set_all_throttle(max_thrust ? ORBITAL_DRAG_COEFF * resistance / max_thrust : 1)
+	if(abs(actual_angle - PROGRADE) > 1) // TODO - make this respect 360 degree wraparound
+		return
+	if(resistance < 0.001)
+		set_all_throttle(0)
+		return
+
+	var/error = (resistance * ORBITAL_DRAG_COEFF - thrust) / (resistance * ORBITAL_DRAG_COEFF)
+
+	var/output = clamp(keeping_gain + (error + (1 / keeping_integral) * keeping_last_error + keeping_derivitive * (error - keeping_last_error)), 0, 1)
+
+	keeping_accumulated_error += error
+
+	keeping_last_error = error
+
+	set_all_throttle(output)
 
 /datum/controller/subsystem/orbital_altitude/proc/reentry_effects()
 	if(orbital_altitude >= ORBITAL_ALTITUDE_LOW)

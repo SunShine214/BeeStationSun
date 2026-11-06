@@ -50,6 +50,10 @@
 	name = "water vapor tank gas sensor"
 	chamber_id = ATMOS_GAS_MONITOR_H2O
 
+/obj/machinery/air_sensor/ionic_fuel_tank
+	name = "ionic fuel tank gas sensor"
+	chamber_id = ATMOS_GAS_MONITOR_IONIC
+
 /obj/machinery/air_sensor/incinerator_tank
 	name = "incinerator chamber gas sensor"
 	chamber_id = ATMOS_GAS_MONITOR_INCINERATOR

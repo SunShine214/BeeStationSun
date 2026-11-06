@@ -43,6 +43,9 @@
 /obj/machinery/atmospherics/components/unary/vent_pump/siphon/monitored/water_vapor_output
 	name = "water vapor tank output inlet"
 
+/obj/machinery/atmospherics/components/unary/vent_pump/siphon/monitored/ionic_fuel_output
+	name = "ionic fuel tank output inlet"
+
 /obj/machinery/atmospherics/components/unary/vent_pump/siphon/monitored/incinerator_output
 	name = "incinerator chamber output inlet"
 

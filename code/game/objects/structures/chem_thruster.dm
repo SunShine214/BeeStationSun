@@ -24,8 +24,8 @@
 	. = ..()
 
 /obj/structure/chem_thruster/process(delta_time) // TODO - think about "queuing" thrust so missed processing cycles dont affect thrust. Also fix burn(1)
-	thruster.maximum_thrust = rocket.burn(delta_time)
-	nozzle?.thruster_intensity = thruster.maximum_thrust
+	thruster.thrust = rocket.burn(delta_time)
+	nozzle?.thruster_intensity = thruster.thrust
 	nozzle?.update_appearance()
 
 	if(nozzle)
@@ -45,7 +45,7 @@
 
 /obj/structure/chem_thruster/examine(mob/user)
 	. = ..()
-	. += thruster.maximum_thrust
+	. += thruster.thrust
 
 /obj/structure/chem_thruster/proc/refresh_structure()
 	bodies = list()

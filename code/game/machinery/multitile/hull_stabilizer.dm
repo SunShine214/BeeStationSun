@@ -39,6 +39,11 @@
 	selected_alloy = CRUCIBLE_ALLOYS[1]
 	. = ..()
 
+/obj/machinery/multitile/hull_stabilizer/Destroy()
+	canisters = null
+	QDEL_NULL(materials)
+	. = ..()
+
 /obj/machinery/multitile/hull_stabilizer/process(delta_time)
 	var/nanite_mult = adjust_nanites(-nanite_consumption) / nanite_consumption
 	SSsuperstructure.repair_structure(consume_selected_alloy(material_consumption * throttle) * CRUCIBLE_ALLOYS[selected_alloy][CRUCIBLE_ALLOY_MULT] * nanite_mult)

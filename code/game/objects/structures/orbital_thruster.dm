@@ -1,4 +1,5 @@
-// Functional Component.
+#define ENERGY_TO_THRUST_COEFF 100000
+
 /obj/machinery/atmospherics/components/unary/orbital_thruster
 	name = "orbital thruster"
 	desc = "A massive thruster used to adjust the station's orbit."
@@ -14,6 +15,13 @@
 	var/obj/machinery/power/terminal/invisible/power_link
 	var/datum/orbital_thruster/thruster
 
+	/// What ratio of power does this thruster consume from the power grid?
+	var/power_ratio = 0.01
+	/// How much power, in watts, was drawn last process()
+	var/last_power = 0
+	/// How many liters/second are injected into the accelerator
+	var/injection_rate = 50
+
 /obj/machinery/atmospherics/components/unary/orbital_thruster/Initialize(mapload)
 	. = ..()
 	power_link = new(get_turf(src))
@@ -26,7 +34,25 @@
 	QDEL_NULL(power_link)
 	. = ..()
 
+/obj/machinery/atmospherics/components/unary/orbital_thruster/process(delta_time)
+	var/usage = power_link.avail() * power_ratio * thruster.throttle
+	var/surplus = power_link.surplus()
+
+	if(surplus < usage)
+		usage = surplus
+
+	last_power = usage
+	power_link.add_load(usage)
+
+
 /obj/machinery/atmospherics/components/unary/orbital_thruster/process_atmos()
+
+	var/datum/gas_mixture/input = airs[1]
+	var/datum/gas_mixture/amount_pumped = input.remove_specific_ratio(/datum/gas/ionic_fuel, (injection_rate / input.volume) * thruster.throttle)
+
+	var/power_mult = last_power + 1 ? log(last_power + 1) : 0 // More thrusters means higher power efficiency
+
+	thruster.thrust = power_mult * amount_pumped?.total_moles() * ENERGY_TO_THRUST_COEFF
 
 	update_parents()
 	update_appearance()
@@ -123,3 +149,5 @@
 				if(!played_sound)
 					playsound(affected_turf, 'sound/effects/wounds/sizzle1.ogg', 50, vary = TRUE)
 					played_sound = TRUE
+
+#undef ENERGY_TO_THRUST_COEFF

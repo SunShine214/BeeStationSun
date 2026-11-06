@@ -166,6 +166,10 @@
 	name = "Water Vapor Supply Control"
 	build_path = /obj/machinery/computer/atmos_control/water_vapor
 
+/obj/item/circuitboard/computer/atmos_control/ionic_fuel
+	name = "Ionic Fuel Supply Control"
+	build_path = /obj/machinery/computer/atmos_control/ionic_fuel
+
 /obj/item/circuitboard/computer/auxiliary_base
 	name = "Auxiliary Base Management Console"
 	icon_state = "engineering"
