@@ -35,7 +35,7 @@
 	var/material_consumption = CRUCIBLE_DEFAULT_MAT_USE
 
 /obj/machinery/multitile/hull_stabilizer/Initialize(mapload)
-	materials = AddComponent(/datum/component/material_container, list(/datum/material/iron, /datum/material/diamond, /datum/material/titanium, /datum/material/plasma,), 0, MATCONTAINER_EXAMINE, null, null)
+	materials = AddComponent(/datum/component/material_container, list(/datum/material/iron, /datum/material/diamond, /datum/material/titanium, /datum/material/plasma,), 200, MATCONTAINER_EXAMINE, null, null)
 	selected_alloy = CRUCIBLE_ALLOYS[1]
 	. = ..()
 

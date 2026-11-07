@@ -1,5 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
-import { Box, Button, DraggableClickableControl, Knob, NumberInput } from 'tgui/components';
+import {
+  Box,
+  Button,
+  DraggableClickableControl,
+  Flex,
+  Knob,
+  LabeledCounter,
+  LabeledList,
+  NumberInput,
+  Section,
+  Stack,
+} from 'tgui/components';
 
 import { useBackend } from '../backend';
 import { Window } from '../layouts';
@@ -27,6 +38,7 @@ type OrbitalData = {
   derivitive: number;
   last_error: number;
   accumulated_error: number;
+  orbit_keeping: boolean;
   thrust_level: number;
   actual_thrust: number;
   error_over_time: number[];
@@ -62,22 +74,23 @@ export const OrbitalHeightControl = () => {
 };
 
 const ErrorGraph = (props) => {
-  const {
-    error_over_time = [],
-    width = 100,
-    height = 100,
-  } = props;
+  const { error_over_time = [], width = 100, height = 100 } = props;
 
   return (
-    <svg
-        width={width}
-        height={height}
-        viewBox={`${0} ${-25} ${50} ${25}`}
-      >
-    <g transform="scale(1, -1)">
-    <rect height={1} width={width} x={0} y={0} fill="grey" />
-    {error_over_time.map((error: number, i: number, array: number[]) => (<line key={i} x1={i - 1} y1={i > 0 ? array[i - 1] * 10 : 0} x2={i} y2={error * 10} stroke="red" />))}
-    </g>
+    <svg color="grey" width={width} height={height} viewBox={`${0} ${-25} ${50} ${50}`} style={{ backgroundColor: '#3a3a3a' }}>
+      <g transform="scale(1, -1)">
+        <rect height={1} width={50} x={0} y={0} fill="grey" />
+        {error_over_time.map((error: number, i: number, array: number[]) => (
+          <line
+            key={i}
+            x1={i - 1}
+            y1={i > 0 ? array[i - 1] * 10 : 0}
+            x2={i}
+            y2={error * 10}
+            stroke="red"
+          />
+        ))}
+      </g>
     </svg>
   );
 };
@@ -212,11 +225,10 @@ function OrbitalObjectStep(
   };
 }
 
-const OrbitalHeightContent = () => {
+const OrbitalMap = (props) => {
   const { act, data } = useBackend<OrbitalData>();
   const {
     station_pos = [0, 0],
-    current_altitude = 0,
     orbital_velocity = [0, 0],
     semi_major_axis = 0,
     eccentricity = 0,
@@ -230,20 +242,9 @@ const OrbitalHeightContent = () => {
     atmosphere_normal,
     atmosphere_low,
     atmosphere_destruction,
-    gain,
-    integral,
-    derivitive,
-    last_error,
-    accumulated_error,
-    thrust_level,
-    actual_thrust,
-
-    error_over_time = [],
   } = data;
+  const { width = 300, height = 300 } = props;
   const pixel_scale = 1 / 40000;
-
-  const [target_x, set_target_x] = useState(Math.cos(station_target_angle));
-  const [target_y, set_target_y] = useState(Math.sin(station_target_angle));
   const sim = OrbitalObjectAnimation(
     [0, 0],
     station_pos,
@@ -251,214 +252,359 @@ const OrbitalHeightContent = () => {
     cinus_grav_mass,
     2,
   );
+  const [pan_x, set_pan_x] = useState(0);
+  const [pan_y, set_pan_y] = useState(0);
   const [zoom, set_zoom] = useState(1);
 
   return (
-    <>
-      <DraggableClickableControl
-        value={target_x}
-        dragMatrix={[-1, 0]}
-        step={1}
-        stepPixelSize={1}
-        onDrag={(e, value) => {
-          set_target_x(value);
-        }}
-        onClick={(e, value) => {}}
-        updateRate={5}
-      >
-        {(control_x) => (
-          <DraggableClickableControl
-            value={target_y}
-            dragMatrix={[0, -1]}
+    <Section>
+      <Box>
+        <Knob
+          size={1.5}
+          value={zoom}
+          minValue={0.1}
+          maxValue={5}
+          animated={false}
+          step={0.1}
+          onChange={(_, v) => set_zoom(v)}
+        />
+        <DraggableClickableControl
+          value={pan_x}
+          dragMatrix={[-1, 0]}
+          step={1}
+          stepPixelSize={1}
+          onDrag={(e, value) => {
+            set_pan_x(Math.min(Math.max(value, -width / 2), width));
+          }}
+          onClick={(e, value) => {}}
+          updateRate={5}
+        >
+          {(control_x) => (
+            <DraggableClickableControl
+              value={pan_y}
+              dragMatrix={[0, -1]}
+              step={1}
+              stepPixelSize={1}
+              onDrag={(e, value) => {
+                set_pan_y(Math.min(Math.max(value, -height / 2), height));
+              }}
+              onClick={(e, value) => {}}
+              updateRate={5}
+            >
+              {(control_y) => (
+                <svg
+                  onMouseDown={(e) => {
+                    control_x.handleDragStart(e);
+                    control_y.handleDragStart(e);
+                  }}
+                  width={width}
+                  height={height}
+                  viewBox={`${(-(width / 2) + pan_x) * zoom} ${(-(height / 2) + pan_y) * zoom} ${width * zoom} ${height * zoom}`}
+                >
+                  <g transform="scale(1, -1)">
+                    <line
+                      x1={sim[0] * pixel_scale}
+                      y1={sim[1] * pixel_scale}
+                      x2={sim[0] * pixel_scale + 25}
+                      y2={sim[1] * pixel_scale}
+                      transform={`rotate(${station_actual_angle + orbital_angle} ${sim[0] * pixel_scale} ${sim[1] * pixel_scale})`}
+                      stroke="red"
+                    />
+                    <line
+                      x1={sim[0] * pixel_scale}
+                      y1={sim[1] * pixel_scale}
+                      x2={sim[0] * pixel_scale + 25}
+                      y2={sim[1] * pixel_scale}
+                      transform={`rotate(${station_target_angle + orbital_angle} ${sim[0] * pixel_scale} ${sim[1] * pixel_scale})`}
+                      stroke="blue"
+                    />
+                    <OrbitalRing
+                      center_x={0}
+                      center_y={0}
+                      semi_major_axis={semi_major_axis}
+                      eccentricity={eccentricity}
+                      arg_of_periapsis={arg_of_periapsis}
+                      color="#ffffff"
+                      pixel_scale={pixel_scale}
+                    />
+                    <circle
+                      cx={0}
+                      cy={0}
+                      r={atmosphere_height * pixel_scale}
+                      fill="#3284ff3d"
+                    />
+                    <circle
+                      cx={0}
+                      cy={0}
+                      r={atmosphere_normal * pixel_scale}
+                      fill="#54ff323d"
+                    />
+                    <circle
+                      cx={0}
+                      cy={0}
+                      r={atmosphere_low * pixel_scale}
+                      fill="#ffbe3285"
+                    />
+                    <circle
+                      cx={0}
+                      cy={0}
+                      r={atmosphere_destruction * pixel_scale}
+                      fill="#ff3232c7"
+                    />
+                    <circle
+                      cx={0}
+                      cy={0}
+                      r={cinus_radius * pixel_scale}
+                      fill="#e93c3c"
+                    />
+                    <rect
+                      x={sim[0] * pixel_scale - 2}
+                      y={sim[1] * pixel_scale - 2}
+                      width={4}
+                      height={4}
+                      fill="grey"
+                    />
+                  </g>
+                </svg>
+              )}
+            </DraggableClickableControl>
+          )}
+        </DraggableClickableControl>
+      </Box>
+    </Section>
+  );
+};
+
+const OrbitKeeping = () => {
+  const { act, data } = useBackend<OrbitalData>();
+  const {
+    gain,
+    integral,
+    derivitive,
+    last_error,
+    orbit_keeping,
+    accumulated_error,
+    error_over_time = [],
+  } = data;
+
+  return (
+    <Flex direction="row">
+      <Flex.Item>
+        <Button
+            content="Toggle Orbit Keeping"
+            onClick={() => act('toggle_orbit_keeping')}
+            align="center"
+          />
+          <Box>
+          Orbit Keeping: {orbit_keeping ? "Activated" : "Deactivated"}
+          </Box>
+      </Flex.Item>
+      <Flex.Item>
+        <LabeledList>
+          <LabeledList.Item label={"Gain"}>
+            <Box m={1}>
+        <NumberInput
+          value={gain}
+          minValue={0}
+          maxValue={100}
+          stepPixelSize={5}
+          width="50px"
+          step={0.01}
+          onDrag={(value) =>
+            act('gain', {
+              gain: value,
+            })
+          }
+        />
+            </Box>
+          </LabeledList.Item>
+        <LabeledList.Item label={"Integral"}>
+        <Box m={1} width="100%">
+          <NumberInput
+            value={integral}
+            minValue={0.1}
+            maxValue={100}
+            stepPixelSize={5}
+            width="50px"
             step={1}
-            stepPixelSize={1}
-            onDrag={(e, value) => {
-              set_target_y(value);
+            onDrag={(value) =>
+              act('integral', {
+                integral: value,
+              })
+            }
+          />
+        </Box>
+        </LabeledList.Item>
+        <LabeledList.Item label={"Derivitive"}>
+        <Box m={1}>
+          <NumberInput
+            value={derivitive}
+            minValue={0}
+            maxValue={100}
+            stepPixelSize={5}
+            width="50px"
+            step={0.1}
+            onDrag={(value) =>
+              act('derivitive', {
+                derivitive: value,
+              })
+            }
+          />
+        </Box>
+        </LabeledList.Item>
+        </LabeledList>
+        <Flex direction="row" backgroundColor="#680000" align="center">
+        <LabeledCounter
+          label="Accum. Error"
+          todisplay={accumulated_error}
+          maxdigits={8}
+          fontSize="12px"
+          backgroundColor="#680000"
+        />
+        <Box fill verticalAlign="center">
+        <Button
+          content={'Reset'}
+          onClick={() => act('reset_integral')}
+        />
+        </Box>
+        </Flex >
+      </Flex.Item>
+      <Flex.Item height="100%">
+
+      <Flex direction="column">
+        <ErrorGraph error_over_time={error_over_time} height="50%" />
+        <LabeledCounter
+          label="Error"
+          todisplay={last_error}
+          maxdigits={6}
+          decimal={2}
+          fontSize="12px"
+          backgroundColor="#680000"
+        />
+      </Flex>
+      </Flex.Item>
+    </Flex>
+  );
+};
+
+const Navball = () => {
+  const { act, data } = useBackend<OrbitalData>();
+  const { station_target_angle = 0 } = data;
+  const ref = useRef<SVGSVGElement>(null);
+  return (
+    <Box
+      width="150px"
+      height="150px"
+      m={2}
+      style={{ border: '1px solid grey' }}
+    >
+      <Stack vertical align="center" fill>
+        <Stack.Item>
+          <Button
+            mt="-10px"
+            content={'Prograde'}
+            onClick={() =>
               act('adjust_angle', {
-                angle: (Math.atan2(target_y, target_x) * 180) / Math.PI,
+                angle: 0,
+              })
+            }
+          />
+        </Stack.Item>
+        <Stack.Item>
+          <svg
+            ref={ref}
+            onMouseDown={(e) => {
+              const parent = ref.current;
+              if (!parent) return;
+              const bounds = parent.getBoundingClientRect();
+              act('adjust_angle', {
+                angle:
+                  Math.atan2(
+                    e.clientX - bounds.left - bounds.width / 2,
+                    e.clientY - bounds.top - bounds.height / 2,
+                  ) *
+                    (180 / Math.PI) -
+                  180,
               });
             }}
-            onClick={(e, value) => {}}
-            updateRate={5}
+            viewBox="-25 -25 50 50"
+            height="100px"
+            width="100px"
           >
-            {(control_y) => (
-              <svg
-                onMouseDown={(e) => {
-                  control_x.handleDragStart(e);
-                  control_y.handleDragStart(e);
-                }}
-                viewBox="-25 -25 50 50"
-                height="100px"
-                width="100px"
-              >
-                <line
-                  x1={0}
-                  y1={0}
-                  x2={0}
-                  y2={25}
-                  transform={`rotate(${station_target_angle} 0 0)`}
-                  stroke="blue"
-                />
-              </svg>
-            )}
-          </DraggableClickableControl>
-        )}
-      </DraggableClickableControl>
-      <Button
-        mt="-10px"
-        content={'orbit keeping'}
-        onClick={() => act('toggle_orbit_keeping')}
-      />
-      <Button
-        mt="-10px"
-        content={'increase'}
-        onClick={() => act('increase_thrust')}
-      />
-      <Button
-        mt="-10px"
-        content={'decrease'}
-        onClick={() => act('decrease_thrust')}
-      />
-      Height {current_altitude / 1000} KM
-      <br />
-      Throttle {thrust_level}
-      <br />
-      Actual Thrust {actual_thrust / 1000000} MN
-      <br />
-      Gain {gain}
-      <Box m={1}>
-      <NumberInput
-              value={gain}
-              minValue={0}
-              maxValue={100}
-              stepPixelSize={5}
-              width="39px"
-              step={0.1}
-              onDrag={(value) =>
-                act('gain', {
-                  "gain": value,
-                })
-              }
-            />
-      </Box>
-      <br />
-      Integral {integral}
-      <Box m={1}>
-      <NumberInput
-              value={integral}
-              minValue={0}
-              maxValue={100}
-              stepPixelSize={5}
-              width="39px"
-              step={0.1}
-              onDrag={(value) =>
-                act('integral', {
-                  "integral": value,
-                })
-              }
-            />
-      </Box>
-      <br />
-      Derivitive {derivitive}
-      <Box m={1}>
-      <NumberInput
-              value={derivitive}
-              minValue={0}
-              maxValue={100}
-              stepPixelSize={5}
-              width="39px"
-              step={0.1}
-              onDrag={(value) =>
-                act('derivitive', {
-                  "derivitive": value,
-                })
-              }
-            />
-      </Box>
-      <br />
-      Last Error {last_error}
-      <br />
-      Accumulated Error {accumulated_error}
-      <Button
-        mt="-10px"
-        content={'reset accumulator'}
-        onClick={() => act('reset_integral')}
-      />
-      <ErrorGraph error_over_time={error_over_time} height={100} />
-      <Knob
-        size={1.5}
-        value={zoom}
-        minValue={0.1}
-        maxValue={5}
-        animated={false}
-        step={0.1}
-        onChange={(_, v) => set_zoom(v)}
-      />
-      <svg
-        height="300px"
-        width="300px"
-        viewBox={`${-150 * zoom} ${-150 * zoom} ${300 * zoom} ${300 * zoom}`}
-      >
-        <g transform="scale(1, -1)">
-          <line
-            x1={sim[0] * pixel_scale}
-            y1={sim[1] * pixel_scale}
-            x2={sim[0] * pixel_scale + 25}
-            y2={sim[1] * pixel_scale}
-            transform={`rotate(${station_actual_angle + orbital_angle} ${sim[0] * pixel_scale} ${sim[1] * pixel_scale})`}
-            stroke="red"
+            <g transform="scale(1, -1)">
+              <line
+                x1={0}
+                y1={0}
+                x2={0}
+                y2={25}
+                transform={`rotate(${station_target_angle} 0 0)`}
+                stroke="blue"
+              />
+            </g>
+          </svg>
+        </Stack.Item>
+        <Stack.Item>
+          <Button
+            mb="-10px"
+            content={'Retrograde'}
+            onClick={() =>
+              act('adjust_angle', {
+                angle: 180,
+              })
+            }
           />
-          <line
-            x1={sim[0] * pixel_scale}
-            y1={sim[1] * pixel_scale}
-            x2={sim[0] * pixel_scale + 25}
-            y2={sim[1] * pixel_scale}
-            transform={`rotate(${station_target_angle + orbital_angle} ${sim[0] * pixel_scale} ${sim[1] * pixel_scale})`}
-            stroke="blue"
+        </Stack.Item>
+      </Stack>
+    </Box>
+  );
+};
+
+const Throttle = () => {
+  const { act, data } = useBackend<OrbitalData>();
+  const { thrust_level, actual_thrust } = data;
+  return (
+    <Flex direction="row">
+      <Flex.Item>
+        <Stack vertical inline>
+          <Button
+            width="30px"
+            icon="sort-up"
+            onClick={() => act('increase_thrust')}
+            align="center"
           />
-          <OrbitalRing
-            center_x={0}
-            center_y={0}
-            semi_major_axis={semi_major_axis}
-            eccentricity={eccentricity}
-            arg_of_periapsis={arg_of_periapsis}
-            color="#ffffff"
-            pixel_scale={pixel_scale}
+          <Button
+            width="30px"
+            icon="sort-down"
+            onClick={() => act('decrease_thrust')}
+            align="center"
           />
-          <circle
-            cx={0}
-            cy={0}
-            r={atmosphere_height * pixel_scale}
-            fill="#3284ff3d"
-          />
-          <circle
-            cx={0}
-            cy={0}
-            r={atmosphere_normal * pixel_scale}
-            fill="#54ff323d"
-          />
-          <circle
-            cx={0}
-            cy={0}
-            r={atmosphere_low * pixel_scale}
-            fill="#ffbe3285"
-          />
-          <circle
-            cx={0}
-            cy={0}
-            r={atmosphere_destruction * pixel_scale}
-            fill="#ff3232c7"
-          />
-          <circle cx={0} cy={0} r={cinus_radius * pixel_scale} fill="#e93c3c" />
-          <rect
-            x={sim[0] * pixel_scale - 2}
-            y={sim[1] * pixel_scale - 2}
-            width={4}
-            height={4}
-            fill="grey"
-          />
-        </g>
-      </svg>
+        </Stack>
+      </Flex.Item>
+      <Flex.Item align="center" fill>
+        <Box m={1}>Throttle: {thrust_level}</Box>
+      </Flex.Item>
+      <Flex.Item>
+        <LabeledCounter
+          label="Thrust"
+          todisplay={actual_thrust / 1000000}
+          maxdigits={10}
+          fontSize="12px"
+          backgroundColor="#182b5e"
+          unit="MN"
+        />
+      </Flex.Item>
+    </Flex>
+  );
+};
+
+const OrbitalHeightContent = () => {
+  const { act, data } = useBackend<OrbitalData>();
+  return (
+    <>
+      <OrbitKeeping />
+      <Throttle />
+      <Navball />
+      <OrbitalMap />
     </>
   );
 };

@@ -47,7 +47,6 @@
 	last_power = usage
 	power_link.add_load(usage)
 
-
 /obj/machinery/atmospherics/components/unary/orbital_thruster/process_atmos()
 
 	var/datum/gas_mixture/input = airs[1]

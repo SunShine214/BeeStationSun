@@ -32,6 +32,7 @@ export { Interactive } from './Interactive';
 export { KeyListener } from './KeyListener';
 export { Knob } from './Knob';
 export { LabeledControls } from './LabeledControls';
+export { LabeledCounter } from './LabeledCounter';
 export { LabeledList } from './LabeledList';
 export { Modal } from './Modal';
 export { NoticeBox } from './NoticeBox';

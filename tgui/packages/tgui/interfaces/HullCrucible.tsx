@@ -17,7 +17,7 @@ export const HullCrucible = (props) => {
     <Window width={300} height={300}>
       <Window.Content>
         {nanite_cans.map((can) => (
-            <p key={can}>{can.nanites}</p>
+          <p key={can}>{can.nanites}</p>
         ))}
       </Window.Content>
     </Window>

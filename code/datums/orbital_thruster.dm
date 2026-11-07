@@ -37,7 +37,7 @@
 	for(var/i in 1 to ORBITAL_THRUSTER_MAX_PLUME)
 		if(current_turf.is_blocked_turf())
 			break
-		current_turf = get_set(current_turf, direction)
+		current_turf = get_step(current_turf, direction)
 		if(!current_turf)
 			break // TODO - Fix
 

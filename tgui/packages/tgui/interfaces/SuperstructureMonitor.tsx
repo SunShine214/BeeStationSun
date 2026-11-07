@@ -11,23 +11,19 @@ type Data = {
 
 export const SuperstructureMonitor = (props) => {
   const { act, data } = useBackend<Data>();
-  const {
-    hull = 0,
-    max_hull = 0,
-    shielding = 0,
-    max_shielding = 0,
-  } = data;
+  const { hull = 0, max_hull = 0, shielding = 0, max_shielding = 0 } = data;
   return (
     <Window width={300} height={300}>
       <Window.Content>
-        H
-        {hull}<br />
+        H{hull}
+        <br />
         MH
-        {max_hull}<br />
-        S
-        {shielding}<br />
+        {max_hull}
+        <br />S{shielding}
+        <br />
         MS
-        {max_shielding}<br />
+        {max_shielding}
+        <br />
       </Window.Content>
     </Window>
   );
