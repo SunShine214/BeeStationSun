@@ -58,6 +58,7 @@
 	data["integral"] = SSorbital_altitude.keeping_integral
 	data["accumulated_error"] = SSorbital_altitude.keeping_accumulated_error
 	data["last_error"] = SSorbital_altitude.keeping_last_error
+	data["error_over_time"] = SSorbital_altitude.error_over_time
 
 	return data
 

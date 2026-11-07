@@ -35,45 +35,9 @@
 
 	var/turf/current_turf = get_step(starting, direction)
 	for(var/i in 1 to ORBITAL_THRUSTER_MAX_PLUME)
-		var/dense = FALSE
-		for (var/atom/thing in current_turf)
-
-			if(QDELETED(thing))
-				continue
-
-			// Objects
-			if (isobj(thing))
-				if (iseffect(thing))
-					continue
-
-				var/obj/obj_thing = thing
-				obj_thing.newtonian_move(REVERSE_DIR(direction))
-
-				if (obj_thing.density)
-					dense = TRUE
-				// Apply object damage
-				obj_thing.take_damage(obj_damage, BURN, FIRE)
-
-			// Mobs
-			if (ismob(thing))
-				if (isobserver(thing))
-					continue
-
-				var/mob/mob_thing = thing
-				mob_thing.newtonian_move(REVERSE_DIR(direction))
-
-				mob_thing.take_damage(mob_damage, BURN)
-
-				if (isliving(mob_thing))
-					var/mob/living/living_thing = mob_thing
-					living_thing.adjustFireLoss(mob_damage)
-
-		// Apply damage to turf if not blocked
-		if (!dense)
-			current_turf.take_damage(tile_damage, BURN, FIRE, TRUE, direction)
-		else
-			return
-		current_turf = get_step(current_turf, direction)
+		if(current_turf.is_blocked_turf())
+			break
+		current_turf = get_set(current_turf, direction)
 		if(!current_turf)
-			return
+			break // TODO - Fix
 

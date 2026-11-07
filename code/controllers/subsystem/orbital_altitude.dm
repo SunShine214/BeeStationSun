@@ -1,7 +1,7 @@
 SUBSYSTEM_DEF(orbital_altitude)
 	name = "Orbital Altitude"
 	can_fire = TRUE
-	wait = 0.25 SECONDS //TODO - PUT THIS BACK RAAAAAA (maybe not...?)
+	wait = 0.25 SECONDS
 	ss_flags = SS_NO_INIT | SS_KEEP_TIMING
 
 	/// Current orbital altitude in meters
@@ -32,17 +32,18 @@ SUBSYSTEM_DEF(orbital_altitude)
 
 	/// Should we counteract atmospheric resistance (only if we are facing prograde) at all times to keep our orbit?
 	var/orbit_keeping = TRUE
-
 	/// The gain of the PID
-	var/keeping_gain = 0.25
+	var/keeping_gain = 0.01
 	/// The derivitive time of the PID
-	var/keeping_derivitive = 3
+	var/keeping_derivitive = 0.1
 	/// The integral time of the PID
-	var/keeping_integral = 10
+	var/keeping_integral = 4
 	/// Last error from the previous cycle of the PID
 	var/keeping_last_error = 0
 	/// Accumulated error of the PID
 	var/keeping_accumulated_error = 0
+	/// List of error over time for display purposes.
+	var/list/error_over_time = list()
 
 	// ---------------------------------------
 
@@ -53,25 +54,11 @@ SUBSYSTEM_DEF(orbital_altitude)
 	var/thrust = 0
 	/// Atmospheric resistance coefficient
 	var/resistance = 0
-
-
+	/// Bitflag of current orbital errors
+	var/errors = NONE
 
 	/// List of all orbital thrusters
 	var/list/orbital_thrusters = list()
-
-	/// World time when critical orbit was entered
-	var/critical_orbit_start_time = 0
-	/// State of orbiting. Used for announments, mostly.
-	var/orbital_stage = ORBITAL_NORM
-	/// Whether the final 60-second countdown has started
-	var/final_countdown_active = FALSE
-	/// Security level before switching to delta
-	var/previous_alert_level = SEC_LEVEL_GREEN
-
-	/// Cached station boundaries for each Z-level
-	var/list/station_bounds_cache
-	/// Whether station bounds have been calculated
-	var/bounds_calculated = FALSE
 
 	COOLDOWN_DECLARE(orbital_report_cooldown)
 	COOLDOWN_DECLARE(orbital_report_critical)
@@ -83,24 +70,14 @@ SUBSYSTEM_DEF(orbital_altitude)
 		can_fire = FALSE
 		return
 
-	// Calculate station boundaries once at startup
-	if(!bounds_calculated)
-		calculate_all_station_bounds()
-		bounds_calculated = TRUE
-
-	// Update thrust from all orbital thrusters
-	update_thrust_from_thrusters()
-
 	check_values()
-
-	process_countdown()
-
 	adjust_angle()
-
 	calculate_eccentric_anomaly()
 	calculate_pos_from_epoch()
 	calculate_velo_from_epoch()
 	orbital_altitude_change()
+	manage_orbit_keeping()
+	update_thrust_from_thrusters()
 	orbital_epoch += 0.5
 
 	reentry_effects()
@@ -195,14 +172,13 @@ SUBSYSTEM_DEF(orbital_altitude)
 	orbital_epoch = (mean_anomaly * (PI / 180)) / mean_motion
 
 /datum/controller/subsystem/orbital_altitude/proc/update_thrust_from_thrusters()
-	// Calculate total thrust from all thrusters
 	var/summed_thrust = 0
 	for(var/datum/orbital_thruster/thruster in orbital_thrusters)
 		summed_thrust += thruster.get_thrust()
 	thrust = summed_thrust
 
 /datum/controller/subsystem/orbital_altitude/proc/set_all_throttle(to_set)
-	throttle = to_set
+	throttle = clamp(to_set, 0, 1)
 	sync_all_thrusters()
 
 /datum/controller/subsystem/orbital_altitude/proc/adjust_all_throttle(amount)
@@ -214,14 +190,13 @@ SUBSYSTEM_DEF(orbital_altitude)
 
 /datum/controller/subsystem/orbital_altitude/proc/orbital_altitude_change()
 	resistance = NUM_E ** (-orbital_altitude / CINIS_CALCULATED_DRAG_SCALE)
-	manage_orbit_keeping() // Lives here so small mistakes are not made due to out-of-date information
 
 	var/negative_velocity_magnitude = (ORBITAL_DRAG_COEFF * resistance) / STATION_MASS
 	var/magnitude = thrust / STATION_MASS
 
 	orbital_angle = ATAN2(cached_station_velocity[1], cached_station_velocity[2])
 
-	if(abs(orbital_angle - actual_angle) < 0.001)
+	if(abs(orbital_angle - actual_angle) < 0.1)
 		if(abs(magnitude - negative_velocity_magnitude) < 0.001)
 			return // Early return when the thrust vector is near equal to resistance- thus meaning no force is actually being applied.
 			//TODO - think about this and fix it
@@ -230,7 +205,9 @@ SUBSYSTEM_DEF(orbital_altitude)
 	var/new_velo_y = cached_station_velocity[2] + (magnitude * sin(orbital_angle + actual_angle)) + (negative_velocity_magnitude * -sin(orbital_angle))
 
 	var/pos_magnitude = get_station_altitude()
+
 	orbital_altitude = pos_magnitude //TODO - find a better place for this.
+
 	var/velo_magnitude_sqrd = new_velo_x**2 + new_velo_y**2
 	var/radial_dot = cached_station_pos[1] * new_velo_x + cached_station_pos[2] * new_velo_y
 
@@ -238,14 +215,18 @@ SUBSYSTEM_DEF(orbital_altitude)
 
 	if(orbital_energy >= 0)
 		return
-		//TODO: add message about thrusters being cut due to orbital extremes, also, make sure you it resets to a non-parabolic orbit should one occur somehow
-
 
 	var/new_sma = 1 / (2 / pos_magnitude - velo_magnitude_sqrd / (CINIS_MASS * GRAVITATION_CONSTANT))
 
-	if(new_sma * (1 + eccentricity) > ORBITAL_ALTITUDE_HIGH_BOUND || new_sma * (1 - eccentricity) < ORBITAL_ALTITUDE_ABSOLUTE_MIN)
-		//TODO - add alert system ("SHUT DOWN THRUSTERS, TOO HIGH/TOO LOW")
+	if(new_sma * (1 + eccentricity) > ORBITAL_ALTITUDE_HIGH_BOUND)
+		set_error(TRUE, ORBITAL_ERROR_TOO_HIGH)
 		return
+	if(new_sma * (1 - eccentricity) < ORBITAL_ALTITUDE_ABSOLUTE_MIN)
+		set_error(TRUE, ORBITAL_ERROR_TOO_LOW)
+		return
+
+	set_error(FALSE, ORBITAL_ERROR_TOO_HIGH)
+	set_error(FALSE, ORBITAL_ERROR_TOO_LOW)
 
 	semi_major_axis = new_sma
 
@@ -263,244 +244,39 @@ SUBSYSTEM_DEF(orbital_altitude)
 /datum/controller/subsystem/orbital_altitude/proc/manage_orbit_keeping()
 	if(!orbit_keeping)
 		return
+
 	if(abs(actual_angle - PROGRADE) > 1) // TODO - make this respect 360 degree wraparound
+		set_error(TRUE, ORBITAL_ERROR_KEEPING_FACING)
 		return
+	set_error(FALSE, ORBITAL_ERROR_KEEPING_FACING)
+
 	if(resistance < 0.001)
 		set_all_throttle(0)
 		return
 
 	var/error = (resistance * ORBITAL_DRAG_COEFF - thrust) / (resistance * ORBITAL_DRAG_COEFF)
 
-	var/output = clamp(keeping_gain + (error + (1 / keeping_integral) * keeping_last_error + keeping_derivitive * (error - keeping_last_error)), 0, 1)
+	if(length(error_over_time) >= 50)
+		popleft(error_over_time)
+	error_over_time += error
+
+	var/output = clamp(keeping_gain * (error + (1 / keeping_integral) * keeping_accumulated_error + keeping_derivitive * (error - keeping_last_error)), 0, 1)
 
 	keeping_accumulated_error += error
-
 	keeping_last_error = error
 
 	set_all_throttle(output)
+
+/datum/controller/subsystem/orbital_altitude/proc/set_error(state, flag) // TODO - think about if this is even needed
+	if(state && !(errors & flag))
+		errors |= flag
+		return TRUE
+	else if(!state && (errors & flag))
+		errors &= ~flag
+		return TRUE
+	return FALSE
 
 /datum/controller/subsystem/orbital_altitude/proc/reentry_effects()
 	if(orbital_altitude >= ORBITAL_ALTITUDE_LOW)
 		return
 	SSsuperstructure.damage_structure(resistance * ORBITAL_SUPERSTUCTURE_DAM_MAX)
-	//spawn_atmospheric_drag()
-
-/datum/controller/subsystem/orbital_altitude/proc/process_countdown()
-	if(!final_countdown_active)
-		return
-
-	var/time_remaining = ORBITAL_TIME_TO_DEST - (world.time - critical_orbit_start_time)
-	if(time_remaining <= 0)
-		initiate_destruction()
-		end_final_countdown()
-
-/datum/controller/subsystem/orbital_altitude/proc/start_final_countdown()
-	previous_alert_level = SSsecurity_level.get_current_level_as_text()
-	SSsecurity_level.set_level(SEC_LEVEL_DELTA)
-	critical_orbit_start_time = world.time
-	final_countdown_active = TRUE
-
-/datum/controller/subsystem/orbital_altitude/proc/end_final_countdown()
-	// Restore previous security level if we escalated to delta
-	SSsecurity_level.set_level(previous_alert_level)
-	final_countdown_active = FALSE
-
-/datum/controller/subsystem/orbital_altitude/proc/initiate_destruction()
-	Cinematic(CINEMATIC_SELFDESTRUCT, world, CALLBACK(src, PROC_REF(complete_destruction)))
-
-/datum/controller/subsystem/orbital_altitude/proc/complete_destruction()
-	// Kill all living mobs on station levels
-	for(var/mob/living/L in GLOB.mob_living_list)
-		var/turf/T = get_turf(L)
-		if(T && is_station_level(T.z))
-			L.investigate_log("has died from orbital decay.", INVESTIGATE_DEATHS)
-			L.gib()
-
-	// Force round end
-	SSticker.force_ending = FORCE_END_ROUND
-
-/datum/controller/subsystem/orbital_altitude/proc/spawn_atmospheric_drag()
-	var/list/station_z_levels = SSmapping.levels_by_trait(ZTRAIT_STATION)
-	if(!length(station_z_levels))
-		return
-
-	var/target_z = pick(station_z_levels)
-	var/list/bounds = station_bounds_cache["[target_z]"]
-	if(!bounds)
-		return
-
-	// Pick a random edge to spawn from
-	var/edge = rand(1, 4)
-	var/turf/start_turf
-	var/turf/target_turf
-
-	switch(edge)
-		if(1) // Top edge
-			start_turf = locate(rand(bounds["min_x"], bounds["max_x"]), bounds["max_y"] + 10, target_z)
-			target_turf = locate(rand(bounds["min_x"], bounds["max_x"]), bounds["min_y"], target_z)
-		if(2) // Bottom edge
-			start_turf = locate(rand(bounds["min_x"], bounds["max_x"]), bounds["min_y"] - 10, target_z)
-			target_turf = locate(rand(bounds["min_x"], bounds["max_x"]), bounds["max_y"], target_z)
-		if(3) // Right edge
-			start_turf = locate(bounds["max_x"] + 10, rand(bounds["min_y"], bounds["max_y"]), target_z)
-			target_turf = locate(bounds["min_x"], rand(bounds["min_y"], bounds["max_y"]), target_z)
-		if(4) // Left edge
-			start_turf = locate(bounds["min_x"] - 10, rand(bounds["min_y"], bounds["max_y"]), target_z)
-			target_turf = locate(bounds["max_x"], rand(bounds["min_y"], bounds["max_y"]), target_z)
-
-	if(!start_turf || !target_turf)
-		return
-
-	// Spawn heavy drag occasionally, light drag otherwise
-	if(COOLDOWN_FINISHED(src, heavy_atmospheric_drag_cooldown))
-		COOLDOWN_START(src, heavy_atmospheric_drag_cooldown, 60 SECONDS)
-		new /obj/effect/meteor/atmospheric_drag/heavy(start_turf, target_turf)
-	else
-		new /obj/effect/meteor/atmospheric_drag(start_turf, target_turf)
-
-/datum/controller/subsystem/orbital_altitude/proc/calculate_all_station_bounds()
-	station_bounds_cache = list()
-
-	var/list/station_z_levels = SSmapping.levels_by_trait(ZTRAIT_STATION)
-	if(!length(station_z_levels))
-		return
-
-	// Calculate bounding box and cache space turfs for each station Z-level
-	for(var/z_level in station_z_levels)
-		var/min_x = world.maxx
-		var/max_x = 1
-		var/min_y = world.maxy
-		var/max_y = 1
-		var/found_station = FALSE
-
-		// Iterate through all non-space areas
-		for(var/area/A in GLOB.areas)
-			if(A.type == /area/misc/space || istype(A, /area/misc/space))
-				continue
-
-			var/list/area_turfs = A.get_turfs_by_zlevel(z_level)
-			if(!length(area_turfs))
-				continue
-
-			// Find the bounding box of station turfs on this Z-level
-			for(var/turf/T in area_turfs)
-				if(T.z != z_level)
-					continue
-				if(!is_station_level(T.z))
-					continue
-
-				found_station = TRUE
-				min_x = min(min_x, T.x)
-				max_x = max(max_x, T.x)
-				min_y = min(min_y, T.y)
-				max_y = max(max_y, T.y)
-
-		// Cache the bounds for this Z-level
-		if(found_station && max_x >= min_x && max_y >= min_y)
-			var/key = "[z_level]"
-			station_bounds_cache[key] = list("min_x" = min_x, "max_x" = max_x, "min_y" = min_y, "max_y" = max_y)
-
-// Invisible atmospheric drag effect that damages station structures
-// Simulates heating and structural stress from atmospheric re-entry
-/obj/effect/meteor/atmospheric_drag
-	name = "atmospheric drag"
-	desc = "You shouldn't be seeing this."
-	icon_state = "dust"
-	alpha = 0
-	hits = 1
-	hitpwr = EXPLODE_LIGHT
-	meteorsound = null
-	meteordrop = list()
-	dropamt = 0
-	threat = 0
-	pass_flags = PASSTABLE | PASSGRILLE | PASSMOB | PASSDOORS
-	mouse_opacity = MOUSE_OPACITY_TRANSPARENT
-	movement_type = FLYING
-
-	/// Damage dealt to structures on impact
-	var/erosionpower = 20
-
-/obj/effect/meteor/atmospheric_drag/Initialize(mapload, target)
-	. = ..()
-	// Remove from global meteor list (this isn't a real meteor event)
-	GLOB.meteor_list -= src
-	SSaugury.unregister_doom(src)
-
-/obj/effect/meteor/atmospheric_drag/chase_target(atom/chasing, delay, home)
-	. = ..()
-
-/obj/effect/meteor/atmospheric_drag/Bump(atom/A)
-	// Pass through mobs harmlessly
-	if(isliving(A) || ismob(A))
-		return
-
-	if(isturf(A))
-		return ..()
-
-	// Damage structures and machinery
-	if(A.density)
-		if(istype(A, /obj/structure) || istype(A, /obj/machinery))
-			var/obj/O = A
-			O.take_damage(erosionpower, BRUTE, "melee", 0)
-		else if(istype(A, /turf/closed))
-			return ..()
-
-	return
-
-/obj/effect/meteor/atmospheric_drag/ram_turf(turf/T)
-	// Don't damage turfs with mobs on them
-	for(var/mob/M in T)
-		return
-
-	if(isspaceturf(T))
-		return
-
-	// Queue minor explosion on this turf
-	SSexplosions.lowturf += T
-
-	get_hit()
-
-/obj/effect/meteor/atmospheric_drag/get_hit()
-	hits--
-	if(hits <= 0)
-		// Play creaking sound for atmosphere
-		playsound(src.loc, pick('sound/effects/creak1.ogg', 'sound/effects/creak2.ogg'), 80, TRUE, 300, falloff_distance = 300)
-		qdel(src)
-
-/obj/effect/meteor/atmospheric_drag/examine(mob/user)
-	return // Cannot be examined
-
-/obj/effect/meteor/atmospheric_drag/attackby(obj/item/I, mob/user, params)
-	return // Cannot be interacted with
-
-/obj/effect/meteor/atmospheric_drag/CanPass(atom/movable/mover, border_dir)
-	// Always let mobs pass through
-	if(isliving(mover) || ismob(mover))
-		return TRUE
-	return ..()
-
-/obj/effect/meteor/atmospheric_drag/CanPassThrough(atom/blocker, turf/target, blocker_dir)
-	// Always pass through mobs
-	if(isliving(blocker) || ismob(blocker))
-		return TRUE
-	return ..()
-
-// Heavy variant for more intense damage
-/obj/effect/meteor/atmospheric_drag/heavy
-	name = "heavy atmospheric drag"
-	hitpwr = EXPLODE_HEAVY
-	hits = 50
-	erosionpower = 100
-
-/obj/effect/meteor/atmospheric_drag/heavy/ram_turf(turf/T)
-	// Don't damage turfs with mobs on them
-	for(var/mob/M in T)
-		return
-
-	if(isspaceturf(T))
-		return
-
-	// Queue major explosion on this turf
-	SSexplosions.highturf += T
-
-	get_hit()

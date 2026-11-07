@@ -1,17 +1,14 @@
 // Technically unrelated but they use "orbits" too so:
-// Orbital altitude thresholds in meters
-
 #define ORBITAL_DRAG_COEFF 5000 MEGANEWTON // - How much drag the station produces at 1 resistance, in mega neutons. This will counteract thrust.
 #define STATION_MASS 100000000 // - According to the interweb, aircraft carriers are 100000 tons, which feels similar to what the station would be.
 
 #define CINIS_ATMOSPHERE 5e5
 #define CINIS_RADIUS 1.143e6 // - Tiny, since Earth-sized planets take hours to finish an orbit.
-#define GRAVITATION_CONSTANT 6.6743e-11 // Grav constant
 #define CINIS_MASS 5.6e24 // - Similarly tiny
-
 #define CINIS_CALCULATED_DRAG_SCALE 300000 // Not at all realistic, but provides a decent scale of resistance.
 
-#define ORBITAL_ALTITUDE_RAD_FREE 10 * CINIS_ATMOSPHERE + CINIS_RADIUS //At which point there is not radiation
+#define GRAVITATION_CONSTANT 6.6743e-11 // Grav constant (but real)
+
 #define ORBITAL_ALTITUDE_HIGH_BOUND 3 * CINIS_ATMOSPHERE + CINIS_RADIUS // - Cannot go higher than this
 #define ORBITAL_ALTITUDE_HIGH_CRITICAL 2 * CINIS_ATMOSPHERE + CINIS_RADIUS // - Upper critical threshold
 #define ORBITAL_ALTITUDE_HIGH CINIS_ATMOSPHERE + CINIS_RADIUS // - Upper normal threshold
@@ -22,15 +19,15 @@
 
 #define ORBITAL_SUPERSTUCTURE_DAM_MAX 100 // how much damage the station superstructure take at ABSOLUTE_MIN (exponential)
 
-#define ORBITAL_PID_LENGTH 10 //What length should the Integral accumulation list be? Longer means a higher max accumulation.
+#define ORBITAL_ERROR_TOO_LOW 1 << 0
+#define ORBITAL_ERROR_TOO_HIGH 1 << 1
+#define ORBITAL_ERROR_KEEPING_FACING 1 << 2
 
 // Orbital directions
 #define PROGRADE 0
 #define RETROGRADE 180
 
-#define ECCEN_ANOM_ITER 10
-
-#define ORBITAL_TIME_TO_DEST 1 MINUTES
+#define ECCEN_ANOM_ITER 10 // - Maximum iterations to calculate the Eccentric Anomaly
 
 #define ORBITAL_LOW_DEST 0
 #define ORBITAL_LOW_CRIT 1

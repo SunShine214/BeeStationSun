@@ -29,6 +29,7 @@ type OrbitalData = {
   accumulated_error: number;
   thrust_level: number;
   actual_thrust: number;
+  error_over_time: number[];
 };
 
 type OrbitalItem = {
@@ -57,6 +58,27 @@ export const OrbitalHeightControl = () => {
         <OrbitalHeightContent />
       </Window.Content>
     </Window>
+  );
+};
+
+const ErrorGraph = (props) => {
+  const {
+    error_over_time = [],
+    width = 100,
+    height = 100,
+  } = props;
+
+  return (
+    <svg
+        width={width}
+        height={height}
+        viewBox={`${0} ${-25} ${50} ${25}`}
+      >
+    <g transform="scale(1, -1)">
+    <rect height={1} width={width} x={0} y={0} fill="grey" />
+    {error_over_time.map((error: number, i: number, array: number[]) => (<line key={i} x1={i - 1} y1={i > 0 ? array[i - 1] * 10 : 0} x2={i} y2={error * 10} stroke="red" />))}
+    </g>
+    </svg>
   );
 };
 
@@ -215,6 +237,8 @@ const OrbitalHeightContent = () => {
     accumulated_error,
     thrust_level,
     actual_thrust,
+
+    error_over_time = [],
   } = data;
   const pixel_scale = 1 / 40000;
 
@@ -360,6 +384,7 @@ const OrbitalHeightContent = () => {
         content={'reset accumulator'}
         onClick={() => act('reset_integral')}
       />
+      <ErrorGraph error_over_time={error_over_time} height={100} />
       <Knob
         size={1.5}
         value={zoom}
