@@ -5,7 +5,7 @@ type Props = {
   label: string;
   todisplay: number;
   maxdigits: number;
-} & Partial<{ unit: string; decimal: number;}> &
+} & Partial<{ unit: string; decimal: number }> &
   Partial<BoxProps>;
 
 export const LabeledCounter = (props: Props) => {
@@ -18,14 +18,21 @@ export const LabeledCounter = (props: Props) => {
     unit = '',
     ...rest
   } = props;
-  let actually_displayed = "";
+  let actually_displayed = '';
 
-  if(Math.abs(todisplay) > 10 ** maxdigits || Math.abs(todisplay) < 10 ** -maxdigits) {
-    actually_displayed = Math.abs(todisplay).toExponential(maxdigits) + (unit ? " " : "") + unit;
-  } else if(Math.abs(todisplay) < 1) {
-    actually_displayed = Number(Math.abs(todisplay).toFixed(decimal)) + (unit ? " " : "") + unit;
+  if (
+    (Math.abs(todisplay) > 10 ** maxdigits ||
+      Math.abs(todisplay) < 10 ** -maxdigits) &&
+    todisplay !== 0
+  ) {
+    actually_displayed =
+      Math.abs(todisplay).toExponential(maxdigits) + (unit ? ' ' : '') + unit;
+  } else if (Math.abs(todisplay) <= 1) {
+    actually_displayed =
+      Number(Math.abs(todisplay).toFixed(decimal)) + (unit ? ' ' : '') + unit;
   } else {
-    actually_displayed = Math.abs(todisplay).toFixed(decimal) + (unit ? " " : "") + unit;
+    actually_displayed =
+      Math.abs(todisplay).toFixed(0) + (unit ? ' ' : '') + unit;
   }
 
   return (
@@ -39,7 +46,7 @@ export const LabeledCounter = (props: Props) => {
         <Flex.Item>
           <Box
             backgroundColor="grey"
-            width={`${Math.max(actually_displayed.length + 1, maxdigits + 1 + unit.length)}ch`}
+            width={`${Math.max(actually_displayed.length + 1 + unit.length, maxdigits + 1 + unit.length)}ch`}
             fontSize={fontSize}
             mx={1}
             px={1}

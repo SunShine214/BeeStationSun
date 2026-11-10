@@ -22,6 +22,9 @@
 	var/template_offset_y = 0
 
 	var/list/obj/attached_parts = list()
+	/// What ui should open upon interacting with any dummy or the main part? (Exists because tgui checks for adjacency on the mob level,
+	/// rather then the machine hosting the ui :/)
+	var/ui = null
 
 /obj/machinery/multitile/Initialize(mapload)
 	. = ..()
@@ -32,6 +35,7 @@
 	for(var/obj/attached in attached_parts)
 		if(QDELETED(attached))
 			continue
+		UnregisterSignal(attached, COMSIG_QDELETING)
 		attached_parts -= attached
 		qdel(attached)
 	QDEL_NULL(attached_parts)
@@ -80,10 +84,16 @@
 		return build_dummy(locate(x + x_offset, y + y_offset, z))
 
 /obj/machinery/multitile/proc/build_dummy(location)
-	return new /obj/structure/dummy(location, src)
+	var/obj/structure/dummy/new_dummy = new(location, src)
+	new_dummy.resistance_flags = resistance_flags
+	new_dummy.move_resist = move_resist
+	return new_dummy
 
 /obj/machinery/multitile/proc/build_icon_dummy(icon_state, location)
-	return new /obj/structure/dummy_visible(location, src, icon_state)
+	var/obj/structure/dummy_visible/new_dummy = new(location, src, icon_state)
+	new_dummy.resistance_flags = resistance_flags
+	new_dummy.move_resist = move_resist
+	return new_dummy
 
 /obj/machinery/multitile/proc/build_type(type, location)
 	return new type(location, src)
@@ -97,22 +107,31 @@
 		return
 	ui_act_base(action, params)
 
+/obj/machinery/multitile/ui_interact(mob/user, datum/tgui/incoming_ui)
+	if(!ui)
+		return
+	incoming_ui = SStgui.try_update_ui(user, src, incoming_ui)
+	if(!incoming_ui)
+		incoming_ui = new(user, src, ui, name)
+		incoming_ui.open()
+		incoming_ui.set_autoupdate(TRUE)
+
 /obj/structure/dummy
 	name = "big machinery part"
 	density = TRUE
 	anchored = TRUE
 	invisibility = INVISIBILITY_ABSTRACT
-	var/obj/machinery/multitile/parent
+	var/datum/weakref/parent
 
 /obj/structure/dummy/Initialize(mapload, new_parent)
 	. = ..()
-	parent = new_parent
+	parent = WEAKREF(new_parent)
 
 /obj/structure/dummy_visible
 	name = "big machinery part"
 	density = TRUE
 	anchored = TRUE
-	var/obj/machinery/multitile/parent //TODO - replace with weakref
+	var/datum/weakref/parent
 
 /obj/structure/dummy_visible/Initialize(mapload, obj/new_parent, new_icon_state)
 	. = ..()
@@ -120,14 +139,47 @@
 	desc = new_parent.desc
 	icon = new_parent.icon
 	icon_state = new_icon_state
-	parent = new_parent
+	parent = WEAKREF(new_parent)
 
-/obj/structure/dummy_visible/ui_interact(mob/user, datum/tgui/ui)
-	parent.ui_interact()
+/obj/structure/dummy_visible/item_interaction(mob/living/user, obj/item/tool, list/modifiers)
+	var/obj/machinery/multitile/multi_parent = parent.resolve()
+	return multi_parent?.item_interaction(user, tool, modifiers)
+
+/obj/structure/dummy_visible/item_interaction_secondary(mob/living/user, obj/item/tool, list/modifiers)
+	var/obj/machinery/multitile/multi_parent = parent.resolve()
+	return multi_parent?.item_interaction_secondary(user, tool, modifiers)
+
+/obj/structure/dummy_visible/attackby(obj/item/attacking_item, mob/user, list/modifiers)
+	var/obj/machinery/multitile/multi_parent = parent.resolve()
+	return multi_parent?.attackby(attacking_item, user, modifiers)
+
+/obj/structure/dummy_visible/attackby_secondary(obj/item/weapon, mob/user, list/modifiers)
+	var/obj/machinery/multitile/multi_parent = parent.resolve()
+	return multi_parent?.attackby_secondary(weapon, user, modifiers)
+
+/obj/structure/dummy_visible/ui_interact(mob/user, datum/tgui/incoming_ui)
+	var/obj/machinery/multitile/multi_parent = parent.resolve()
+	var/ui = multi_parent?.ui
+	if(!ui)
+		return
+	incoming_ui = SStgui.try_update_ui(user, src, incoming_ui)
+	if(!incoming_ui)
+		incoming_ui = new(user, src, ui, name)
+		incoming_ui.open()
+		incoming_ui.set_autoupdate(TRUE)
 
 /obj/structure/dummy_visible/ui_act(action, params)
 	if(..())
 		return
-	parent.ui_act_base(action, params)
+	var/obj/machinery/multitile/multi_parent = parent.resolve()
+	multi_parent?.ui_act_base(action, params)
+
+/obj/structure/dummy_visible/ui_data(mob/user)
+	var/obj/machinery/multitile/multi_parent = parent.resolve()
+	return multi_parent.ui_data()
+
+/obj/structure/dummy_visible/ui_static_data(mob/user)
+	var/obj/machinery/multitile/multi_parent = parent.resolve()
+	return multi_parent.ui_static_data()
 
 #undef TEMPLATE_PART_DUMMY

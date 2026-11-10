@@ -8,14 +8,15 @@
 #define CRUCIBLE_ALLOYS list("Plasteel" = CRUCIBLE_PLASTEEL, "Plastitianium" = CRUCIBLE_PLASTITIANIUM, "Ferrocarbon" = CRUCIBLE_FERROCARBON, "Dureenium" = CRUCIBLE_DUREENIUM)
 
 #define CRUCIBLE_DEFAULT_NANITE_USE 10
-
 #define CRUCIBLE_DEFAULT_MAT_USE 1
-
-/obj/machinery/multitile/hull_stabilizer
+// TODO - Make it relinkable with DEFINE_BUFFER_HANDLER ect...
+/obj/machinery/multitile/hull_crucible
 	name = "station hull crucible"
 	desc = "This device that uses material and nanite canisters to repair and manage the station's hull."
-	icon = 'icons/obj/machines/hull_stabilizer.dmi'
+	icon = 'icons/obj/machines/hull_crucible.dmi'
 	icon_state = "5"
+	resistance_flags = INDESTRUCTIBLE | LAVA_PROOF | FIRE_PROOF | UNACIDABLE | ACID_PROOF
+	move_resist = INFINITY
 
 	template = list(\
 		list(list("template_type" = "1",  "density" = FALSE), "2", list("template_type" = "3",  "density" = FALSE)),\
@@ -26,58 +27,55 @@
 	template_offset_x = -1
 	template_offset_y = -1
 
+	ui = "HullCrucible"
+
 	var/list/obj/structure/hull_nanite_canister/canisters = list()
-	var/datum/component/material_container/materials
+	var/datum/component/remote_materials/materials
+
 	var/selected_alloy
 	var/throttle = 1
-
 	var/nanite_consumption = CRUCIBLE_DEFAULT_NANITE_USE
 	var/material_consumption = CRUCIBLE_DEFAULT_MAT_USE
 
-/obj/machinery/multitile/hull_stabilizer/Initialize(mapload)
-	materials = AddComponent(/datum/component/material_container, list(/datum/material/iron, /datum/material/diamond, /datum/material/titanium, /datum/material/plasma,), 200, MATCONTAINER_EXAMINE, null, null)
+/obj/machinery/multitile/hull_crucible/Initialize(mapload)
+	materials = AddComponent(/datum/component/remote_materials, "crucible", mapload)
 	selected_alloy = CRUCIBLE_ALLOYS[1]
 	. = ..()
 
-/obj/machinery/multitile/hull_stabilizer/Destroy()
+/obj/machinery/multitile/hull_crucible/Destroy()
 	canisters = null
-	QDEL_NULL(materials)
 	. = ..()
 
-/obj/machinery/multitile/hull_stabilizer/process(delta_time)
-	var/nanite_mult = adjust_nanites(-nanite_consumption) / nanite_consumption
+/obj/machinery/multitile/hull_crucible/process(delta_time)
+	if(throttle <= 0)
+		return
+	var/nanite_mult = adjust_nanites(-nanite_consumption * throttle) / (nanite_consumption * throttle)
 	SSsuperstructure.repair_structure(consume_selected_alloy(material_consumption * throttle) * CRUCIBLE_ALLOYS[selected_alloy][CRUCIBLE_ALLOY_MULT] * nanite_mult)
 
-/obj/machinery/multitile/hull_stabilizer/ui_interact(mob/user, datum/tgui/ui)
-	ui = SStgui.try_update_ui(user, src, ui)
-	if(!ui)
-		ui = new(user, src, "HullCrucible", name)
-		ui.open()
-		ui.set_autoupdate(TRUE)
-
-/obj/machinery/multitile/hull_stabilizer/ui_data(mob/user)
+/obj/machinery/multitile/hull_crucible/ui_data(mob/user)
 	var/list/data = list()
 
 	var/list/nanite_cans = list()
 	for(var/obj/structure/hull_nanite_canister/can in canisters)
 		nanite_cans += list(list("nanites" = can.nanites))
 	data["nanite_cans"] = nanite_cans
+	data["materials"] = materials.mat_container.ui_data()
 
 	return data
 
 /// Consume one alloy's worth of materials.
-/obj/machinery/multitile/hull_stabilizer/proc/consume_selected_alloy(amount)
+/obj/machinery/multitile/hull_crucible/proc/consume_selected_alloy(amount)
 	var/alloy_total = 0
 	for(var/key in CRUCIBLE_ALLOYS[selected_alloy][CRUCIBLE_ALLOY_MATS])
 		alloy_total += CRUCIBLE_ALLOYS[selected_alloy][CRUCIBLE_ALLOY_MATS][key]
 	if(amount < alloy_total || !alloy_total)
 		return 0
-	if(!materials.has_materials(CRUCIBLE_ALLOYS[selected_alloy][CRUCIBLE_ALLOY_MATS], amount / alloy_total))
+	if(!materials.mat_container.has_materials(CRUCIBLE_ALLOYS[selected_alloy][CRUCIBLE_ALLOY_MATS], amount / alloy_total))
 		return 0
-	materials.use_materials(CRUCIBLE_ALLOYS[selected_alloy][CRUCIBLE_ALLOY_MATS], amount / alloy_total)
+	materials.mat_container.use_materials(CRUCIBLE_ALLOYS[selected_alloy][CRUCIBLE_ALLOY_MATS], amount / alloy_total)
 	return amount
 
-/obj/machinery/multitile/hull_stabilizer/proc/adjust_nanites(amount)
+/obj/machinery/multitile/hull_crucible/proc/adjust_nanites(amount)
 	if(!length(canisters))
 		return 0 // Not FALSE since this does not represent a boolean
 
@@ -94,24 +92,24 @@
 
 	return amount_removed
 
-/obj/machinery/multitile/hull_stabilizer/proc/get_nanites()
+/obj/machinery/multitile/hull_crucible/proc/get_nanites()
 	var/total = 0
 	for(var/obj/structure/hull_nanite_canister/canister in canisters)
 		total += canister.nanites
 	return total
 
-/obj/machinery/multitile/hull_stabilizer/proc/add_canister(obj/structure/hull_nanite_canister/canister)
+/obj/machinery/multitile/hull_crucible/proc/add_canister(obj/structure/hull_nanite_canister/canister)
 	RegisterSignal(canister, COMSIG_QDELETING, PROC_REF(remove_canister))
 	canisters += canister
 
-/obj/machinery/multitile/hull_stabilizer/proc/remove_canister(obj/structure/hull_nanite_canister/canister)
+/obj/machinery/multitile/hull_crucible/proc/remove_canister(obj/structure/hull_nanite_canister/canister)
 	UnregisterSignal(canister, COMSIG_QDELETING) // TODO - Investigate this
 	canisters -= canister
 
 /obj/structure/hull_nanite_canister
 	name = "hull-repair nanite canister"
 	desc = "A stasis canister for organo-synth nanite clusters meant to be attached to the hull crucible to provide replacement nanites."
-	icon = 'icons/obj/machines/hull_stabilizer.dmi'
+	icon = 'icons/obj/machines/hull_crucible.dmi'
 	icon_state = "nanite_canister"
 	var/nanites = 100
 	var/datum/weakref/crucible
@@ -120,10 +118,10 @@
 	if(anchored)
 		playsound(src, 'sound/machines/gas_attach.ogg', 50)
 		set_anchored(FALSE)
-		var/obj/machinery/multitile/hull_stabilizer/old_crucible = crucible?.resolve()
+		var/obj/machinery/multitile/hull_crucible/old_crucible = crucible?.resolve()
 		old_crucible?.remove_canister(src)
 		return TRUE
-	var/obj/machinery/multitile/hull_stabilizer/new_crucible = find_valid_crucible()
+	var/obj/machinery/multitile/hull_crucible/new_crucible = find_valid_crucible()
 	if(new_crucible)
 		playsound(src, 'sound/machines/gas_attach.ogg', 50)
 		set_anchored(TRUE)
@@ -139,11 +137,11 @@
 		for(var/iter_y = -1, iter_y <= 1, iter_y += 2)
 			var/turf/turf_to_check = locate(x + iter_x, y + iter_y, z)
 			contents_to_check += turf_to_check.contents
-	for(var/obj/machinery/multitile/hull_stabilizer/crucible in contents_to_check)
+	for(var/obj/machinery/multitile/hull_crucible/crucible in contents_to_check)
 		return crucible
 
 /obj/structure/hull_nanite_canister/proc/find_valid_crucible()
-	var/obj/machinery/multitile/hull_stabilizer/crucible = find_crucible()
+	var/obj/machinery/multitile/hull_crucible/crucible = find_crucible()
 	if(!crucible)
 		return
 	for(var/obj/structure/hull_nanite_canister/other_can in get_turf(src))

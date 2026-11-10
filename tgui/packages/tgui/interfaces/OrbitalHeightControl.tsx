@@ -77,7 +77,13 @@ const ErrorGraph = (props) => {
   const { error_over_time = [], width = 100, height = 100 } = props;
 
   return (
-    <svg color="grey" width={width} height={height} viewBox={`${0} ${-25} ${50} ${50}`} style={{ backgroundColor: '#3a3a3a' }}>
+    <svg
+      color="grey"
+      width={width}
+      height={height}
+      viewBox={`${0} ${-25} ${50} ${50}`}
+      style={{ backgroundColor: '#3a3a3a' }}
+    >
       <g transform="scale(1, -1)">
         <rect height={1} width={50} x={0} y={0} fill="grey" />
         {error_over_time.map((error: number, i: number, array: number[]) => (
@@ -257,7 +263,7 @@ const OrbitalMap = (props) => {
   const [zoom, set_zoom] = useState(1);
 
   return (
-    <Section>
+    <Section title="Orbital Map">
       <Box>
         <Knob
           size={1.5}
@@ -296,6 +302,11 @@ const OrbitalMap = (props) => {
                   onMouseDown={(e) => {
                     control_x.handleDragStart(e);
                     control_y.handleDragStart(e);
+                  }}
+                  onWheel={(e) => {
+                    set_zoom(
+                      Math.min(Math.max(zoom + e.deltaY * 0.001, 0.1), 2),
+                    );
                   }}
                   width={width}
                   height={height}
@@ -388,102 +399,123 @@ const OrbitKeeping = () => {
   } = data;
 
   return (
-    <Flex direction="row">
-      <Flex.Item>
-        <Button
-            content="Toggle Orbit Keeping"
+    <Section title="Orbit Keeping">
+      <Flex direction="column">
+        <Flex.Item grow>
+          <Button
+            content={
+              orbit_keeping
+                ? 'Deactivate Orbit Keeping'
+                : 'Activate Orbit Keeping'
+            }
             onClick={() => act('toggle_orbit_keeping')}
             align="center"
+            width="100%"
           />
-          <Box>
-          Orbit Keeping: {orbit_keeping ? "Activated" : "Deactivated"}
-          </Box>
-      </Flex.Item>
-      <Flex.Item>
-        <LabeledList>
-          <LabeledList.Item label={"Gain"}>
-            <Box m={1}>
-        <NumberInput
-          value={gain}
-          minValue={0}
-          maxValue={100}
-          stepPixelSize={5}
-          width="50px"
-          step={0.01}
-          onDrag={(value) =>
-            act('gain', {
-              gain: value,
-            })
-          }
-        />
-            </Box>
-          </LabeledList.Item>
-        <LabeledList.Item label={"Integral"}>
-        <Box m={1} width="100%">
-          <NumberInput
-            value={integral}
-            minValue={0.1}
-            maxValue={100}
-            stepPixelSize={5}
-            width="50px"
-            step={1}
-            onDrag={(value) =>
-              act('integral', {
-                integral: value,
-              })
-            }
-          />
-        </Box>
-        </LabeledList.Item>
-        <LabeledList.Item label={"Derivitive"}>
-        <Box m={1}>
-          <NumberInput
-            value={derivitive}
-            minValue={0}
-            maxValue={100}
-            stepPixelSize={5}
-            width="50px"
-            step={0.1}
-            onDrag={(value) =>
-              act('derivitive', {
-                derivitive: value,
-              })
-            }
-          />
-        </Box>
-        </LabeledList.Item>
-        </LabeledList>
-        <Flex direction="row" backgroundColor="#680000" align="center">
-        <LabeledCounter
-          label="Accum. Error"
-          todisplay={accumulated_error}
-          maxdigits={8}
-          fontSize="12px"
-          backgroundColor="#680000"
-        />
-        <Box fill verticalAlign="center">
-        <Button
-          content={'Reset'}
-          onClick={() => act('reset_integral')}
-        />
-        </Box>
-        </Flex >
-      </Flex.Item>
-      <Flex.Item height="100%">
-
-      <Flex direction="column">
-        <ErrorGraph error_over_time={error_over_time} height="50%" />
-        <LabeledCounter
-          label="Error"
-          todisplay={last_error}
-          maxdigits={6}
-          decimal={2}
-          fontSize="12px"
-          backgroundColor="#680000"
-        />
+        </Flex.Item>
+        <Flex direction="row" justify="center">
+          <Flex direction="row" justify="center">
+            <Flex.Item>
+              <LabeledList>
+                <LabeledList.Item label={'Gain'}>
+                  <Box m={1}>
+                    <NumberInput
+                      value={gain}
+                      minValue={0}
+                      maxValue={100}
+                      stepPixelSize={5}
+                      width="50px"
+                      step={0.01}
+                      onDrag={(value) =>
+                        act('gain', {
+                          gain: value,
+                        })
+                      }
+                    />
+                  </Box>
+                </LabeledList.Item>
+                <LabeledList.Item label={'Integral'}>
+                  <Box m={1} width="100%">
+                    <NumberInput
+                      value={integral}
+                      minValue={0.1}
+                      maxValue={100}
+                      stepPixelSize={5}
+                      width="50px"
+                      step={1}
+                      onDrag={(value) =>
+                        act('integral', {
+                          integral: value,
+                        })
+                      }
+                    />
+                  </Box>
+                </LabeledList.Item>
+                <LabeledList.Item label={'Derivitive'}>
+                  <Box m={1}>
+                    <NumberInput
+                      value={derivitive}
+                      minValue={0}
+                      maxValue={100}
+                      stepPixelSize={5}
+                      width="50px"
+                      step={0.1}
+                      onDrag={(value) =>
+                        act('derivitive', {
+                          derivitive: value,
+                        })
+                      }
+                    />
+                  </Box>
+                </LabeledList.Item>
+              </LabeledList>
+            </Flex.Item>
+            <Flex.Item />
+            <Flex.Item height="100%" />
+          </Flex>
+          <ErrorGraph error_over_time={error_over_time} height="100%" />
+        </Flex>
+        <Flex direction="row" justify="center" backgroundColor="#680000">
+          <Flex.Item>
+            <LabeledCounter
+              label="Error"
+              todisplay={last_error}
+              maxdigits={6}
+              decimal={2}
+              fontSize="12px"
+              width="100%"
+            />
+          </Flex.Item>
+          <Flex.Item>
+            <Flex
+              direction="row"
+              backgroundColor="#680000"
+              align="center"
+              width="100%"
+              pr={1}
+            >
+              <Flex.Item>
+                <LabeledCounter
+                  label="Accum. Error"
+                  todisplay={accumulated_error}
+                  maxdigits={8}
+                  fontSize="12px"
+                  backgroundColor="#680000"
+                />
+              </Flex.Item>
+              <Flex.Item>
+                <Box fill verticalAlign="center">
+                  <Button
+                    content={'Reset'}
+                    onClick={() => act('reset_integral')}
+                  />
+                </Box>
+              </Flex.Item>
+            </Flex>
+          </Flex.Item>
+        </Flex>
       </Flex>
-      </Flex.Item>
-    </Flex>
+    </Section>
   );
 };
 
@@ -563,7 +595,7 @@ const Throttle = () => {
   const { act, data } = useBackend<OrbitalData>();
   const { thrust_level, actual_thrust } = data;
   return (
-    <Flex direction="row">
+    <Flex direction="row" justify="center">
       <Flex.Item>
         <Stack vertical inline>
           <Button
@@ -581,13 +613,20 @@ const Throttle = () => {
         </Stack>
       </Flex.Item>
       <Flex.Item align="center" fill>
-        <Box m={1}>Throttle: {thrust_level}</Box>
+        <LabeledCounter
+          label="Throttle"
+          todisplay={thrust_level}
+          maxdigits={10}
+          fontSize="12px"
+          backgroundColor="#182b5e"
+          decimal={3}
+        />
       </Flex.Item>
-      <Flex.Item>
+      <Flex.Item align="center">
         <LabeledCounter
           label="Thrust"
           todisplay={actual_thrust / 1000000}
-          maxdigits={10}
+          maxdigits={7}
           fontSize="12px"
           backgroundColor="#182b5e"
           unit="MN"
@@ -598,13 +637,37 @@ const Throttle = () => {
 };
 
 const OrbitalHeightContent = () => {
-  const { act, data } = useBackend<OrbitalData>();
+  const { data } = useBackend<OrbitalData>();
+  const { current_altitude = 0 } = data;
   return (
-    <>
-      <OrbitKeeping />
-      <Throttle />
-      <Navball />
-      <OrbitalMap />
-    </>
+    <Stack>
+      <Stack vertical>
+        <Stack.Item grow>
+          <OrbitKeeping />
+        </Stack.Item>
+        <Stack.Item>
+          <OrbitalMap />
+        </Stack.Item>
+      </Stack>
+      <Stack.Item grow>
+        <Stack vertical ml={1} height="100%">
+          <Section title="Navigation">
+            <Navball />
+          </Section>
+          <Section title="Drive">
+            <Throttle />
+          </Section>
+          <Stack.Item grow>
+            <Section height="100%" title="Data">
+              <LabeledList>
+                <LabeledList.Item label="Altitude">
+                  {current_altitude}
+                </LabeledList.Item>
+              </LabeledList>
+            </Section>
+          </Stack.Item>
+        </Stack>
+      </Stack.Item>
+    </Stack>
   );
 };
