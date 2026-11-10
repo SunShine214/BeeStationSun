@@ -25,6 +25,10 @@
 	chemical_flags = CHEMICAL_RNG_GENERAL | CHEMICAL_RNG_FUN | CHEMICAL_RNG_BOTANY
 	taste_description = "oil"
 
+/datum/reagent/nitroglycerin/on_new(data)
+	. = ..()
+	volatile = new(3042 KILOWATT, 323, 9, 9) // More powerful then in real life, but the risk of explosion is high.
+
 /datum/reagent/stabilizing_agent
 	name = "Stabilizing Agent"
 	description = "Keeps unstable chemicals stable. This does not work on everything."
@@ -42,6 +46,10 @@
 	metabolization_rate = 10 * REAGENTS_METABOLISM
 	taste_description = "burning"
 	process_flags = ORGANIC | SYNTHETIC
+
+/datum/reagent/clf3/on_new(data)
+	. = ..()
+	volatile = new(163 KILOWATT, 453, 0, 2) // Since halogens can only accept one electron, consider it half an oxygen! Not realistic, but eh
 
 /datum/reagent/clf3/on_mob_life(mob/living/carbon/affected_mob, delta_time, times_fired)
 	. = ..()
@@ -390,3 +398,25 @@
 /datum/reagent/ammonium_perchlorate/on_new(data)
 	. = ..()
 	volatile = new(120 KILOWATT, 440, 0, 4)
+
+/datum/reagent/manganese_heptoxide
+	name = "Manganese Heptoxide"
+	description = "Mn2O7. A strong oxidizer, which is highly energetic when decomposing."
+	reagent_state = SOLID
+	color = "#6b0000"
+	chemical_flags = CHEMICAL_RNG_GENERAL | CHEMICAL_RNG_FUN | CHEMICAL_RNG_BOTANY
+	taste_description = "burning metal"
+	process_flags = ORGANIC
+
+/datum/reagent/manganese_heptoxide/on_new(data)
+	. = ..()
+	volatile = new(726 KILOWATT, 328, 0, 7)
+
+/datum/reagent/manganese_heptoxide
+	name = "Manganese Heptoxide"
+	description = "Mn2O7. A strong oxidizer, which is highly energetic when decomposing."
+	reagent_state = SOLID
+	color = "#6b0000"
+	chemical_flags = CHEMICAL_RNG_GENERAL | CHEMICAL_RNG_FUN | CHEMICAL_RNG_BOTANY
+	taste_description = "burning metal"
+	process_flags = ORGANIC

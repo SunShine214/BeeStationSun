@@ -11,7 +11,7 @@
 	linked_reagents = null
 	. = ..()
 
-// TODO, make it actually consume the oxidizer (energy releasing oxidizers already get consumed)
+// TODO - Make it increase temperature slowly
 /datum/fuel_burner/proc/burn(delta_time)
 	var/datum/reagents/combined = linked_reagents?.resolve()
 	if(!combined)
