@@ -2,7 +2,11 @@ SUBSYSTEM_DEF(orbital_altitude)
 	name = "Orbital Altitude"
 	can_fire = TRUE
 	wait = 0.25 SECONDS
-	ss_flags = SS_NO_INIT | SS_KEEP_TIMING
+	ss_flags = SS_KEEP_TIMING
+	runlevels = RUNLEVEL_GAME | RUNLEVEL_POSTGAME
+	dependencies = list(
+		/datum/controller/subsystem/mapping,
+	)
 
 	/// Current orbital altitude in meters
 	var/orbital_altitude = ORBITAL_ALTITUDE_DEFAULT
@@ -59,9 +63,11 @@ SUBSYSTEM_DEF(orbital_altitude)
 	/// List of all orbital thrusters
 	var/list/orbital_thrusters = list()
 
-	COOLDOWN_DECLARE(orbital_report_cooldown)
-	COOLDOWN_DECLARE(orbital_report_critical)
-	COOLDOWN_DECLARE(heavy_atmospheric_drag_cooldown)
+	// TODO - orbital CC reports?
+
+/datum/controller/subsystem/orbital_altitude/Initialize()
+
+	return SS_INIT_SUCCESS
 
 /datum/controller/subsystem/orbital_altitude/fire(resumed = FALSE)
 	// Disable for planetary stations (they don't orbit)

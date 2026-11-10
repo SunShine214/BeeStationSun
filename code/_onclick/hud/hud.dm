@@ -234,6 +234,7 @@ GLOBAL_LIST_INIT(available_ui_styles, list(
 	reorganize_alerts(screenmob)
 	screenmob.reload_fullscreen()
 	update_parallax_pref(screenmob)
+	create_atmosphere_background(screenmob)
 
 	// ensure observers get an accurate and up-to-date view
 	if (!viewmob)

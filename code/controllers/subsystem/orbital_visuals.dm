@@ -2,7 +2,10 @@ SUBSYSTEM_DEF(orbital_visuals)
 	name = "Orbital Visuals"
 	can_fire = TRUE
 	wait = 0.1 SECONDS
-	ss_flags = SS_NO_INIT | SS_KEEP_TIMING
+	ss_flags = SS_KEEP_TIMING
+	dependencies = list(
+		/datum/controller/subsystem/mapping,
+	)
 
 	/// Whether atmospheric fire visual effects are active
 	var/atmospheric_fire_effect_active = FALSE
@@ -10,6 +13,14 @@ SUBSYSTEM_DEF(orbital_visuals)
 	var/original_starlight_colour = COLOR_STARLIGHT
 	/// List of fire colors for atmospheric re-entry effects
 	var/list/fire_colors = list(LIGHT_COLOR_FIRE, LIGHT_COLOR_LAVA, LIGHT_COLOR_ORANGE, "#FF4500", "#FF6B00", "#FFA500")
+
+	var/list/station_z_levels
+	COOLDOWN_DECLARE(parallax_update_cooldown)
+
+/datum/controller/subsystem/orbital_visuals/Initialize()
+	RegisterSignal(SSdcs, COMSIG_GLOB_MOB_LOGGED_IN, PROC_REF(on_mob_login))
+	station_z_levels = SSmapping.levels_by_trait(ZTRAIT_STATION)
+	return SS_INIT_SUCCESS
 
 /datum/controller/subsystem/orbital_visuals/fire(resumed = FALSE)
 	// Disable for planetary stations (they don't orbit)
@@ -19,6 +30,12 @@ SUBSYSTEM_DEF(orbital_visuals)
 
 	// Get current orbital altitude
 	var/orbital_altitude = SSorbital_altitude.orbital_altitude
+
+	if(COOLDOWN_FINISHED(src, parallax_update_cooldown))
+		for(var/level in station_z_levels)
+			for (var/mob/mob as anything in SSmobs.clients_by_zlevel[level]) // TODO - DOES NOT UPDATE GHOSTS!!
+				update_background(mob)
+		COOLDOWN_START(src, parallax_update_cooldown, 2 SECONDS)
 
 	// Start atmospheric fire effects at 95km (LOW threshold) for early warning
 	if(orbital_altitude < ORBITAL_ALTITUDE_LOW && !atmospheric_fire_effect_active)
@@ -31,6 +48,27 @@ SUBSYSTEM_DEF(orbital_visuals)
 	// Stop fire effects when safely above 95km
 	if(orbital_altitude >= ORBITAL_ALTITUDE_LOW && atmospheric_fire_effect_active)
 		stop_atmospheric_fire_effect()
+
+/datum/controller/subsystem/orbital_visuals/proc/on_mob_login(datum/source, mob/new_login)
+	SIGNAL_HANDLER
+	//Register the required signals
+	RegisterSignal(new_login, COMSIG_MOVABLE_Z_CHANGED, PROC_REF(on_mob_changed_z_level))
+	RegisterSignal(new_login, COMSIG_MOB_LOGOUT, PROC_REF(on_mob_logout))
+
+/datum/controller/subsystem/orbital_visuals/proc/on_mob_logout(mob/source)
+	SIGNAL_HANDLER
+	UnregisterSignal(source, COMSIG_MOVABLE_Z_CHANGED)
+	UnregisterSignal(source, COMSIG_MOB_LOGOUT)
+
+/datum/controller/subsystem/orbital_visuals/proc/on_mob_changed_z_level(mob/source, old_z, new_z)
+	SIGNAL_HANDLER
+	update_background(source)
+
+/datum/controller/subsystem/orbital_visuals/proc/update_background(mob/source)
+	var/client/to_update = source.client
+	if(!to_update)
+		return
+	animate(to_update.atmosphere_background, alpha = get_alpha_from_orbit(), 2 SECONDS)
 
 /datum/controller/subsystem/orbital_visuals/proc/start_atmospheric_fire_effect()
 	if(atmospheric_fire_effect_active)
@@ -71,6 +109,9 @@ SUBSYSTEM_DEF(orbital_visuals)
 	var/base_brightness = 1.0 + (depth_ratio * 0.5) // 1.0x → 1.75x
 	var/brightened_color = brighten_color(picked_color, base_brightness + (flicker_intensity / 300))
 	set_starlight_colour(brightened_color, transition_time)
+
+/datum/controller/subsystem/orbital_visuals/proc/get_alpha_from_orbit()
+	return clamp(1 - ((SSorbital_altitude.orbital_altitude - CINIS_RADIUS) / CINIS_ATMOSPHERE) * 255, 0, 255)
 
 /datum/controller/subsystem/orbital_visuals/proc/brighten_color(color_input, multiplier)
 	// Extract RGB components from hex color
