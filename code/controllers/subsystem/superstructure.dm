@@ -38,7 +38,7 @@ SUBSYSTEM_DEF(superstructure)
 	play_global(pick('sound/effects/creak1.ogg', 'sound/effects/creak2.ogg', 'sound/effects/creak3.ogg')) // TODO - REPLACE THESE with more appropriate "low damage" sounds.
 	COOLDOWN_START(src, shielding_cooldown, rand(15, 25) SECONDS)
 
-/datum/controller/subsystem/superstructure/proc/play_global(sound)
+/datum/controller/subsystem/superstructure/proc/play_global(sound) // TODO - already-made proc?
 	for(var/mob/player_mob in GLOB.player_list)
 		if(is_station_level(player_mob.z))
 			SEND_SOUND(player_mob, sound)

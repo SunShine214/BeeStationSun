@@ -6,9 +6,6 @@
 	circuit = /obj/item/circuitboard/computer/orbital_height_control
 	light_color = LIGHT_COLOR_BLUE
 
-/obj/machinery/computer/orbital_height_control/Initialize(mapload)
-	. = ..()
-
 /obj/machinery/computer/orbital_height_control/ui_interact(mob/user, datum/tgui/ui)
 	. = ..()
 	ui = SStgui.try_update_ui(user, src, ui)

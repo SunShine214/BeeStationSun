@@ -47,7 +47,7 @@
 	. = ..()
 
 /obj/machinery/multitile/hull_crucible/process(delta_time)
-	if(throttle <= 0)
+	if(throttle <= 0) // TODO - EMAG interaction?
 		return
 	var/nanite_mult = adjust_nanites(-nanite_consumption * throttle) / (nanite_consumption * throttle)
 	SSsuperstructure.repair_structure(consume_selected_alloy(material_consumption * throttle) * CRUCIBLE_ALLOYS[selected_alloy][CRUCIBLE_ALLOY_MULT] * nanite_mult)
@@ -136,7 +136,7 @@
 	for(var/iter_x = -1, iter_x <= 1, iter_x += 2)
 		for(var/iter_y = -1, iter_y <= 1, iter_y += 2)
 			var/turf/turf_to_check = locate(x + iter_x, y + iter_y, z)
-			contents_to_check += turf_to_check.contents
+			contents_to_check += turf_to_check.contents // TODO - look at, this is O(4 * length(contents) + n) always
 	for(var/obj/machinery/multitile/hull_crucible/crucible in contents_to_check)
 		return crucible
 

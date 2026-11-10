@@ -35,15 +35,13 @@
 	for(var/obj/attached in attached_parts)
 		if(QDELETED(attached))
 			continue
-		UnregisterSignal(attached, COMSIG_QDELETING)
-		attached_parts -= attached
+		UnregisterSignal(attached, COMSIG_QDELETING) // TODO - look at this
 		qdel(attached)
-	QDEL_NULL(attached_parts)
 	. = ..()
 
 /obj/machinery/multitile/proc/child_destroyed()
 	SIGNAL_HANDLER
-	qdel(src)
+	qdel(src) // TODO - delete loop?
 
 /obj/machinery/multitile/proc/build_from_template()
 	if(isnull(template))
@@ -78,14 +76,14 @@
 /obj/machinery/multitile/proc/get_obj_from_template(item, x_offset, y_offset)
 	if(ispath(item))
 		return build_type(item, locate(x + x_offset, y + y_offset, z))
-	else if(istext(item))
+	if(istext(item))
 		return build_icon_dummy(item, locate(x + x_offset, y + y_offset, z))
-	else if(isnum(item) && item == TEMPLATE_PART_DUMMY)
+	if(isnum(item) && item == TEMPLATE_PART_DUMMY)
 		return build_dummy(locate(x + x_offset, y + y_offset, z))
 
 /obj/machinery/multitile/proc/build_dummy(location)
 	var/obj/structure/dummy/new_dummy = new(location, src)
-	new_dummy.resistance_flags = resistance_flags
+	new_dummy.resistance_flags = resistance_flags // TODO - fix this, move it into init?
 	new_dummy.move_resist = move_resist
 	return new_dummy
 
@@ -143,19 +141,19 @@
 
 /obj/structure/dummy_visible/item_interaction(mob/living/user, obj/item/tool, list/modifiers)
 	var/obj/machinery/multitile/multi_parent = parent.resolve()
-	return multi_parent?.item_interaction(user, tool, modifiers)
+	return multi_parent?.item_interaction(user, tool, modifiers) || NONE // TODO - is none needed?
 
 /obj/structure/dummy_visible/item_interaction_secondary(mob/living/user, obj/item/tool, list/modifiers)
 	var/obj/machinery/multitile/multi_parent = parent.resolve()
-	return multi_parent?.item_interaction_secondary(user, tool, modifiers)
+	return multi_parent?.item_interaction_secondary(user, tool, modifiers) || NONE
 
 /obj/structure/dummy_visible/attackby(obj/item/attacking_item, mob/user, list/modifiers)
 	var/obj/machinery/multitile/multi_parent = parent.resolve()
-	return multi_parent?.attackby(attacking_item, user, modifiers)
+	return multi_parent?.attackby(attacking_item, user, modifiers) || NONE
 
 /obj/structure/dummy_visible/attackby_secondary(obj/item/weapon, mob/user, list/modifiers)
 	var/obj/machinery/multitile/multi_parent = parent.resolve()
-	return multi_parent?.attackby_secondary(weapon, user, modifiers)
+	return multi_parent?.attackby_secondary(weapon, user, modifiers) || NONE
 
 /obj/structure/dummy_visible/ui_interact(mob/user, datum/tgui/incoming_ui)
 	var/obj/machinery/multitile/multi_parent = parent.resolve()
@@ -176,10 +174,10 @@
 
 /obj/structure/dummy_visible/ui_data(mob/user)
 	var/obj/machinery/multitile/multi_parent = parent.resolve()
-	return multi_parent.ui_data()
+	return multi_parent?.ui_data() // TODO - "|| list()" here
 
 /obj/structure/dummy_visible/ui_static_data(mob/user)
 	var/obj/machinery/multitile/multi_parent = parent.resolve()
-	return multi_parent.ui_static_data()
+	return multi_parent?.ui_static_data()
 
 #undef TEMPLATE_PART_DUMMY

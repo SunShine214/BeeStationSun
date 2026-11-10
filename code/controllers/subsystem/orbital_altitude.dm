@@ -16,10 +16,10 @@ SUBSYSTEM_DEF(orbital_altitude)
 	var/arg_of_periapsis = 0
 	var/orbital_epoch = 0
 
-	var/cached_eccentric_anomaly = null
+	var/cached_eccentric_anomaly
 
-	var/cached_station_pos = null
-	var/cached_station_velocity = null
+	var/cached_station_pos
+	var/cached_station_velocity
 
 	var/target_angle = 0
 	var/actual_angle = 0
@@ -49,7 +49,6 @@ SUBSYSTEM_DEF(orbital_altitude)
 
 	/// Global throttle
 	var/throttle = 1
-
 	/// Current thrust applied to the station (from engines)
 	var/thrust = 0
 	/// Atmospheric resistance coefficient
@@ -101,8 +100,6 @@ SUBSYSTEM_DEF(orbital_altitude)
 	return sqrt(cached_station_pos[1]**2 + cached_station_pos[2]**2)
 
 /datum/controller/subsystem/orbital_altitude/proc/calculate_velo_from_epoch()
-	if(isnull(cached_eccentric_anomaly))
-		calculate_eccentric_anomaly()
 	if(eccentricity > 0)
 		var/r = semi_major_axis * (1 - eccentricity * cos(cached_eccentric_anomaly))
 		var/per_velo_x = -(sqrt(CINIS_MASS * GRAVITATION_CONSTANT * semi_major_axis) / r) * sin(cached_eccentric_anomaly)
@@ -118,8 +115,6 @@ SUBSYSTEM_DEF(orbital_altitude)
 	cached_station_velocity = list(-circular_velo * sin(mean_anomaly + arg_of_periapsis), circular_velo * cos(mean_anomaly + arg_of_periapsis))
 
 /datum/controller/subsystem/orbital_altitude/proc/calculate_pos_from_epoch()
-	if(isnull(cached_eccentric_anomaly))
-		calculate_eccentric_anomaly()
 	if(eccentricity > 0)
 		var/per_x = semi_major_axis * (cos(cached_eccentric_anomaly) - eccentricity)
 		var/per_y = semi_major_axis * sqrt(1 - eccentricity**2) * sin(cached_eccentric_anomaly)
@@ -259,7 +254,7 @@ SUBSYSTEM_DEF(orbital_altitude)
 	if(length(error_over_time) >= 50)
 		popleft(error_over_time)
 	error_over_time += error
-
+	// TODO - redundant clamping?
 	var/output = clamp(keeping_gain * (error + (1 / keeping_integral) * keeping_accumulated_error + keeping_derivitive * (error - keeping_last_error)), 0, 1)
 
 	keeping_accumulated_error += error
@@ -267,7 +262,7 @@ SUBSYSTEM_DEF(orbital_altitude)
 
 	set_all_throttle(output)
 
-/datum/controller/subsystem/orbital_altitude/proc/set_error(state, flag) // TODO - think about if this is even needed
+/datum/controller/subsystem/orbital_altitude/proc/set_error(state, flag) // TODO - think about if this is even needed. Vars better probable
 	if(state && !(errors & flag))
 		errors |= flag
 		return TRUE
