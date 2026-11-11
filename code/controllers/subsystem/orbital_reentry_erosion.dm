@@ -1,9 +1,7 @@
 SUBSYSTEM_DEF(orbital_reentry_erosion)
 	name = "Orbital Reentry Erosion"
 
-	ss_flags = SS_NO_FIRE //TODO REMOVE
-
-	wait = 1 SECONDS
+	wait = 2 SECONDS
 	dependencies = list(
 		/datum/controller/subsystem/mapping,
 		/datum/controller/subsystem/atoms,
@@ -37,177 +35,13 @@ SUBSYSTEM_DEF(orbital_reentry_erosion)
 
 	return SS_INIT_SUCCESS
 
-/datum/controller/subsystem/orbital_reentry_erosion/proc/has_real_contents(turf/tile)
-	// Check if the tile has any real contents (objects or mobs)
-	if (!tile)
-		return FALSE
-
-	var/has_contents = FALSE
-	for (var/atom/movable/thing in tile)
-		// Break for the first real content found
-		if (is_real(thing))
-			has_contents = TRUE
-			break
-
-	return has_contents
-
-/datum/controller/subsystem/orbital_reentry_erosion/proc/is_real(atom/thing)
-	if (isobj(thing))
-		if (!iseffect(thing)) // With exceptions :3
-			return TRUE
-
-	if (ismob(thing))
-		if (!isobserver(thing))
-			return TRUE
-
-	return FALSE
-
-
 /datum/controller/subsystem/orbital_reentry_erosion/fire(resumed)
-	// Check if we should be active based on altitude
-	var/current_altitude = SSorbital_altitude.orbital_altitude
-	var/should_be_active = current_altitude < ORBITAL_ALTITUDE_LOW_CRITICAL
-
-	// Handle activation/deactivation
-	if (should_be_active && !erosion_active)
-		erosion_active = TRUE
-
-	else if (!should_be_active && erosion_active)
-		erosion_active = FALSE
-		// Clear all fires when deactivating
-		for (var/thing in created_fires)
-			qdel(thing)
-		created_fires.Cut()
+	if(SSorbital_altitude.thrust <= 0)
 		return
-
-	// If not active, don't process
-	if (!erosion_active)
-		return
-
-	// Calculate damage multiplier based on altitude
-	var/damage_multiplier = get_damage_multiplier(current_altitude)
-
-	// Set the initial working conditions
-	if (!resumed)
-		work_z = 1
-		work_coord = 1
-		// Clear old fires
-		for (var/thing in created_fires)
-			qdel(thing)
-		created_fires.Cut()
-
-	// Start working
-	var/max_coord = (reentry_direction == EAST || reentry_direction == WEST) ? world.maxy : world.maxx
-
-	while (work_z <= length(station_levels))
-		var/target_z = station_levels[work_z]
-
-		// Always scan from the edge to find the first valid target for this coordinate
-		var/current_target_pos
-		var/turf/target_tile
-
-		if (reentry_direction == EAST || reentry_direction == WEST)
-			// Start from the edge based on direction
-			current_target_pos = reentry_direction == EAST ? world.maxx : 1
-			var/x_increment = reentry_direction == EAST ? -1 : 1
-
-			// Scan until we find a valid target
-			while (current_target_pos > 0 && current_target_pos <= world.maxx)
-				target_tile = locate(current_target_pos, work_coord, target_z)
-
-				// Found a valid target (solid turf or space with real contents)
-				if (target_tile && (!isspaceturf(target_tile) || has_real_contents(target_tile)))
-					break
-
-				current_target_pos += x_increment
-		else
-			// Start from the edge based on direction
-			current_target_pos = reentry_direction == SOUTH ? 1 : world.maxy
-			var/y_increment = reentry_direction == SOUTH ? 1 : -1
-
-			// Scan until we find a valid target
-			while (current_target_pos > 0 && current_target_pos <= world.maxy)
-				target_tile = locate(work_coord, current_target_pos, target_z)
-
-				// Found a valid target (solid turf or space with real contents)
-				if (target_tile && (!isspaceturf(target_tile) || has_real_contents(target_tile)))
-					break
-
-				current_target_pos += y_increment
-
-		// Apply damage to the tile and everything on it (only if it's valid and not empty space)
-		if (target_tile && (!isspaceturf(target_tile) || has_real_contents(target_tile)))
-			apply_erosion_damage(target_tile, damage_multiplier)
-
-		// Increment coordinate
-		work_coord++
-
-		// Increment z if necessary
-		if (work_coord > max_coord)
-			work_coord = 1
-			work_z++
-
-		// Tick check, abort this run and continue on the next
-		if (MC_TICK_CHECK)
-			return
-
-/datum/controller/subsystem/orbital_reentry_erosion/proc/get_damage_multiplier(altitude)
-	return 4.0
-
-/datum/controller/subsystem/orbital_reentry_erosion/proc/apply_erosion_damage(turf/target_tile, damage_multiplier)
-	// Create fire effect
-	created_fires += new /obj/effect/reentry_fire(target_tile)
-
-	// Calculate actual damage values with much higher scaling
-	var/fire_temp = 600 + (1400 * damage_multiplier)  // 600 to 4800K at max
-	var/fire_volume = 200 + (800 * damage_multiplier)  // 200 to 2600 at max
-
-	// Yeah we go exponential
-	var/tile_damage = ((100 * damage_multiplier) * (damage_multiplier * damage_multiplier)) // 0 to 2700
-	var/obj_damage = ((2 * damage_multiplier) * (damage_multiplier * damage_multiplier)) // 0 to 54
-	var/mob_damage = (1 * (damage_multiplier * damage_multiplier)) // 0 to 9
-
-	// Apply damage to things
-	var/dense = FALSE
-	for (var/atom/thing in target_tile)
-
-		if(QDELETED(thing))
+	for(var/atom/movable/movable in GLOB.in_space_moveables)
+		if(movable.anchored)
 			continue
-
-		// Objects
-		if (isobj(thing))
-			if (iseffect(thing)) // With exceptions :3
-				continue
-
-			var/obj/obj_thing = thing
-			obj_thing.newtonian_move(REVERSE_DIR(reentry_direction))
-
-			if (obj_thing.density)
-				dense = TRUE
-			obj_thing.fire_act(fire_volume, fire_temp)
-			// fire_act may have destroyed the object
-			if(QDELETED(obj_thing))
-				continue
-			// Apply object damage
-			obj_thing.take_damage(obj_damage, BURN, FIRE)
-
-		// Mobs
-		if (ismob(thing))
-			if (isobserver(thing))
-				continue
-
-			var/mob/mob_thing = thing
-			mob_thing.newtonian_move(REVERSE_DIR(reentry_direction))
-
-			mob_thing.fire_act(fire_volume, fire_temp) // Does this do anything on mobs?
-
-			if (isliving(mob_thing))
-				var/mob/living/living_thing = mob_thing
-				living_thing.adjustFireLoss(mob_damage)
-
-	// Apply damage to turf if not blocked
-	if (!dense)
-		target_tile.take_damage(tile_damage, BURN, FIRE, TRUE, reentry_direction, fire_volume)
+		movable.newtonian_move(reentry_direction)
 
 /obj/effect/reentry_fire
 	anchored = TRUE

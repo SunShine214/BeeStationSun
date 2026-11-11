@@ -73,6 +73,9 @@
 	if(!our_area.has_starlight_overlay)
 		add_overlay(GLOB.starlight_overlay)
 
+	for(var/atom/movable/moveable in contents)
+		GLOB.in_space_moveables |= contents
+
 	return INITIALIZE_HINT_NORMAL
 
 /turf/open/space/Destroy()
@@ -158,7 +161,8 @@
 	. = ..()
 	if(!arrived || src != arrived.loc)
 		return
-
+	if(!isspaceturf(old_loc))
+		GLOB.in_space_moveables |= arrived
 	if(destination_z && destination_x && destination_y && !(arrived.pulledby || !arrived.can_be_z_moved))
 		var/tx = destination_x
 		var/ty = destination_y
@@ -186,6 +190,19 @@
 			AM.forceMove(T)
 			arrived.start_pulling(AM)
 			AM.can_be_z_moved = TRUE
+
+/turf/open/space/Exited(atom/movable/gone, direction)
+	. = ..()
+	if(!gone)
+		return
+	if(isspaceturf(gone.loc))
+		return
+	GLOB.in_space_moveables -= gone
+
+/turf/open/space/ChangeTurf(path, list/new_baseturfs, flags)
+	. = ..()
+	for(var/atom/movable/moveable in contents)
+		GLOB.in_space_moveables -= moveable
 
 /turf/open/space/MakeSlippery(wet_setting, min_wet_time, wet_time_to_add, max_wet_time, permanent)
 	return
