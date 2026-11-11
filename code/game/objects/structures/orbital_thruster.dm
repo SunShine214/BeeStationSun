@@ -48,7 +48,6 @@
 	power_link.add_load(usage)
 
 /obj/machinery/atmospherics/components/unary/orbital_thruster/process_atmos()
-
 	var/datum/gas_mixture/input = airs[1]
 	var/datum/gas_mixture/amount_pumped = input.remove_specific_ratio(/datum/gas/ionic_fuel, (injection_rate / input.volume) * thruster.throttle)
 
@@ -93,7 +92,6 @@
 /obj/machinery/orbital_thruster_nozzle/update_overlays()
 	. = ..()
 	if(back_end_piece.thruster.get_thrust() > 0)
-		var/mutable_appearance/glow = mutable_appearance('icons/obj/orbital_thruster.dmi', "orbital_thruster_beam", ABOVE_OBJ_LAYER)
-		. += glow
+		. += mutable_appearance('icons/obj/orbital_thruster.dmi', "orbital_thruster_beam", ABOVE_OBJ_LAYER)
 
 #undef ENERGY_TO_THRUST_COEFF

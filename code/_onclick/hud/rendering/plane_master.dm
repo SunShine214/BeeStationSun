@@ -294,7 +294,7 @@ INITIALIZE_IMMEDIATE(/atom/movable/screen/plane_master)
 	plane = PLANE_SPACE
 	render_relay_planes = list(RENDER_PLANE_SPACE)
 
-/atom/movable/screen/plane_master/atmosphere
+/atom/movable/screen/plane_master/atmosphere // TODO - blackness plane gets blended with atmosphere, bad
 	name = "atmosphere plane master"
 	plane = PLANE_ATMOSPHERE
 	mouse_opacity = MOUSE_OPACITY_TRANSPARENT
