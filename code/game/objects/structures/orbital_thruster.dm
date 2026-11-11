@@ -57,7 +57,6 @@
 
 	nozzle.update_appearance()
 	update_parents()
-	update_appearance()
 
 /obj/machinery/atmospherics/components/unary/orbital_thruster/update_overlays()
 	. = ..()
@@ -73,25 +72,23 @@
 	use_power = NO_POWER_USE
 	idle_power_usage = 0
 
-	var/datum/looping_sound/orbital_thruster/soundloop
-	var/obj/machinery/atmospherics/components/unary/orbital_thruster/back_end_piece // TODO - turn into weakref
+	var/datum/weakref/body
 
 /obj/machinery/orbital_thruster_nozzle/Initialize(mapload, obj/machinery/atmospherics/components/unary/orbital_thruster/parent)
 	if(!parent)
 		stack_trace("An orbital thruster nozzle has spawned without a parent piece!")
 		return INITIALIZE_HINT_QDEL
-	back_end_piece = parent
-	soundloop = new(src, FALSE)
+	body = WEAKREF(parent)
 	. = ..()
 
 /obj/machinery/orbital_thruster_nozzle/Destroy()
-	QDEL_NULL(soundloop)
-	back_end_piece = null
+	QDEL_NULL(body)
 	return ..()
 
 /obj/machinery/orbital_thruster_nozzle/update_overlays()
 	. = ..()
-	if(back_end_piece.thruster.get_thrust() > 0)
+	var/obj/machinery/atmospherics/components/unary/orbital_thruster/back_end_piece = body.resolve()
+	if(back_end_piece.thruster?.get_thrust() > 0)
 		. += mutable_appearance('icons/obj/orbital_thruster.dmi', "orbital_thruster_beam", ABOVE_OBJ_LAYER)
 
 #undef ENERGY_TO_THRUST_COEFF
