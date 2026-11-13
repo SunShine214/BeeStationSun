@@ -14,8 +14,8 @@ SUBSYSTEM_DEF(orbital_visuals)
 	/// List of fire colors for atmospheric re-entry effects
 	var/list/fire_colors = list(LIGHT_COLOR_FIRE, LIGHT_COLOR_LAVA, LIGHT_COLOR_ORANGE, "#FF4500", "#FF6B00", "#FFA500")
 
-	var/list/station_z_levels = matrix(1, 0, 0, 0, 1, 480)
-	var/matrix/scrolling_direction
+	var/list/station_z_levels
+	var/matrix/scrolling_direction = matrix(1, 0, 0, 0, 1, 480)
 	COOLDOWN_DECLARE(parallax_update_cooldown)
 
 /datum/controller/subsystem/orbital_visuals/Initialize()
@@ -43,7 +43,7 @@ SUBSYSTEM_DEF(orbital_visuals)
 
 	if(COOLDOWN_FINISHED(src, parallax_update_cooldown))
 		for(var/level in station_z_levels)
-			for (var/mob/mob as anything in SSmobs.clients_by_zlevel[level]) // TODO - DOES NOT UPDATE GHOSTS!!
+			for (var/mob/mob as anything in SSmobs.clients_by_zlevel[level])
 				update_background(mob)
 		COOLDOWN_START(src, parallax_update_cooldown, 2 SECONDS)
 
@@ -74,14 +74,15 @@ SUBSYSTEM_DEF(orbital_visuals)
 	SIGNAL_HANDLER
 	update_background(source)
 
-/datum/controller/subsystem/orbital_visuals/proc/update_background(mob/source)
+/datum/controller/subsystem/orbital_visuals/proc/update_background(mob/source) // TODO - auto expand the amount of atmos tiles depending on view size?
 	var/client/to_update = source.client
 	if(!to_update || !to_update?.atmosphere_background)
 		return
-	animate(to_update.atmosphere_background, alpha = get_alpha_from_orbit(), 4 SECONDS)
+	animate(to_update.atmosphere_background, alpha = get_alpha_from_orbit(), 2 SECONDS)
 	for(var/atom/movable/screen/atmosphere_background/background in to_update.atmosphere_background.vis_contents)
-		animate(background, transform = scrolling_direction, 4 SECONDS, loop = -1)
-		animate(transform = matrix(), 0)
+		animate(background, transform = scrolling_direction, 2 SECONDS, loop = -1)
+		animate(transform = matrix(), 0, loop = -1)
+
 
 /datum/controller/subsystem/orbital_visuals/proc/start_atmospheric_fire_effect()
 	if(atmospheric_fire_effect_active)
@@ -124,7 +125,7 @@ SUBSYSTEM_DEF(orbital_visuals)
 	set_starlight_colour(brightened_color, transition_time)
 
 /datum/controller/subsystem/orbital_visuals/proc/get_alpha_from_orbit()
-	return (2 - clamp((2 * SSorbital_altitude.orbital_altitude - 2 * CINIS_RADIUS) / CINIS_ATMOSPHERE, 0, 1)) * 255
+	return (clamp(2 - (2 * SSorbital_altitude.orbital_altitude - 2 * CINIS_RADIUS) / CINIS_ATMOSPHERE, 0, 1)) * 255
 
 /datum/controller/subsystem/orbital_visuals/proc/brighten_color(color_input, multiplier)
 	// Extract RGB components from hex color

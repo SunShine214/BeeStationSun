@@ -1061,6 +1061,14 @@
 	if(affected_mob.blood_volume < BLOOD_VOLUME_NORMAL)
 		affected_mob.blood_volume += 0.25 * delta_time
 
+/datum/reagent/manganese
+	name = "Manganese"
+	description = "A metal commonly used in steel alloys. Found in iron ores."
+	color = "#96889e"
+	chemical_flags = CHEMICAL_BASIC_ELEMENT
+	reagent_state = SOLID
+	taste_description = "tangy metal"
+
 /datum/reagent/gold
 	name = "Gold"
 	description = "Gold is a dense, soft, shiny metal and the most malleable and ductile metal known."

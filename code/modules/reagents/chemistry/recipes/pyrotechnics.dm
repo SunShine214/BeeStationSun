@@ -678,3 +678,33 @@
 	name = "Cults Explosion"
 	required_reagents = list(/datum/reagent/consumable/ethanol/ratvander = 1, /datum/reagent/consumable/ethanol/narsour = 1)
 	strengthdiv = 10
+
+/datum/chemical_reaction/hydrazine
+	name = "Ammonia Oxidization (Hydrazine)"
+	results = list(/datum/reagent/hydrazine = 3)
+	required_reagents = list(/datum/reagent/chlorine = 1, /datum/reagent/ammonia = 2)
+	required_catalysts = list(/datum/reagent/acetone = 5)
+	required_temp = 415
+
+/datum/chemical_reaction/plasma_precursor
+	name = "Plasma Precursor"
+	results = list(/datum/reagent/toxin/plasma/plasma_precursor = 6)
+	required_reagents = list(/datum/reagent/cryostylane = 1, /datum/reagent/toxin/plasma = 5)
+	required_temp = 200
+
+/datum/chemical_reaction/plasmatic_nitrolymine
+	name = "Plasmatic Nitrolymine"
+	results = list(/datum/reagent/plasmatic_nitrolymine = 2)
+	required_reagents = list(/datum/reagent/toxin/plasma/plasma_precursor = 6, /datum/reagent/hydrazine = 2)
+	required_temp = 225
+
+/datum/chemical_reaction/ammonium_perchlorate
+	name = "Ammonium Perchlorate"
+	results = list(/datum/reagent/ammonium_perchlorate = 5)
+	required_reagents = list(/datum/reagent/chlorine = 1, /datum/reagent/ammonia = 3, /datum/reagent/oxygen = 2)
+
+/datum/chemical_reaction/manganese_heptoxide
+	name = "Manganese Heptoxide"
+	results = list(/datum/reagent/manganese_heptoxide = 10)
+	required_reagents = list(/datum/reagent/manganese = 2, /datum/reagent/potassium = 1, /datum/reagent/oxygen = 7)
+

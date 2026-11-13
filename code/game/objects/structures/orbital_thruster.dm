@@ -56,6 +56,7 @@
 	thruster.thrust = power_mult * amount_pumped?.total_moles() * ENERGY_TO_THRUST_COEFF
 
 	nozzle.update_appearance()
+	nozzle.ion_trail.alpha = clamp(3e-5 * thruster.get_thrust(), 0, 255)
 	update_parents()
 
 /obj/machinery/atmospherics/components/unary/orbital_thruster/update_overlays()
@@ -73,12 +74,15 @@
 	idle_power_usage = 0
 
 	var/datum/weakref/body
+	var/obj/effect/abstract/particle_holder/ion_trail
 
 /obj/machinery/orbital_thruster_nozzle/Initialize(mapload, obj/machinery/atmospherics/components/unary/orbital_thruster/parent)
 	if(!parent)
 		stack_trace("An orbital thruster nozzle has spawned without a parent piece!")
 		return INITIALIZE_HINT_QDEL
 	body = WEAKREF(parent)
+	ion_trail = new(src, /particles/ion_trail)
+	ion_trail.layer = ABOVE_OBJ_LAYER
 	. = ..()
 
 /obj/machinery/orbital_thruster_nozzle/Destroy()
@@ -89,6 +93,18 @@
 	. = ..()
 	var/obj/machinery/atmospherics/components/unary/orbital_thruster/back_end_piece = body.resolve()
 	if(back_end_piece.thruster?.get_thrust() > 0)
-		. += mutable_appearance('icons/obj/orbital_thruster.dmi', "orbital_thruster_beam", ABOVE_OBJ_LAYER)
+		. += mutable_appearance('icons/obj/orbital_thruster.dmi', "orbital_thruster_beam", ABOVE_OBJ_LAYER, alpha = clamp(5e-5 * back_end_piece.thruster?.get_thrust(), 0, 255))
+
+/particles/ion_trail
+	icon = 'icons/effects/particles/generic.dmi'
+	icon_state = list("trail")
+	velocity = list(0, -25, 0)
+	color = "#2fffff"
+	lifespan = 0.5 SECONDS
+	fade = 0.5 SECONDS
+	spawning = 10
+	count = 500
+	position = generator(GEN_VECTOR, list(-6, 0), list(6, 0))
+	height = 300
 
 #undef ENERGY_TO_THRUST_COEFF

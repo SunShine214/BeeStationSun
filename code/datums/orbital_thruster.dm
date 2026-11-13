@@ -41,3 +41,4 @@
 		if(!current_turf)
 			break // TODO - Fix
 
+#undef ORBITAL_THRUSTER_MAX_PLUME

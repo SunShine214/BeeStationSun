@@ -378,9 +378,13 @@
 	description = "Pl6N2H2. Flaming death."
 	reagent_state = SOLID
 	color = "#992d7e"
-	chemical_flags = CHEMICAL_RNG_GENERAL | CHEMICAL_RNG_FUN | CHEMICAL_RNG_BOTANY
+	chemical_flags = CHEMICAL_RNG_GENERAL | CHEMICAL_RNG_FUN
 	taste_description = "firey death"
 	process_flags = ORGANIC
+
+/datum/reagent/toxin/plasma/plasma_precursor
+	name = "Plasma Precursor"
+	description = "Plasma in a complex crystal lattice. A precursor to advanced plasma fuels."
 
 /datum/reagent/plasmatic_nitrolymine/on_new(data)
 	. = ..()
@@ -411,12 +415,3 @@
 /datum/reagent/manganese_heptoxide/on_new(data)
 	. = ..()
 	volatile = new(726 KILOWATT, 328, 0, 7)
-
-/datum/reagent/manganese_heptoxide
-	name = "Manganese Heptoxide"
-	description = "Mn2O7. A strong oxidizer, which is highly energetic when decomposing."
-	reagent_state = SOLID
-	color = "#6b0000"
-	chemical_flags = CHEMICAL_RNG_GENERAL | CHEMICAL_RNG_FUN | CHEMICAL_RNG_BOTANY
-	taste_description = "burning metal"
-	process_flags = ORGANIC

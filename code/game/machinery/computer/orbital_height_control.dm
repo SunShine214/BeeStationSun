@@ -16,7 +16,6 @@
 
 /obj/machinery/computer/orbital_height_control/ui_static_data(mob/user)
 	var/list/data = list()
-	data["orbital_bodies"] = list(list("Dummy", 1000, 5000, 5000)) //TODO - expand on this
 	data["cinus_radius"] = CINIS_RADIUS
 	data["cinus_grav_mass"] = CINIS_MASS * GRAVITATION_CONSTANT
 	data["cinus_name"] = "Cinis"

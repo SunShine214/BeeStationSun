@@ -33,6 +33,7 @@ STACKSIZE_MACRO(/obj/item/stack/ore/uranium)
 	scan_state = "rock_Iron"
 	spreadChance = 20
 	merge_type = /obj/item/stack/ore/iron
+	grind_results = list(/datum/reagent/manganese = 1, /datum/reagent/iron = 20)
 
 STACKSIZE_MACRO(/obj/item/stack/ore/iron)
 

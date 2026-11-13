@@ -95,10 +95,7 @@ SUBSYSTEM_DEF(orbital_altitude)
 /datum/controller/subsystem/orbital_altitude/proc/adjust_angle()
 	if(actual_angle == target_angle)
 		return
-	if(target_angle - actual_angle < 180)
-		actual_angle = (clamp(min(target_angle - (actual_angle - 360), target_angle - actual_angle), -5, 5) + actual_angle) // TODO - weirdness
-	else
-		actual_angle = (clamp(min((target_angle - 360) - actual_angle, target_angle - actual_angle), -5, 5) + actual_angle)
+	actual_angle += clamp(target_angle - actual_angle, -5, 5) // TODO - actually fix please
 
 /datum/controller/subsystem/orbital_altitude/proc/get_station_pos()
 	if(!cached_station_pos)
