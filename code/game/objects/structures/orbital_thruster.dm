@@ -100,11 +100,10 @@
 	icon_state = list("trail")
 	velocity = list(0, -25, 0)
 	color = "#2fffff"
-	lifespan = 0.5 SECONDS
 	fade = 0.5 SECONDS
 	spawning = 10
 	count = 500
-	position = generator(GEN_VECTOR, list(-6, 0), list(6, 0))
+	position = generator(GEN_VECTOR, list(-5, 0), list(6, 0), NORMAL_RAND)
 	height = 300
 
 #undef ENERGY_TO_THRUST_COEFF
