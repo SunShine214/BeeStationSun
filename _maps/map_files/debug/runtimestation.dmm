@@ -1031,6 +1031,11 @@
 /obj/structure/cable/yellow,
 /turf/open/floor/iron,
 /area/station/medical/chemistry)
+"iK" = (
+/obj/machinery/atmospherics/pipe/smart/manifold4w/general/visible,
+/obj/structure/chem_thruster_body,
+/turf/open/floor/iron,
+/area/station/hallway/secondary/exit/departure_lounge)
 "iX" = (
 /obj/structure/table,
 /obj/effect/turf_decal/tile/blue/half/contrasted{
@@ -1453,6 +1458,10 @@
 	},
 /turf/open/floor/iron,
 /area/station/command/bridge)
+"sf" = (
+/obj/structure/chem_thruster,
+/turf/open/floor/iron,
+/area/station/hallway/secondary/exit/departure_lounge)
 "si" = (
 /obj/machinery/door/airlock,
 /obj/structure/cable,
@@ -1566,6 +1575,11 @@
 	},
 /turf/open/floor/plating,
 /area/station/engineering/atmos)
+"uv" = (
+/obj/effect/spawner/structure/window/reinforced,
+/obj/structure/chem_thruster_nozzle,
+/turf/open/floor/plating,
+/area/station/hallway/secondary/exit/departure_lounge)
 "uB" = (
 /obj/effect/turf_decal/stripes/corner{
 	dir = 4
@@ -8477,9 +8491,9 @@ dJ
 dQ
 cS
 Fn
-fO
-nt
-gf
+sf
+iK
+uv
 aa
 aa
 aa

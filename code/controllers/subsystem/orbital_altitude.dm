@@ -95,7 +95,7 @@ SUBSYSTEM_DEF(orbital_altitude)
 /datum/controller/subsystem/orbital_altitude/proc/adjust_angle()
 	if(actual_angle == target_angle)
 		return
-	actual_angle = (clamp(closer_angle_difference(actual_angle, target_angle), -5, 5) + actual_angle) %% 360 // TODO - actually fix please
+	actual_angle = SIMPLIFY_DEGREES(clamp(closer_angle_difference(actual_angle, target_angle), -5, 5) + actual_angle)
 
 /datum/controller/subsystem/orbital_altitude/proc/get_station_pos()
 	if(!cached_station_pos)
@@ -197,17 +197,16 @@ SUBSYSTEM_DEF(orbital_altitude)
 
 	orbital_angle = ATAN2(cached_station_velocity[1], cached_station_velocity[2])
 
-	if(abs(orbital_angle - actual_angle) < 0.1)
+	if(abs(closer_angle_difference(actual_angle, orbital_angle)) < 0.1)
 		if(abs(magnitude - negative_velocity_magnitude) < 0.001)
 			return // Early return when the thrust vector is near equal to resistance- thus meaning no force is actually being applied.
-			//TODO - think about this and fix it
 
 	var/new_velo_x = cached_station_velocity[1] + (magnitude * cos(orbital_angle + actual_angle)) + (negative_velocity_magnitude * -cos(orbital_angle))
 	var/new_velo_y = cached_station_velocity[2] + (magnitude * sin(orbital_angle + actual_angle)) + (negative_velocity_magnitude * -sin(orbital_angle))
 
 	var/pos_magnitude = get_station_altitude()
 
-	orbital_altitude = pos_magnitude //TODO - find a better place for this.
+	orbital_altitude = pos_magnitude
 
 	var/velo_magnitude_sqrd = new_velo_x**2 + new_velo_y**2
 	var/radial_dot = cached_station_pos[1] * new_velo_x + cached_station_pos[2] * new_velo_y
@@ -246,7 +245,7 @@ SUBSYSTEM_DEF(orbital_altitude)
 	if(!orbit_keeping)
 		return
 
-	if(abs(actual_angle - PROGRADE) > 1) // TODO - make this respect 360 degree wraparound
+	if(abs(closer_angle_difference(actual_angle, PROGRADE)) > 1)
 		set_error(TRUE, ORBITAL_ERROR_KEEPING_FACING)
 		return
 	set_error(FALSE, ORBITAL_ERROR_KEEPING_FACING)
@@ -260,7 +259,7 @@ SUBSYSTEM_DEF(orbital_altitude)
 	if(length(error_over_time) >= 50)
 		popleft(error_over_time)
 	error_over_time += error
-	// TODO - redundant clamping?
+
 	var/output = clamp(keeping_gain * (error + (1 / keeping_integral) * keeping_accumulated_error + keeping_derivitive * (error - keeping_last_error)), 0, 1)
 
 	keeping_accumulated_error += error

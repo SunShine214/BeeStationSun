@@ -17,6 +17,7 @@
 	create_reagents(200, DRAWABLE | REFILLABLE)
 	rocket = new(reagents, 10)
 	START_PROCESSING(SSprocessing, src)
+	refresh_structure()
 
 /obj/structure/chem_thruster/Destroy()
 	QDEL_NULL(thruster)
@@ -25,8 +26,10 @@
 
 /obj/structure/chem_thruster/process(delta_time) // TODO - think about "queuing" thrust so missed processing cycles dont affect thrust. Also fix burn(1)
 	thruster.thrust = rocket.burn(delta_time)
-	nozzle?.thruster_intensity = thruster.thrust
+	nozzle?.thruster_intensity = thruster.get_thrust()
 	nozzle?.update_appearance()
+	nozzle?.fire_trail.set_particle_spawning(clamp(thruster.get_thrust() * 1e-6, 0, 15)) // TODO - move into proc on nozzle?
+	nozzle?.smoke_trail.alpha = clamp(thruster.get_thrust() * 5e-5, 0, 255)
 
 	if(nozzle)
 		thruster.do_plume(get_turf(nozzle), dir)
@@ -79,9 +82,40 @@
 	dir = SOUTH
 	anchored = TRUE
 	var/thruster_intensity = 0
+	var/obj/effect/abstract/particle_holder/fire_trail
+	var/obj/effect/abstract/particle_holder/smoke_trail
+
+/obj/structure/chem_thruster_nozzle/Initialize(mapload)
+	. = ..()
+	smoke_trail = new(src, /particles/flame_trail/smoke) // TODO - review this
+	smoke_trail.layer = ABOVE_OBJ_LAYER
+	fire_trail = new(src, /particles/flame_trail)
+	fire_trail.plane = ABOVE_LIGHTING_PLANE
+	fire_trail.vis_flags &= ~VIS_INHERIT_PLANE
+
+	smoke_trail.alpha = 0
 
 /obj/structure/chem_thruster_nozzle/update_overlays()
 	. = ..()
 	if(thruster_intensity > 0)
-		. += mutable_appearance('icons/obj/orbital_thruster.dmi', "chem_thruster_fire", layer)
-		. += emissive_appearance('icons/obj/orbital_thruster.dmi', "chem_thruster_fire", layer)
+		. += mutable_appearance('icons/obj/orbital_thruster.dmi', "chem_thruster_fire", layer, alpha = clamp(thruster_intensity * 5e-5, 0, 255))
+		. += emissive_appearance('icons/obj/orbital_thruster.dmi', "chem_thruster_fire", layer, alpha = clamp(thruster_intensity * 5e-5, 0, 255))
+
+/particles/flame_trail
+	icon = 'icons/effects/particles/generic.dmi'
+	icon_state = list("trail")
+	drift = generator(GEN_VECTOR, list(-10, 0), list(10, 0), NORMAL_RAND)
+	velocity = list(0, -25, 0)
+	color = generator("color", "#fff241", "#ff7011")
+	lifespan = 0.5 SECONDS
+	fade = 0.5 SECONDS
+	spawning = 0
+	count = 500
+	position = generator(GEN_VECTOR, list(-7, -6), list(8, -6), NORMAL_RAND)
+	height = 300
+
+/particles/flame_trail/smoke
+	icon = 'icons/effects/particles/smoke.dmi'
+	icon_state = list("smoke_3")
+	spawning = 2
+	scale = 2

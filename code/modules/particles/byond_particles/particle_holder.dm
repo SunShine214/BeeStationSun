@@ -78,3 +78,7 @@
 /// Sets the particles position to the passed coordinates
 /obj/effect/abstract/particle_holder/proc/set_particle_position(x = 0, y = 0, z = 0)
 	particles.position = list(x, y, z)
+
+/// Sets the amount of particles spawned per tick
+/obj/effect/abstract/particle_holder/proc/set_particle_spawning(amount = 0)
+	particles.spawning = amount

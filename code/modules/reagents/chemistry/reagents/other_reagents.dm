@@ -1065,7 +1065,7 @@
 	name = "Manganese"
 	description = "A metal commonly used in steel alloys. Found in iron ores."
 	color = "#96889e"
-	chemical_flags = CHEMICAL_BASIC_ELEMENT
+	chemical_flags = CHEMICAL_BASIC_ELEMENT | CHEMICAL_RNG_BOTANY
 	reagent_state = SOLID
 	taste_description = "tangy metal"
 

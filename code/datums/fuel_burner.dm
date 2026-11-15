@@ -11,18 +11,22 @@
 	linked_reagents = null
 	. = ..()
 
-// TODO - Make it increase temperature slowly
+// TODO - Make it increase temperature slowly and review this, it has weird behaviors (pure no energy oxidizers burning by themselves)
+// fixable by possibly adding a "stable" volatile class, that will be removed on oxygen needing chems, but other wise remain.
 /datum/fuel_burner/proc/burn(delta_time)
 	var/datum/reagents/combined = linked_reagents?.resolve()
 	if(!combined)
+		return 0
+	if(!combined.total_volume)
 		return 0
 
 	var/list/burn_candidates = list()
 	var/burn_total_volume = 0
 
 	var/total_oxygen = 0
+	var/total_needed_oxygen = 0 // TODO - actually implement this
 
-	var/burn_rate = combined.total_volume ? clamp(surface_area / combined.total_volume, 0, 1) : 0
+	var/burn_rate = clamp(surface_area / combined.total_volume, 0, 1)
 
 	for(var/datum/reagent/to_check in combined.reagent_list)
 		if(!to_check.volatile)
@@ -31,10 +35,11 @@
 			burn_candidates += to_check
 			burn_total_volume += to_check.volume
 			total_oxygen += to_check.volatile.oxygen_per_unit * to_check.volume * burn_rate
+			total_needed_oxygen += to_check.volatile.oxygen_requirement * to_check.volume * burn_rate
 
 	var/reaction_energy = 0
 
-	if(!length(burn_candidates))
+	if(!length(burn_candidates)) // No reaction energy? Do not burn.
 		return reaction_energy
 
 	var/oxygen_per_reagent = total_oxygen / length(burn_candidates)
@@ -54,8 +59,6 @@
 		combined.remove_reagent(burning.type, amount_burned)
 
 	return reaction_energy
-
-
 
 
 

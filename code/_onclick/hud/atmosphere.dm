@@ -12,7 +12,7 @@
 			background.pixel_w = 480 * iter_x
 			background.pixel_z = 480 * iter_y
 			mob_client.atmosphere_background.vis_contents += background
-	mob_client.screen |= mob_client.atmosphere_background // TODO - 3x3 tiling!!
+	mob_client.screen |= mob_client.atmosphere_background
 
 /datum/hud/proc/remove_atmosphere_background(mob/to_show_to)
 	var/client/mob_client = to_show_to?.client || mymob?.client
