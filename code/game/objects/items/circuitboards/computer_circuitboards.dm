@@ -170,6 +170,10 @@
 	name = "Ionic Fuel Supply Control"
 	build_path = /obj/machinery/computer/atmos_control/ionic_fuel
 
+/obj/item/circuitboard/computer/atmos_control/protoplasma
+	name = "Protoplasma Supply Control"
+	build_path = /obj/machinery/computer/atmos_control/protoplasma
+
 /obj/item/circuitboard/computer/auxiliary_base
 	name = "Auxiliary Base Management Console"
 	icon_state = "engineering"

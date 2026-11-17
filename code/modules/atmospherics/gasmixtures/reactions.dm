@@ -275,6 +275,66 @@
 	if(burned_fuel)
 		. |= REACTING | VOLATILE_REACTION
 
+/**
+ * Tritium combustion:
+ *
+ * Combustion of oxygen and hydrogen.
+ * Decently exothermic.
+ * Creates hotspots.
+ */
+/datum/gas_reaction/protoplasmafire
+	priority_group = PRIORITY_FIRE
+	name = "Protoplasma Combustion"
+	id = "protoplasmafire"
+	expands_hotspot = TRUE
+	desc = "Combustion of Protoplasma with oxygen."
+
+/datum/gas_reaction/protoplasmafire/init_reqs()
+	requirements = list(
+		/datum/gas/protoplasma = MINIMUM_MOLE_COUNT,
+		/datum/gas/oxygen = MINIMUM_MOLE_COUNT,
+		"MIN_TEMP" = TRITIUM_MINIMUM_BURN_TEMPERATURE, // Hydrogen shares basically the same chemical reactions as its isotope. I think....
+	)
+
+/datum/gas_reaction/protoplasmafire/react(datum/gas_mixture/air, datum/holder)
+	. = NO_REACTION
+	var/list/cached_moles = air.moles
+	var/protoplasma = cached_moles[/datum/gas/protoplasma]
+	var/oxygen = cached_moles[/datum/gas/oxygen]
+	var/old_heat_capacity = air.heat_capacity()
+
+	var/oxygen_ratio = oxygen / protoplasma
+
+	var/efficiency
+	if(oxygen_ratio <= PROTOPLASMA_OXY_FULL_BURN)
+		efficiency = sqrt((1 / PROTOPLASMA_OXY_FULL_BURN) * oxygen_ratio)
+	else
+		efficiency = PROTOPLASMA_OVER_OXY_PENALTY ** (-oxygen_ratio + PROTOPLASMA_OXY_FULL_BURN)
+
+	var/burned_fuel = min(oxygen, protoplasma * PROTOPLASMA_BURN_RATE * (oxygen_ratio / PROTOPLASMA_OXY_FULL_BURN))
+
+	SET_REACTION_RESULTS(burned_fuel)
+
+	cached_moles[/datum/gas/protoplasma] -= burned_fuel
+	cached_moles[/datum/gas/oxygen] -= burned_fuel
+
+	var/energy_released = burned_fuel * efficiency * FIRE_PROTOPLASMA_ENERGY_RELEASED
+
+	if(energy_released > 0)
+		var/new_heat_capacity = air.heat_capacity()
+		if(new_heat_capacity > MINIMUM_HEAT_CAPACITY)
+			air.temperature = (air.temperature * old_heat_capacity + energy_released) / new_heat_capacity
+
+	var/turf/open/location
+	if(isatom(holder))
+		location = holder
+	if(istype(location))
+		if(air.temperature > FIRE_MINIMUM_TEMPERATURE_TO_EXIST)
+			location.hotspot_expose(air.temperature, CELL_VOLUME)
+
+	if(burned_fuel)
+		. |= REACTING | VOLATILE_REACTION
+
 // N2O
 
 /**

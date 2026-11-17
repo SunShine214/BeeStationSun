@@ -115,7 +115,7 @@
 	name = "Plasma"
 	gas_overlay = "plasma"
 	moles_visible = MOLES_GAS_VISIBLE
-	gasrig_shielding_power = 2
+	gasrig_shielding_power = 8
 	gasrig_shielding_modifier = 0.4
 	dangerous = TRUE
 	rarity = 800
@@ -230,11 +230,24 @@
 	moles_visible = MOLES_GAS_VISIBLE
 	gasrig_shielding_power = 1
 	gasrig_shielding_modifier = 0.5
-	dangerous = TRUE
 	rarity = 100
 	base_value = 3
 	desc = "A mixture of gases that have been ionized for use in high power thrusters."
 	primary_color = "#00ffff"
+
+/datum/gas/protoplasma
+	id = GAS_PROTOPLASMA
+	specific_heat = 400 // Some sort of hyper-linked (4th dimensional?) form of plasma
+	name = "Protoplasma"
+	rarity = 2
+	gas_overlay = "freon" // TODO - replace with actual overlay
+	moles_visible = MOLES_GAS_VISIBLE
+	gasrig_shielding_power = 10
+	gasrig_shielding_modifier = 5
+	base_value = 25
+	desc = "A flammable 4th dimensional precursor to plasma. The key to Nanotrasen's power."
+	dangerous = TRUE
+	primary_color = "#cc0055"
 
 /obj/effect/overlay/gas
 	icon = 'icons/effects/atmospherics.dmi'

@@ -65,6 +65,16 @@
 /// The threshold of the tritium combustion's radiation. Lower values means it will be able to penetrate through more structures.
 #define TRITIUM_RADIATION_THRESHOLD 0.3
 
+// - Protoplasma:
+/// How much protoplasma can burn at one time, in an oxygen saturated environment?
+#define PROTOPLASMA_BURN_RATE 0.2
+/// Ratio of oxygen that allows a full burn: (1 plasma mol : PROTOPLASMA_OXY_FULL_BURN oxygen mol)
+#define PROTOPLASMA_OXY_FULL_BURN 5
+/// The root of the negative exponent determining efficiency past oxygen ratio PROTOPLASMA_OXY_FULL_BURN. Smaller allows larger ratios to be less inefficient.
+#define PROTOPLASMA_OVER_OXY_PENALTY 1.1
+/// Energy released for one mol of protoplasma burnt at the optimal ratio
+#define FIRE_PROTOPLASMA_ENERGY_RELEASED 2800000
+
 // N2O:
 /// The minimum temperature N2O can form from nitrogen and oxygen in the presence of BZ at.
 #define N2O_FORMATION_MIN_TEMPERATURE 200

@@ -20,7 +20,7 @@
  * Setting the conditions for the reaction to actually happen for gasmixtures
  * is handled by the hotspot itself, specifically perform_exposure().
  */
-/turf/open/hotspot_expose(exposed_temperature, exposed_volume, soh)
+/turf/open/hotspot_expose(exposed_temperature, exposed_volume, soh) // TODO - fix this
 	if(exposed_temperature < TCMB)
 		exposed_temperature = TCMB
 		CRASH("[src].hotspot_expose() called with exposed_temperature < [TCMB]")
@@ -32,17 +32,17 @@
 	if (cached_moles[/datum/gas/oxygen] < 0.5)
 		return
 
-	var/plas_trit_threshold = (cached_moles[/datum/gas/plasma] > 0.5 || cached_moles[/datum/gas/tritium] > 0.5)
+	var/flammable_threshold = (cached_moles[/datum/gas/plasma] > 0.5 || cached_moles[/datum/gas/tritium] > 0.5 || cached_moles[/datum/gas/protoplasma])
 	if(active_hotspot)
 		if(soh)
-			if(plas_trit_threshold)
+			if(flammable_threshold)
 				if(active_hotspot.temperature < exposed_temperature)
 					active_hotspot.temperature = exposed_temperature
 				if(active_hotspot.volume < exposed_volume)
 					active_hotspot.volume = exposed_volume
 		return
 
-	if((exposed_temperature > PLASMA_MINIMUM_BURN_TEMPERATURE) && plas_trit_threshold)
+	if((exposed_temperature > PLASMA_MINIMUM_BURN_TEMPERATURE) && flammable_threshold)
 		new /obj/effect/hotspot(src, exposed_volume * 25, exposed_temperature)
 		SSair.add_to_active(src)
 

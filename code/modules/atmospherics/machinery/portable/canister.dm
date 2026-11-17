@@ -626,6 +626,12 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/machinery/portable_atmospherics/canister)
 	greyscale_config = /datum/greyscale_config/canister/hazard
 	greyscale_colors = "#00ffff#000000"
 
+/obj/machinery/portable_atmospherics/canister/protoplasma
+	name = "protoplasma canister"
+	gas_type = /datum/gas/protoplasma
+	greyscale_config = /datum/greyscale_config/canister/hazard
+	greyscale_colors = "#cc0055#0b488d"
+
 /obj/machinery/portable_atmospherics/canister/fusion_test
 	name = "fusion test canister"
 	temp_limit = 1e12

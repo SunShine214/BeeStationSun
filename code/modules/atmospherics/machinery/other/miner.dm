@@ -202,6 +202,11 @@
 	overlay_color = "#00ffff"
 	spawn_id = /datum/gas/ionic_fuel
 
+/obj/machinery/atmospherics/miner/protoplasma
+	name = "\improper Protoplasma Gas Miner"
+	overlay_color = "#cc0055"
+	spawn_id = /datum/gas/protoplasma
+
 /obj/machinery/atmospherics/miner/station
 	power_draw = GASMINER_POWER_FULLSCALE
 	spawn_mol = MOLES_CELLSTANDARD / 10

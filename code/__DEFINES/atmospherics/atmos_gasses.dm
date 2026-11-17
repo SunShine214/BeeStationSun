@@ -11,3 +11,4 @@
 #define GAS_HYPER_NOBLIUM "hypernoblium"
 #define GAS_PLUOXIUM "pluoxium"
 #define GAS_IONIC_FUEL "ionic_fuel"
+#define GAS_PROTOPLASMA "protoplasma"
