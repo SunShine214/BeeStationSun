@@ -32,7 +32,7 @@
 	if (cached_moles[/datum/gas/oxygen] < 0.5)
 		return
 
-	var/flammable_threshold = (cached_moles[/datum/gas/plasma] > 0.5 || cached_moles[/datum/gas/tritium] > 0.5 || cached_moles[/datum/gas/protoplasma])
+	var/flammable_threshold = (cached_moles[/datum/gas/plasma] > 0.5 || cached_moles[/datum/gas/tritium] > 0.5 || cached_moles[/datum/gas/protoplasma] > 0.5)
 	if(active_hotspot)
 		if(soh)
 			if(flammable_threshold)

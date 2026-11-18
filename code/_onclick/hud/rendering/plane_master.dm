@@ -298,7 +298,7 @@ INITIALIZE_IMMEDIATE(/atom/movable/screen/plane_master)
 	name = "atmosphere plane master"
 	plane = PLANE_ATMOSPHERE
 	mouse_opacity = MOUSE_OPACITY_TRANSPARENT
-	render_relay_planes = list(RENDER_PLANE_SPACE)
+	render_relay_planes = list(RENDER_PLANE_BELOW_GAME)
 
 /// Kept off the game plate, its lighting would light lower levels twice
 /atom/movable/screen/plane_master/zmimic

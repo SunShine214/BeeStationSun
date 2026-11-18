@@ -61,7 +61,6 @@ SUBSYSTEM_DEF(orbital_visuals)
 
 /datum/controller/subsystem/orbital_visuals/proc/on_mob_login(datum/source, mob/new_login)
 	SIGNAL_HANDLER
-	//Register the required signals
 	RegisterSignal(new_login, COMSIG_MOVABLE_Z_CHANGED, PROC_REF(on_mob_changed_z_level))
 	RegisterSignal(new_login, COMSIG_MOB_LOGOUT, PROC_REF(on_mob_logout))
 
@@ -78,7 +77,12 @@ SUBSYSTEM_DEF(orbital_visuals)
 	var/client/to_update = source.client
 	if(!to_update || !to_update?.atmosphere_background)
 		return
-	animate(to_update.atmosphere_background, alpha = get_alpha_from_orbit(), 2 SECONDS)
+
+	if(!is_station_level(source.z))
+		animate(to_update.atmosphere_background, alpha = 0, 2 SECONDS)
+	else
+		animate(to_update.atmosphere_background, alpha = get_alpha_from_orbit(), 2 SECONDS)
+
 	for(var/atom/movable/screen/atmosphere_background/background in to_update.atmosphere_background.vis_contents)
 		animate(background, transform = scrolling_direction, 2 SECONDS, loop = -1)
 		animate(transform = matrix(), 0, loop = -1)

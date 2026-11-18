@@ -36,12 +36,7 @@ SUBSYSTEM_DEF(orbital_reentry_erosion)
 	return SS_INIT_SUCCESS
 
 /datum/controller/subsystem/orbital_reentry_erosion/fire(resumed)
-	if(SSorbital_altitude.thrust <= 0)
-		return
-	for(var/atom/movable/movable in GLOB.in_space_moveables)
-		if(movable.anchored)
-			continue
-		movable.newtonian_move(reentry_direction)
+	return
 
 /obj/effect/reentry_fire
 	anchored = TRUE

@@ -14,7 +14,7 @@
 
 	var/obj/machinery/power/terminal/invisible/power_link
 	var/datum/orbital_thruster/thruster
-	var/obj/machinery/orbital_thruster_nozzle/nozzle
+	var/obj/structure/orbital_thruster_nozzle/nozzle
 
 	/// What ratio of power does this thruster consume from the power grid?
 	var/power_ratio = 0.01
@@ -68,20 +68,18 @@
 	. = ..()
 
 // Effect Component.
-/obj/machinery/orbital_thruster_nozzle
+/obj/structure/orbital_thruster_nozzle
 	name = "orbital thruster"
 	desc = "A massive thruster used to adjust the station's orbit."
 	icon = 'icons/obj/orbital_thruster.dmi'
 	icon_state = "orbital_thruster_nozzle"
 	anchored = TRUE
 	density = TRUE
-	use_power = NO_POWER_USE
-	idle_power_usage = 0
 
 	var/datum/weakref/body
 	var/obj/effect/abstract/particle_holder/ion_trail
 
-/obj/machinery/orbital_thruster_nozzle/Initialize(mapload, obj/machinery/atmospherics/components/unary/orbital_thruster/parent)
+/obj/structure/orbital_thruster_nozzle/Initialize(mapload, obj/machinery/atmospherics/components/unary/orbital_thruster/parent)
 	if(!parent)
 		stack_trace("An orbital thruster nozzle has spawned without a parent piece!")
 		return INITIALIZE_HINT_QDEL
@@ -92,7 +90,7 @@
 	ion_trail.alpha = 0
 	. = ..()
 
-/obj/machinery/orbital_thruster_nozzle/update_overlays()
+/obj/structure/orbital_thruster_nozzle/update_overlays()
 	. = ..()
 	var/obj/machinery/atmospherics/components/unary/orbital_thruster/back_end_piece = body.resolve()
 	if(back_end_piece.thruster)
@@ -109,7 +107,7 @@
 	lifespan = 0.5 SECONDS
 	fade = 0.5 SECONDS
 	spawning = 0
-	count = 500
+	count = 200
 	position = generator(GEN_VECTOR, list(-5, 0), list(6, 0), NORMAL_RAND)
 	height = 300
 

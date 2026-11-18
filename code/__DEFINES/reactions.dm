@@ -67,7 +67,7 @@
 
 // - Protoplasma:
 /// How much protoplasma can burn at one time, in an oxygen saturated environment?
-#define PROTOPLASMA_BURN_RATE 0.2
+#define PROTOPLASMA_BURN_RATE 0.1
 /// Ratio of oxygen that allows a full burn: (1 plasma mol : PROTOPLASMA_OXY_FULL_BURN oxygen mol)
 #define PROTOPLASMA_OXY_FULL_BURN 5
 /// The root of the negative exponent determining efficiency past oxygen ratio PROTOPLASMA_OXY_FULL_BURN. Smaller allows larger ratios to be less inefficient.

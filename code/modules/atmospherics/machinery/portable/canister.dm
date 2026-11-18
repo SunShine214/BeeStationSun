@@ -629,7 +629,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/machinery/portable_atmospherics/canister)
 /obj/machinery/portable_atmospherics/canister/protoplasma
 	name = "protoplasma canister"
 	gas_type = /datum/gas/protoplasma
-	greyscale_config = /datum/greyscale_config/canister/hazard
+	greyscale_config = /datum/greyscale_config/canister/double_stripe
 	greyscale_colors = "#cc0055#0b488d"
 
 /obj/machinery/portable_atmospherics/canister/fusion_test

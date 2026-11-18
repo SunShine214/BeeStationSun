@@ -276,10 +276,10 @@
 		. |= REACTING | VOLATILE_REACTION
 
 /**
- * Tritium combustion:
+ * Protoplasma combustion:
  *
- * Combustion of oxygen and hydrogen.
- * Decently exothermic.
+ * Combustion of oxygen and protoplasma.
+ * Insanely exothermic and fast.
  * Creates hotspots.
  */
 /datum/gas_reaction/protoplasmafire
@@ -293,7 +293,7 @@
 	requirements = list(
 		/datum/gas/protoplasma = MINIMUM_MOLE_COUNT,
 		/datum/gas/oxygen = MINIMUM_MOLE_COUNT,
-		"MIN_TEMP" = TRITIUM_MINIMUM_BURN_TEMPERATURE, // Hydrogen shares basically the same chemical reactions as its isotope. I think....
+		"MIN_TEMP" = PLASMA_MINIMUM_BURN_TEMPERATURE,
 	)
 
 /datum/gas_reaction/protoplasmafire/react(datum/gas_mixture/air, datum/holder)
@@ -311,12 +311,16 @@
 	else
 		efficiency = PROTOPLASMA_OVER_OXY_PENALTY ** (-oxygen_ratio + PROTOPLASMA_OXY_FULL_BURN)
 
-	var/burned_fuel = min(oxygen, protoplasma * PROTOPLASMA_BURN_RATE * (oxygen_ratio / PROTOPLASMA_OXY_FULL_BURN))
+	var/burned_fuel = min(oxygen, min(protoplasma * PROTOPLASMA_BURN_RATE * (oxygen_ratio / PROTOPLASMA_OXY_FULL_BURN), protoplasma))
 
 	SET_REACTION_RESULTS(burned_fuel)
 
 	cached_moles[/datum/gas/protoplasma] -= burned_fuel
 	cached_moles[/datum/gas/oxygen] -= burned_fuel
+
+	cached_moles[/datum/gas/plasma] += burned_fuel * 0.25
+	cached_moles[/datum/gas/carbon_dioxide] += burned_fuel * 0.50
+	cached_moles[/datum/gas/water_vapor] += burned_fuel * 0.25
 
 	var/energy_released = burned_fuel * efficiency * FIRE_PROTOPLASMA_ENERGY_RELEASED
 
