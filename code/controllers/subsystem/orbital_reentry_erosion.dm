@@ -36,7 +36,9 @@ SUBSYSTEM_DEF(orbital_reentry_erosion)
 	return SS_INIT_SUCCESS
 
 /datum/controller/subsystem/orbital_reentry_erosion/fire(resumed)
-	return
+	if(SSorbital_altitude.orbital_altitude >= ORBITAL_ALTITUDE_LOW)
+		return
+	SSsuperstructure.damage_structure(SSorbital_altitude.resistance * ORBITAL_SUPERSTUCTURE_DAM_MAX) // TODO - move elsewhere?? Probably SSorbital_altitude with a cooldown
 
 /obj/effect/reentry_fire
 	anchored = TRUE

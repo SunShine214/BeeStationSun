@@ -166,7 +166,7 @@ INITIALIZE_IMMEDIATE(/atom/movable/screen/plane_master)
 	appearance_flags = PLANE_MASTER | NO_CLIENT_COLOR | PIXEL_SCALE
 	//byond internal end
 	// Hides space and z-mimic outside our view too
-	render_relay_planes = list(RENDER_PLANE_GAME, RENDER_PLANE_BELOW_GAME)
+	render_relay_planes = list(RENDER_PLANE_GAME, RENDER_PLANE_BELOW_GAME, PLANE_ATMOSPHERE)
 
 ///Contains all lighting objects
 /atom/movable/screen/plane_master/lighting
@@ -294,10 +294,11 @@ INITIALIZE_IMMEDIATE(/atom/movable/screen/plane_master)
 	plane = PLANE_SPACE
 	render_relay_planes = list(RENDER_PLANE_SPACE)
 
-/atom/movable/screen/plane_master/atmosphere // TODO - blackness plane gets blended with atmosphere, bad
+/atom/movable/screen/plane_master/atmosphere
 	name = "atmosphere plane master"
 	plane = PLANE_ATMOSPHERE
 	mouse_opacity = MOUSE_OPACITY_TRANSPARENT
+	appearance_flags = PLANE_MASTER
 	render_relay_planes = list(RENDER_PLANE_BELOW_GAME)
 
 /// Kept off the game plate, its lighting would light lower levels twice

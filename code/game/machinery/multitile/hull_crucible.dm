@@ -1,18 +1,22 @@
 #define CRUCIBLE_ALLOY_MATS 1
 #define CRUCIBLE_ALLOY_MULT 2
 
-#define CRUCIBLE_PLASTEEL list(list(/datum/material/iron = 1, /datum/material/plasma = 1), 5)
-#define CRUCIBLE_PLASTITIANIUM list(list(/datum/material/titanium = 1, /datum/material/plasma = 1), 10)
-#define CRUCIBLE_FERROCARBON list(list(/datum/material/iron = 10, /datum/material/diamond = 1), 25)
-#define CRUCIBLE_DUREENIUM list(list(/datum/material/iron = 5, /datum/material/plasma = 2, /datum/material/diamond = 1, /datum/material/titanium = 2), 50)
-#define CRUCIBLE_ALLOYS list("Plasteel" = CRUCIBLE_PLASTEEL, "Plastitianium" = CRUCIBLE_PLASTITIANIUM, "Ferrocarbon" = CRUCIBLE_FERROCARBON, "Dureenium" = CRUCIBLE_DUREENIUM)
+#define CRUCIBLE_PLASTEEL list(list(/datum/material/iron = 1, /datum/material/plasma = 1), 0.05)
+#define CRUCIBLE_PLASTITIANIUM list(list(/datum/material/titanium = 1, /datum/material/plasma = 1), 0.1)
+#define CRUCIBLE_FERROCARBON list(list(/datum/material/iron = 10, /datum/material/diamond = 1), 0.5)
+#define CRUCIBLE_DUREENIUM list(list(/datum/material/iron = 5, /datum/material/plasma = 2, /datum/material/diamond = 1, /datum/material/titanium = 2), 1)
 
-#define CRUCIBLE_DEFAULT_NANITE_USE 10
-#define CRUCIBLE_DEFAULT_MAT_USE 1
+#define PLASTEEL "Plasteel"
+#define PLASTITIANIUM "Plastitianium"
+#define FERROCARBON "Ferrocarbon"
+#define DUREENIUM "Dureenium"
+
+#define CRUCIBLE_DEFAULT_NANITE_USE 1
+#define CRUCIBLE_DEFAULT_MAT_USE 100
 // TODO - Make it relinkable with DEFINE_BUFFER_HANDLER ect...
 /obj/machinery/multitile/hull_crucible
 	name = "station hull crucible"
-	desc = "This device that uses material and nanite canisters to repair and manage the station's hull."
+	desc = "This device uses material and nanite canisters to repair and manage the station's hull."
 	icon = 'icons/obj/machines/hull_crucible.dmi'
 	icon_state = "5"
 	resistance_flags = INDESTRUCTIBLE | LAVA_PROOF | FIRE_PROOF | UNACIDABLE | ACID_PROOF
@@ -32,6 +36,8 @@
 	var/list/obj/structure/hull_nanite_canister/canisters = list()
 	var/datum/component/remote_materials/materials
 
+	var/list/crucible_alloys = list(PLASTEEL = CRUCIBLE_PLASTEEL, PLASTITIANIUM = CRUCIBLE_PLASTITIANIUM, FERROCARBON = CRUCIBLE_FERROCARBON, DUREENIUM = CRUCIBLE_DUREENIUM)
+	// TODO - alloy names to defines?
 	var/selected_alloy
 	var/throttle = 1
 	var/nanite_consumption = CRUCIBLE_DEFAULT_NANITE_USE
@@ -39,7 +45,7 @@
 
 /obj/machinery/multitile/hull_crucible/Initialize(mapload)
 	materials = AddComponent(/datum/component/remote_materials, "crucible", mapload)
-	selected_alloy = CRUCIBLE_ALLOYS[1]
+	selected_alloy = crucible_alloys[PLASTEEL]
 	. = ..()
 
 /obj/machinery/multitile/hull_crucible/Destroy()
@@ -49,8 +55,8 @@
 /obj/machinery/multitile/hull_crucible/process(delta_time)
 	if(throttle <= 0) // TODO - EMAG interaction?
 		return
-	var/nanite_mult = adjust_nanites(-nanite_consumption * throttle) / (nanite_consumption * throttle)
-	SSsuperstructure.repair_structure(consume_selected_alloy(material_consumption * throttle) * CRUCIBLE_ALLOYS[selected_alloy][CRUCIBLE_ALLOY_MULT] * nanite_mult)
+	var/nanite_mult = -adjust_nanites(-nanite_consumption * throttle * delta_time) / (nanite_consumption * throttle * delta_time)
+	SSsuperstructure.repair_structure(consume_selected_alloy(material_consumption * throttle * delta_time) * selected_alloy[CRUCIBLE_ALLOY_MULT] * nanite_mult)
 
 /obj/machinery/multitile/hull_crucible/ui_data(mob/user)
 	var/list/data = list()
@@ -60,19 +66,35 @@
 		nanite_cans += list(list("nanites" = can.nanites))
 	data["nanite_cans"] = nanite_cans
 	data["materials"] = materials.mat_container.ui_data()
+	data["selected_alloy"] = assoc_key_for_value(crucible_alloys, selected_alloy) || PLASTEEL
+	data["throttle"] = throttle
 
 	return data
+
+/obj/machinery/multitile/hull_crucible/ui_static_data(mob/user)
+	var/list/data = list()
+
+	data["alloy_types"] = assoc_to_keys(crucible_alloys)
+
+	return data
+
+/obj/machinery/multitile/hull_crucible/ui_act_base(action, params)
+	switch(action)
+		if("throttle")
+			throttle = clamp(text2num(params["throttle"]), 0, 1)
+		if("select_alloy")
+			selected_alloy = crucible_alloys[params["alloy"]] || crucible_alloys[1]
 
 /// Consume one alloy's worth of materials.
 /obj/machinery/multitile/hull_crucible/proc/consume_selected_alloy(amount)
 	var/alloy_total = 0
-	for(var/key in CRUCIBLE_ALLOYS[selected_alloy][CRUCIBLE_ALLOY_MATS])
-		alloy_total += CRUCIBLE_ALLOYS[selected_alloy][CRUCIBLE_ALLOY_MATS][key]
-	if(amount < alloy_total || !alloy_total)
+	for(var/key, iter_amount in selected_alloy[CRUCIBLE_ALLOY_MATS])
+		alloy_total += iter_amount
+	if(!alloy_total)
 		return 0
-	if(!materials.mat_container.has_materials(CRUCIBLE_ALLOYS[selected_alloy][CRUCIBLE_ALLOY_MATS], amount / alloy_total))
+	if(!materials.mat_container.has_materials(selected_alloy[CRUCIBLE_ALLOY_MATS], amount / alloy_total))
 		return 0
-	materials.mat_container.use_materials(CRUCIBLE_ALLOYS[selected_alloy][CRUCIBLE_ALLOY_MATS], amount / alloy_total)
+	materials.mat_container.use_materials(selected_alloy[CRUCIBLE_ALLOY_MATS], amount / alloy_total)
 	return amount
 
 /obj/machinery/multitile/hull_crucible/proc/adjust_nanites(amount)
@@ -111,7 +133,7 @@
 	desc = "A stasis canister for organo-synth nanite clusters meant to be attached to the hull crucible to provide replacement nanites."
 	icon = 'icons/obj/machines/hull_crucible.dmi'
 	icon_state = "nanite_canister"
-	var/nanites = 100
+	var/nanites = 500
 	var/datum/weakref/crucible
 
 /obj/structure/hull_nanite_canister/wrench_act(mob/living/user, obj/item/tool)

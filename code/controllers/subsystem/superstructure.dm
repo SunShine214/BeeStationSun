@@ -15,7 +15,7 @@ SUBSYSTEM_DEF(superstructure)
 	COOLDOWN_DECLARE(shielding_cooldown)
 
 /datum/controller/subsystem/superstructure/proc/damage_structure(amount)
-	var/shielding_ablation = clamp(shielding_integrity - amount, 0, max_shielding)
+	var/shielding_ablation = clamp(shielding_integrity, 0, amount)
 	adjust_shielding(-shielding_ablation)
 	adjust_hull(-(amount - shielding_ablation))
 

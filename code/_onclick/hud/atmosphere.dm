@@ -30,5 +30,4 @@
 /atom/movable/screen/atmosphere_background
 	icon = 'icons/effects/space_background.dmi'
 	icon_state = "atmosphere"
-	appearance_flags = APPEARANCE_UI | KEEP_TOGETHER
 	mouse_opacity = MOUSE_OPACITY_TRANSPARENT

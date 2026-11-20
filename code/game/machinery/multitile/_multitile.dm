@@ -78,7 +78,7 @@
 		return build_type(item, locate(x + x_offset, y + y_offset, z))
 	if(istext(item))
 		return build_icon_dummy(item, locate(x + x_offset, y + y_offset, z))
-	if(isnum(item) && item == TEMPLATE_PART_DUMMY)
+	if(item == TEMPLATE_PART_DUMMY)
 		return build_dummy(locate(x + x_offset, y + y_offset, z))
 
 /obj/machinery/multitile/proc/build_dummy(location)
@@ -141,7 +141,7 @@
 
 /obj/structure/dummy_visible/item_interaction(mob/living/user, obj/item/tool, list/modifiers)
 	var/obj/machinery/multitile/multi_parent = parent.resolve()
-	return multi_parent?.item_interaction(user, tool, modifiers) || NONE // TODO - is none needed?
+	return multi_parent?.item_interaction(user, tool, modifiers) || NONE // TODO - is none needed? parent should always be real, right?
 
 /obj/structure/dummy_visible/item_interaction_secondary(mob/living/user, obj/item/tool, list/modifiers)
 	var/obj/machinery/multitile/multi_parent = parent.resolve()

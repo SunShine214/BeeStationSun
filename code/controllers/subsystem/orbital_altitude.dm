@@ -1,3 +1,22 @@
+// TODO - todo list
+// Fix blackness overlayer
+// Hull crucible
+//	TGUI
+//	Sprite
+//	Buffer Relink (intercept signal??)
+//	proper to_chats for connecting/disconnecting so forth
+// Gas Ionizer
+//	TGUI
+//	Sprite
+//	Logic
+// Gasrig Adjustments
+// Thruster construction / plume
+// Chem thruster improvements
+// Superstructure Console TGUI
+// Thruster controller?
+// Supercruise object fix
+// Nanite Cans (orderable / prettify sprite)
+
 SUBSYSTEM_DEF(orbital_altitude)
 	name = "Orbital Altitude"
 	can_fire = TRUE
@@ -221,12 +240,8 @@ SUBSYSTEM_DEF(orbital_altitude)
 	if(new_sma * (1 + eccentricity) > ORBITAL_ALTITUDE_HIGH_BOUND)
 		set_error(TRUE, ORBITAL_ERROR_TOO_HIGH)
 		return
-	if(new_sma * (1 - eccentricity) < ORBITAL_ALTITUDE_ABSOLUTE_MIN)
-		set_error(TRUE, ORBITAL_ERROR_TOO_LOW)
-		return
 
 	set_error(FALSE, ORBITAL_ERROR_TOO_HIGH)
-	set_error(FALSE, ORBITAL_ERROR_TOO_LOW)
 
 	semi_major_axis = new_sma
 
@@ -277,6 +292,4 @@ SUBSYSTEM_DEF(orbital_altitude)
 	return FALSE
 
 /datum/controller/subsystem/orbital_altitude/proc/reentry_effects()
-	if(orbital_altitude >= ORBITAL_ALTITUDE_LOW)
-		return
-	SSsuperstructure.damage_structure(resistance * ORBITAL_SUPERSTUCTURE_DAM_MAX)
+	return // TODO - move stuff from orbital erosion to here?
