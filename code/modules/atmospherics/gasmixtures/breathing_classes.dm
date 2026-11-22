@@ -33,7 +33,8 @@
 
 /datum/breathing_class/plasma
 	gases = list(
-		/datum/gas/plasma = 1
+		/datum/gas/plasma = 1,
+		/datum/gas/protoplasma = 8,
 	)
 	products = list(
 		/datum/gas/carbon_dioxide = 1

@@ -11,6 +11,7 @@
 	dir = NORTH
 	initialize_directions = NORTH
 	pipe_flags = PIPING_ONE_PER_TURF | PIPING_DEFAULT_LAYER_ONLY
+	circuit = /obj/item/circuitboard/machine/orbital_thruster
 
 	var/obj/machinery/power/terminal/invisible/power_link
 	var/datum/orbital_thruster/thruster
@@ -22,6 +23,8 @@
 	var/last_power = 0
 	/// How many liters/second are injected into the accelerator
 	var/injection_rate = 50
+	/// Part multiplier
+	var/part_multiplier = 1
 
 /obj/machinery/atmospherics/components/unary/orbital_thruster/Initialize(mapload)
 	. = ..()
@@ -34,14 +37,30 @@
 
 /obj/machinery/atmospherics/components/unary/orbital_thruster/Destroy()
 	UnregisterSignal(nozzle, COMSIG_QDELETING)
-	QDEL_NULL(thruster)
+	QDEL_NULL(thruster) // TODO - set to null for normal gc?
 	QDEL_NULL(power_link)
 	if(!QDELETED(nozzle))
 		QDEL_NULL(nozzle)
 	. = ..()
 
+/obj/machinery/atmospherics/components/unary/orbital_thruster/screwdriver_act(mob/living/user, obj/item/tool)
+	return default_deconstruction_screwdriver(user, "orbital_thruster_body", "orbital_thruster_body", tool) ? ITEM_INTERACT_SUCCESS : ITEM_INTERACT_BLOCKING
+
+/obj/machinery/atmospherics/components/unary/orbital_thruster/crowbar_act(mob/living/user, obj/item/tool)
+	return default_deconstruction_crowbar(tool) ? ITEM_INTERACT_SUCCESS : ITEM_INTERACT_BLOCKING
+
 /obj/machinery/atmospherics/components/unary/orbital_thruster/proc/nozzle_gone()
-	qdel(src)
+	SIGNAL_HANDLER
+	deconstruct()
+
+/obj/machinery/atmospherics/components/unary/orbital_thruster/RefreshParts()
+	. = ..()
+	var/total_tier = 0
+	var/total_parts = 0
+	for(var/datum/stock_part/part in component_parts)
+		total_tier += max(part.tier - 1, 0)
+		total_parts ++
+	part_multiplier = total_parts ? (total_tier / total_parts * 0.25) + 1 : 1
 
 /obj/machinery/atmospherics/components/unary/orbital_thruster/process(delta_time)
 	var/usage = power_link.avail() * power_ratio * thruster.throttle
@@ -59,7 +78,7 @@
 
 	var/power_mult = last_power + 1 ? log(last_power + 1) : 0 // More thrusters means higher power efficiency
 
-	thruster.thrust = power_mult * amount_pumped?.total_moles() * ENERGY_TO_THRUST_COEFF
+	thruster.thrust = power_mult * amount_pumped?.total_moles() * ENERGY_TO_THRUST_COEFF * part_multiplier
 
 	nozzle.update_appearance()
 	update_parents()
@@ -67,7 +86,6 @@
 /obj/machinery/atmospherics/components/unary/orbital_thruster/update_overlays()
 	. = ..()
 
-// Effect Component.
 /obj/structure/orbital_thruster_nozzle
 	name = "orbital thruster"
 	desc = "A massive thruster used to adjust the station's orbit."

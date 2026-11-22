@@ -85,7 +85,6 @@
 		if("select_alloy")
 			selected_alloy = crucible_alloys[params["alloy"]] || crucible_alloys[1]
 
-/// Consume one alloy's worth of materials.
 /obj/machinery/multitile/hull_crucible/proc/consume_selected_alloy(amount)
 	var/alloy_total = 0
 	for(var/key, iter_amount in selected_alloy[CRUCIBLE_ALLOY_MATS])
@@ -125,6 +124,7 @@
 	canisters += canister
 
 /obj/machinery/multitile/hull_crucible/proc/remove_canister(obj/structure/hull_nanite_canister/canister)
+	SIGNAL_HANDLER
 	UnregisterSignal(canister, COMSIG_QDELETING) // TODO - Investigate this
 	canisters -= canister
 
@@ -133,6 +133,7 @@
 	desc = "A stasis canister for organo-synth nanite clusters meant to be attached to the hull crucible to provide replacement nanites."
 	icon = 'icons/obj/machines/hull_crucible.dmi'
 	icon_state = "nanite_canister"
+	density = TRUE
 	var/nanites = 500
 	var/datum/weakref/crucible
 

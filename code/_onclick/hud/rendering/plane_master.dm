@@ -166,7 +166,7 @@ INITIALIZE_IMMEDIATE(/atom/movable/screen/plane_master)
 	appearance_flags = PLANE_MASTER | NO_CLIENT_COLOR | PIXEL_SCALE
 	//byond internal end
 	// Hides space and z-mimic outside our view too
-	render_relay_planes = list(RENDER_PLANE_GAME, RENDER_PLANE_BELOW_GAME, PLANE_ATMOSPHERE)
+	render_relay_planes = list(RENDER_PLANE_GAME, RENDER_PLANE_BELOW_GAME)
 
 ///Contains all lighting objects
 /atom/movable/screen/plane_master/lighting
@@ -175,7 +175,7 @@ INITIALIZE_IMMEDIATE(/atom/movable/screen/plane_master)
 	blend_mode_override = BLEND_MULTIPLY
 	mouse_opacity = MOUSE_OPACITY_TRANSPARENT
 	// Space is rendered apart from the game plate but still needs lighting
-	render_relay_planes = list(RENDER_PLANE_GAME, RENDER_PLANE_SPACE)
+	render_relay_planes = list(RENDER_PLANE_GAME)
 
 /atom/movable/screen/plane_master/lighting/show_to(mob/mymob)
 	. = ..()
@@ -297,9 +297,11 @@ INITIALIZE_IMMEDIATE(/atom/movable/screen/plane_master)
 /atom/movable/screen/plane_master/atmosphere
 	name = "atmosphere plane master"
 	plane = PLANE_ATMOSPHERE
+	blend_mode = BLEND_MULTIPLY
 	mouse_opacity = MOUSE_OPACITY_TRANSPARENT
 	appearance_flags = PLANE_MASTER
 	render_relay_planes = list(RENDER_PLANE_BELOW_GAME)
+	blend_mode_override = BLEND_INSET_OVERLAY
 
 /// Kept off the game plate, its lighting would light lower levels twice
 /atom/movable/screen/plane_master/zmimic

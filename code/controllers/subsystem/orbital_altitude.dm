@@ -1,27 +1,40 @@
 // TODO - todo list
-// Fix blackness overlayer
+// Fix blackness overlayer - DONE (diagonal walls are weird though...?)
 // Hull crucible
 //	TGUI
 //	Sprite
 //	Buffer Relink (intercept signal??)
-//	proper to_chats for connecting/disconnecting so forth
-// Gas Ionizer
+//	proper to_chats for connecting/disconnecting cans so forth
+// Gas Ionizer - Soon
 //	TGUI
 //	Sprite
 //	Logic
-// Gasrig Adjustments
-// Thruster construction / plume
-// Chem thruster improvements
+// Gasrig Adjustments - Near end
+// Thruster TGUI - Soonish
+// Thruster plume
+// Orbital Thruster rotation??
+// Chem thruster improvements (increase thrust? explosion when destroyed and active)
+// Fuel-burner for beakers/grenades? (risky, high performance requirement)
 // Superstructure Console TGUI
 // Thruster controller?
 // Supercruise object fix
 // Nanite Cans (orderable / prettify sprite)
+// Orbital Erosion/Delta Alert
+// Protoplasma interactions (breathing?)
+// Mapping
+//	Thrusters
+//	Ion Fuel Tank
+//	Ionizers
+//	Protoplasma canister?
+
+// Self reviewing
+// TESTING!!!
 
 SUBSYSTEM_DEF(orbital_altitude)
 	name = "Orbital Altitude"
 	can_fire = TRUE
 	wait = 0.25 SECONDS
-	ss_flags = SS_KEEP_TIMING
+	ss_flags = SS_KEEP_TIMING | SS_NO_INIT
 	runlevels = RUNLEVEL_GAME | RUNLEVEL_POSTGAME
 	dependencies = list(
 		/datum/controller/subsystem/mapping,
@@ -84,10 +97,6 @@ SUBSYSTEM_DEF(orbital_altitude)
 
 	// TODO - orbital CC reports?
 
-/datum/controller/subsystem/orbital_altitude/Initialize()
-
-	return SS_INIT_SUCCESS
-
 /datum/controller/subsystem/orbital_altitude/fire(resumed = FALSE)
 	// Disable for planetary stations (they don't orbit)
 	if(SSmapping.current_map.planetary_station)
@@ -104,12 +113,12 @@ SUBSYSTEM_DEF(orbital_altitude)
 	update_thrust_from_thrusters()
 	orbital_epoch += 0.5
 
-	reentry_effects()
+	reentry_effects() // TODO - Remove
 
 /datum/controller/subsystem/orbital_altitude/proc/check_values()
 	if(semi_major_axis <= 0)
 		stack_trace("Semi Major Axis is below or equal to 0; math will break! Resetting orbit to a more suitable number")
-		//TODO - actually reset orbit
+		semi_major_axis = 1000
 
 /datum/controller/subsystem/orbital_altitude/proc/adjust_angle()
 	if(actual_angle == target_angle)

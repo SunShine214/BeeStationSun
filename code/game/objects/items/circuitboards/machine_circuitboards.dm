@@ -246,6 +246,15 @@
 		/datum/stock_part/filter = 1,
 	)
 
+/obj/item/circuitboard/machine/orbital_thruster
+	name = "Orbital Thruster"
+	icon_state = "engineering"
+	build_path = /obj/machinery/atmospherics/components/unary/orbital_thruster
+	req_components = list(
+		/datum/stock_part/micro_laser = 3,
+		/datum/stock_part/capacitor = 1,
+	)
+
 /obj/item/circuitboard/machine/pacman
 	name = "PACMAN-type Generator"
 	icon_state = "engineering"

@@ -20,19 +20,18 @@
 	refresh_structure()
 
 /obj/structure/chem_thruster/Destroy()
+	unregister_all_signals()
 	QDEL_NULL(thruster)
 	QDEL_NULL(rocket)
 	. = ..()
 
 /obj/structure/chem_thruster/process(delta_time) // TODO - think about "queuing" thrust so missed processing cycles dont affect thrust. Also fix burn(1)
+	if(!nozzle)
+		return
 	thruster.thrust = rocket.burn(delta_time)
-	nozzle?.thruster_intensity = thruster.get_thrust()
-	nozzle?.update_appearance()
-	nozzle?.fire_trail.set_particle_spawning(clamp(thruster.get_thrust() * 1e-6, 0, 15)) // TODO - move into proc on nozzle?
-	nozzle?.smoke_trail.alpha = clamp(thruster.get_thrust() * 5e-5, 0, 255)
-
-	if(nozzle)
-		thruster.do_plume(get_turf(nozzle), dir)
+	nozzle.thruster_intensity = thruster.get_thrust()
+	nozzle.update_visuals()
+	thruster.do_plume(get_turf(nozzle), dir)
 
 /obj/structure/chem_thruster/interact(mob/user)
 	reagents.chem_temp += 50
@@ -40,31 +39,66 @@
 	return TRUE
 
 /obj/structure/chem_thruster/multitool_act(mob/living/user, obj/item/tool)
-	refresh_structure()
+	refresh_structure(user)
 	return TRUE
 
 /obj/structure/chem_thruster/wrench_act(mob/living/user, obj/item/tool)
-	default_unfasten_wrench(user, tool, 1 SECONDS) // TODO - signals so it "disassembles" properly, and explodes when active :trolled:
+	if(tool.tool_behaviour != TOOL_WRENCH) // TODO - Fix this being duplicated, proc on structure OR better, chem_thruster subtype
+		return ITEM_INTERACT_BLOCKING
+	tool.play_tool_sound(src, 50)
+	setDir(turn(dir, -90))
+	to_chat(user, span_notice("You rotate [src]."))
+	thruster.direction = dir
+	refresh_structure()
+	return ITEM_INTERACT_SUCCESS
 
 /obj/structure/chem_thruster/examine(mob/user)
 	. = ..()
 	. += thruster.thrust
 
-/obj/structure/chem_thruster/proc/refresh_structure()
+/obj/structure/chem_thruster/proc/refresh_structure(mob/living/user) // TODO - make it explode?
+	unregister_all_signals()
 	bodies = list()
+	if(nozzle)
+		nozzle.thruster_intensity = 0
+		nozzle.update_visuals()
 	nozzle = null
-	find_part(get_turf(src))
-	reagents.maximum_volume = length(bodies) * 200 + 200 + (nozzle ? 200 : 0)
-	// TODO FIX PRETTY MUCH ALL OF THIS
+
+	if(find_part(get_turf(src)) && user)
+		balloon_alert(user, "thruster connected!")
+	else if(user)
+		balloon_alert(user, "invalid thruster!")
+
+	var/new_max = length(bodies) * 200 + 200 + (nozzle ? 200 : 0)
+	if(new_max < reagents.total_volume)
+		var/to_remove = reagents.total_volume - new_max
+		reagents.remove_all(to_remove)
+	reagents.maximum_volume = new_max
+
+	// TODO FIX PRETTY MUCH ALL OF THIS // wha...?
 
 /obj/structure/chem_thruster/proc/find_part(turf/base)
 	var/turf/to_check = get_step(base, dir)
-	for(var/content in to_check.contents)
+	for(var/obj/structure/content in to_check.contents)
+		if(content.dir != dir)
+			continue
 		if(istype(content, /obj/structure/chem_thruster_body))
+			RegisterSignal(content, COMSIG_ATOM_DIR_CHANGE, PROC_REF(refresh_structure))
+			RegisterSignal(content, COMSIG_QDELETING, PROC_REF(refresh_structure))
 			bodies += content
-			find_part(to_check)
+			return find_part(to_check)
 		if(istype(content, /obj/structure/chem_thruster_nozzle))
+			RegisterSignal(content, COMSIG_ATOM_DIR_CHANGE, PROC_REF(refresh_structure))
+			RegisterSignal(content, COMSIG_QDELETING, PROC_REF(refresh_structure))
 			nozzle = content
+			return TRUE
+	return FALSE
+
+/obj/structure/chem_thruster/proc/unregister_all_signals()
+	for(var/body in bodies)
+		UnregisterSignal(body, list(COMSIG_ATOM_DIR_CHANGE, COMSIG_QDELETING))
+	if(nozzle)
+		UnregisterSignal(nozzle, list(COMSIG_ATOM_DIR_CHANGE, COMSIG_QDELETING))
 
 /obj/structure/chem_thruster_body
 	name = "Chemical Thruster Body"
@@ -73,6 +107,14 @@
 	density = TRUE
 	dir = SOUTH
 	anchored = TRUE
+
+/obj/structure/chem_thruster_body/wrench_act(mob/living/user, obj/item/tool)
+	if(tool.tool_behaviour != TOOL_WRENCH) // TODO - Fix this being duplicated, proc on structure OR better, chem_thruster subtype
+		return ITEM_INTERACT_BLOCKING
+	tool.play_tool_sound(src, 50)
+	setDir(turn(dir, -90))
+	to_chat(user, span_notice("You rotate [src]."))
+	return ITEM_INTERACT_SUCCESS
 
 /obj/structure/chem_thruster_nozzle
 	name = "Chemical Thruster Body"
@@ -95,11 +137,25 @@
 
 	smoke_trail.alpha = 0
 
+/obj/structure/chem_thruster_nozzle/wrench_act(mob/living/user, obj/item/tool)
+	if(tool.tool_behaviour != TOOL_WRENCH) // TODO - Fix this being duplicated, proc on structure OR better, chem_thruster subtype
+		return ITEM_INTERACT_BLOCKING
+	tool.play_tool_sound(src, 50)
+	setDir(turn(dir, -90))
+	to_chat(user, span_notice("You rotate [src]."))
+	return ITEM_INTERACT_SUCCESS
+
+
 /obj/structure/chem_thruster_nozzle/update_overlays()
 	. = ..()
 	if(thruster_intensity > 0)
 		. += mutable_appearance('icons/obj/orbital_thruster.dmi', "chem_thruster_fire", layer, alpha = clamp(thruster_intensity * 5e-5, 0, 255))
 		. += emissive_appearance('icons/obj/orbital_thruster.dmi', "chem_thruster_fire", layer, alpha = clamp(thruster_intensity * 5e-5, 0, 255))
+
+/obj/structure/chem_thruster_nozzle/proc/update_visuals()
+	fire_trail.set_particle_spawning(clamp(thruster_intensity * 1e-6, 0, 15)) // TODO - move into proc on nozzle?
+	smoke_trail.alpha = clamp(thruster_intensity * 5e-5, 0, 255)
+	update_appearance()
 
 /particles/flame_trail
 	icon = 'icons/effects/particles/generic.dmi'

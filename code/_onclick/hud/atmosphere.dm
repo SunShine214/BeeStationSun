@@ -24,6 +24,7 @@
 /atom/movable/screen/atmosphere_background_home
 	icon = null
 	plane = PLANE_ATMOSPHERE
+	blend_mode = BLEND_ADD
 	screen_loc = "CENTER-7,CENTER-7"
 	mouse_opacity = MOUSE_OPACITY_TRANSPARENT
 

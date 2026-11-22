@@ -165,3 +165,15 @@ GLOBAL_LIST_INIT(sm_gas_behavior, init_sm_gas())
 	heat_modifier = -1.5
 	power_transmission = -0.5
 	heat_power_generation = -1
+
+/datum/sm_gas/protoplasma
+	gas_path = /datum/gas/protoplasma
+	heat_modifier = -2
+	power_transmission = 1.5
+	heat_power_generation = 1
+	desc = "Will repair the crystal, depending on the percentage."
+
+/datum/sm_gas/protoplasma/extra_effects(obj/machinery/power/supermatter_crystal/sm)
+	if(sm.gas_percentage[/datum/gas/protoplasma] < 0.05)
+		return
+	sm.damage = max(sm.damage - sm.gas_percentage[/datum/gas/protoplasma] * 5, 0)

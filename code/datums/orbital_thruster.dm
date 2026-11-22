@@ -6,6 +6,8 @@
 	/// The thrust of this thruster in Newtons
 	var/thrust = 0
 	var/throttleable = TRUE
+	var/direction = SOUTH
+
 	var/datum/weakref/parent
 
 /datum/orbital_thruster/New(starting_parent, starting_throttleable = TRUE)
@@ -24,7 +26,7 @@
 /datum/orbital_thruster/proc/get_thrust()
 	return thrust
 
-/datum/orbital_thruster/proc/do_plume(turf/starting, direction)
+/datum/orbital_thruster/proc/do_plume(turf/starting)
 	var/thrust = get_thrust()
 	if(!thrust)
 		return

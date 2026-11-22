@@ -301,3 +301,37 @@
 	)
 	category = CAT_CONTAINERS
 	crafting_flags = CRAFT_CHECK_DENSITY | CRAFT_ONE_PER_TURF | CRAFT_ON_SOLID_GROUND
+
+/datum/crafting_recipe/chem_thruster
+	name = "Chemical Thruster Igniter"
+	result = /obj/structure/chem_thruster
+	time = 3 SECONDS
+	tool_behaviors = list(TOOL_SCREWDRIVER, TOOL_WELDER)
+	reqs = list(
+		/obj/item/stack/sheet/plasteel = 5,
+		/obj/item/assembly/igniter = 1,
+	)
+	category = CAT_STRUCTURE
+	crafting_flags = CRAFT_CHECK_DENSITY | CRAFT_ONE_PER_TURF
+
+/datum/crafting_recipe/chem_thruster_body
+	name = "Chemical Thruster Body"
+	result = /obj/structure/chem_thruster_body
+	time = 3 SECONDS
+	tool_behaviors = list(TOOL_SCREWDRIVER, TOOL_WELDER)
+	reqs = list(
+		/obj/item/stack/sheet/plasteel = 5,
+	)
+	category = CAT_STRUCTURE
+	crafting_flags = CRAFT_CHECK_DENSITY | CRAFT_ONE_PER_TURF
+
+/datum/crafting_recipe/chem_thruster_nozzle
+	name = "Chemical Thruster Nozzle"
+	result = /obj/structure/chem_thruster_nozzle
+	time = 3 SECONDS
+	tool_behaviors = list(TOOL_SCREWDRIVER, TOOL_WELDER)
+	reqs = list(
+		/obj/item/stack/sheet/plasteel = 5,
+	)
+	category = CAT_STRUCTURE
+	crafting_flags = CRAFT_CHECK_DENSITY | CRAFT_ONE_PER_TURF

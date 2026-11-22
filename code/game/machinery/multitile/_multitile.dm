@@ -41,7 +41,7 @@
 
 /obj/machinery/multitile/proc/child_destroyed()
 	SIGNAL_HANDLER
-	qdel(src) // TODO - delete loop?
+	deconstruct()
 
 /obj/machinery/multitile/proc/build_from_template()
 	if(isnull(template))
