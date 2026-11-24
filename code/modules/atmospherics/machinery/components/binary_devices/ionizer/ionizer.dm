@@ -52,16 +52,16 @@
 
 	update_parents()
 
-/obj/machinery/atmospherics/components/binary/ionizer/proc/process_interal()
+/obj/machinery/atmospherics/components/binary/ionizer/proc/process_internal()
 	internal.assert_gases(reaction_gas, ion_agent_gas)
 	var/reaction_amount = internal.moles[reaction_gas]
 	var/ion_agent_amount = internal.moles[ion_agent_gas]
 
-	var/converted_portion = clamp(efficiency ** 2 / internal.volume, 0, 1)
+	var/converted_portion = clamp(efficiency ** 2 / internal.volume, 0, 1) // TODO - make this depend on reactor_ionizer_ratio as well (less ionizer is less efficienct??)
 	var/total_converted = (reaction_amount + ion_agent_amount) * converted_portion
 	var/ion_agent_converted = min(reaction_amount * converted_portion * reactor_ionizer_ratio, ion_agent_amount * converted_portion)
 
-	if(!converted_amount)
+	if(!ion_agent_converted)
 		return
 	// Not using a built in proc here, since we have to run two distinct conversions. Doing it this way avoids excess garbage collections and assertions.
 	internal.assert_gas(/datum/gas/ionic_fuel)
@@ -77,6 +77,7 @@
 	data["reaction_gas"] = reaction_gas
 	data["ion_agent_gas"] = ion_agent_gas
 	data["efficiency"] = efficiency
+	data["ratio"] = reactor_ionizer_ratio
 
 	return data
 
