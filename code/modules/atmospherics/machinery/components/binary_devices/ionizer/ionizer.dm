@@ -71,11 +71,19 @@
 	cached_moles[/datum/gas/ionic_fuel] += QUANTIZE(total_converted)
 	internal.garbage_collect()
 
+/obj/machinery/atmospherics/components/binary/ionizer/ui_interact(mob/user, datum/tgui/ui)
+	ui = SStgui.try_update_ui(user, src, ui)
+	if(!ui)
+		ui = new(user, src, "Ionizer")
+		ui.open()
+
 /obj/machinery/atmospherics/components/binary/ionizer/ui_data(mob/user)
 	var/list/data = list()
 
-	data["reaction_gas"] = reaction_gas
-	data["ion_agent_gas"] = ion_agent_gas
+	var/datum/gas/reaction_gas_path = reaction_gas // TODO - There HAS to be a better solution then typepath var reading.
+	data["reaction_gas"] = ispath(reaction_gas_path, /datum/gas/) ? reaction_gas_path::name : null
+	var/datum/gas/ion_gas_path = reaction_gas
+	data["ion_agent_gas"] = ispath(ion_gas_path, /datum/gas/) ? ion_gas_path::name : null
 	data["efficiency"] = efficiency
 	data["ratio"] = reactor_ionizer_ratio
 
@@ -84,7 +92,18 @@
 /obj/machinery/atmospherics/components/binary/ionizer/ui_static_data(mob/user)
 	var/list/data = list()
 
-	data["ionizers_gases"] = GLOB.ionizer_gases
+	data["ionizer_gases"] = list()
+	for(var/gas_path, gas_type in GLOB.ionizer_gases)
+		var/datum/ionizer_gas/ionizer_gas = gas_type
+		if(!length(ionizer_gas.ionizers))
+			continue
+		var/datum/gas/reaction_gas_path = ionizer_gas.gas_path // TODO - shorten if possible
+		var/list/to_append = list()
+		to_append["gas"] = reaction_gas_path::name
+		to_append["ion_agents"] = list()
+		for(var/datum/gas/ion_gas as anything in ionizer_gas.ionizers)
+			to_append["ion_agents"] += ion_gas::name
+		data["ionizer_gases"] += list(to_append)
 
 	return data
 

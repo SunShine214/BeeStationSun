@@ -272,6 +272,9 @@ const OrbitalMap = (props) => {
           maxValue={5}
           animated={false}
           step={0.1}
+          format={(i) => {
+            return i.toFixed(1);
+          }}
           onChange={(_, v) => set_zoom(v)}
         />
         <DraggableClickableControl
